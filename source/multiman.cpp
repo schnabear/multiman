@@ -994,7 +994,7 @@ Sim
 Sports
 Strategy
 Trivia
-Homebrew
+3D
 Other*/
 
 static const char genre[][16] = { 
@@ -1092,7 +1092,7 @@ typedef struct
 }
 xmbopt;
 
-sys_addr_t vm;
+sys_addr_t vm; //pointer to virtual memory
 
 #define MAX_XMB_MEMBERS 2048
 typedef struct
@@ -8442,13 +8442,6 @@ static double get_system_version(void)
 		fgets(bufs, 1024, fp);
 		fclose(fp);
 		base = strtod(bufs + 8, NULL); // this is either the spoofed or actual version
-		/*
-		if(strstr(bufs, "20091206:tetsu@tetsu-linux18.rd.scei.sony.co.jp")!=NULL) base=3.15f;
-		else if(strstr(bufs, "20100721:tetsu@tetsu-linux22.rd.scei.sony.co.jp")!=NULL) base=3.41f;
-		else if(strstr(bufs, "20100913:tetsu@tetsu-linux14")!=NULL) base=3.50f;
-		else if(strstr(bufs, "20101127:tetsu@tetsu-linux14")!=NULL) base=3.55f;
-		else if(strstr(bufs, "20110129:tetsu@tetsu-linux16")!=NULL) base=3.56f;
-		else if(strstr(bufs, "20110304:tetsu@tetsu-linux15")!=NULL) base=3.60f; */
 	}
 
 	fp = fopen("/dev_flash/sys/external/libfs.sprx", "rb");
@@ -8463,7 +8456,7 @@ static double get_system_version(void)
 		uint32_t crc=0, crc_c;
 		for(crc_c=0; crc_c<len; crc_c++) crc+=mem[crc_c];
 //		sprintf(www_info, "%x", crc);
-		if(crc==0x416bbaULL) base=3.15;	else
+		if(crc==0x416bbaULL) base=3.15;	else //ignore spoofers by crcing libfs
 		if(crc==0x41721eULL) base=3.41; else
 		if(crc==0x41655eULL) base=3.55;
 		free(mem);
@@ -24908,8 +24901,8 @@ again_sc8:
 				if(stat(filename, &s3)<0)
 					sprintf(filename, "%s/PARAM.SFO", menu_list[game_sel].path);
 
-				char c_split[512]; c_split[0]=0; // /dev_usb001/GAMES/BLES00254-Lego/PS3_GAME/USRDIR/GAME.DAT
-				char c_cached[512]; c_cached[0]=0; // /dev_hdd0/game/BLES80608/USRDIR/game_gache/BLES00254/GAME.DAT
+				char c_split[512]; c_split[0]=0; 
+				char c_cached[512]; c_cached[0]=0; 
 				char s_tmp2[512];
 				u8 use_cache=0;
 
