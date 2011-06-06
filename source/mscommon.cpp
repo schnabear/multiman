@@ -5,9 +5,8 @@ static int audioInitCell(void);
 volatile bool s_receivedExitGameRequest;
 
 #ifndef MS_THREADED_SAMPLE
-/**********************************************************************************/
+
 // SPURS information
-/**********************************************************************************/
 #define				SPURS_SPU_NUM	1
 #define				SPU_THREAD_GROUP_PRIORITY		250
 CellSpurs			spurs __attribute__((aligned (128)));

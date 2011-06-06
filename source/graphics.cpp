@@ -11,9 +11,7 @@
 
 #include <cell/gcm.h>
 
-//#if (CELL_SDK_VERSION>0x210001)
 #include <cell/control_console.h>
-//#endif
 
 #include <sysutil/sysutil_sysparam.h>
 #include <netex/libnetctl.h>

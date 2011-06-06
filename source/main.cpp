@@ -44,5 +44,3 @@ int main(int argc, char **argv)
 	sprintf(filename, "%s/RELOAD.SELF", tn);
 	sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 3070, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 }
-
-

@@ -19,9 +19,6 @@ int mm_insert_htab_entry(u64 va_addr, u64 lpar_addr, u64 prot, u64 * index)
 				  &hpte_index, &hpte_evicted_v,
 				  &hpte_evicted_r);
 
-	if (result != 0) {
-		//PRINTF  ("lv1_insert_htab_entry failed, returned %d (va_addr=%016lx, lpar_addr=%016lx)\n",		     result, va_addr, lpar_addr);
-	}
 
 	if ((result == 0) && (index != 0))
 		*index = hpte_index;
@@ -47,3 +44,4 @@ int mm_map_lpar_memory_region(u64 lpar_start_addr, u64 ea_start_addr, u64 size,
 
 	return 0;
 }
+

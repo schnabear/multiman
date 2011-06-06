@@ -26522,5 +26522,3 @@ static void misc_thread_entry( uint64_t arg )
 	}
 	sys_ppu_thread_exit( 0 );
 }
-
-

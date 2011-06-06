@@ -123,4 +123,3 @@ u64 lv2_alloc(u64 size, u64 pool)
 
 	return ret;
 }
-
