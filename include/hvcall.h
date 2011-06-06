@@ -34,3 +34,4 @@ void lv1_undocumented_function_115(u64 lpar_addr);
 u64 lv2_alloc(u64 size, u64 pool);
 
 #endif
+

@@ -12,3 +12,4 @@ void install_new_poke();
 void remove_new_poke();
 
 #endif
+
