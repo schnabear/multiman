@@ -59,7 +59,7 @@
 #include <sysutil/sysutil_oskdialog.h>
 #include <sysutil/sysutil_syscache.h>
 #include <sysutil/sysutil_sysparam.h>
-#include <sysutil/sysutil_discgame.h>
+//#include <sysutil/sysutil_discgame.h>
 #include <sysutil/sysutil_common.h>
 #include <sysutil/sysutil_screenshot.h>
 #include <sysutil/sysutil_bgmplayback.h>
