@@ -53,3 +53,4 @@ mm : $(PPU_TARGET)
 	@$(MAKE_SELF_NPDRM) ./objs/$(MM_REL)_BOOT.elf $(RELEASE)$(NPDRM)/USRDIR/EBOOT.BIN $(CONTENT_ID) > nul
 	@rm $(PPU_TARGET)
 	$(MAKE) -f makefile.multiman mm
+

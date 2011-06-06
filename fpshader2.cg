@@ -16,5 +16,3 @@ f2fConnector main( v2fConnector v2f, uniform texobj2D texture)
 	
 	return f2f;
 }
-
-

@@ -1,4 +1,3 @@
-
 struct a2vConnector
 {
     float4 objCoord;
