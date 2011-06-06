@@ -13241,7 +13241,7 @@ static void _Multi_Stream_Update_Thread(uint64_t param)
 	}
 	cellAudioPortStop(portNum);
     s_multiStreamUpdateThreadRunning = false;
-//    sys_ppu_thread_exit(0);
+    sys_ppu_thread_exit(0);
 }
 
 int readmem(unsigned char *_x, uint64_t _fsiz, uint64_t _chunk) //read lv2 memory chunk
