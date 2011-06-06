@@ -1,3 +1,4 @@
+
 #ifndef H_COMMON
 #define H_COMMON
 
@@ -24,3 +25,4 @@
 #define HV_OFFSET				0x000a78				// at address 0x363a78
 
 #endif
+
