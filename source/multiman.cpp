@@ -3959,7 +3959,7 @@ static int load_modules()
 	else unload_mod|=4;
 
 	ret = cellSysmoduleLoadModule(CELL_SYSMODULE_JPGDEC);
-	cellSysmoduleLoadModule( CELL_SYSMODULE_VDEC_MPEG2 );
+	//cellSysmoduleLoadModule( CELL_SYSMODULE_VDEC_MPEG2 );
 	cellSysmoduleLoadModule(CELL_SYSMODULE_SYSUTIL_SCREENSHOT);
 	CellScreenShotSetParam  screenshot_param = {0, 0, 0, 0};
 	screenshot_param.photo_title = "multiMAN";
@@ -3970,11 +3970,14 @@ static int load_modules()
 //	cellScreenShotSetOverlayImage(app_homedir,	(char*) "ICON0.PNG", 50, 50);
 
 	//cellSysmoduleInitialize();
-	ret = cellSysmoduleLoadModule( CELL_SYSMODULE_AUDIO );
+	cellSysmoduleLoadModule( CELL_SYSMODULE_AUDIO );
+	//ret = cellSysmoduleLoadModule( CELL_SYSMODULE_USBD );
+	cellSysmoduleLoadModule( CELL_SYSMODULE_RESC );
+	cellSysmoduleLoadModule( CELL_SYSMODULE_SPURS );
 	
-//	ret = cellSysmoduleLoadModule(CELL_SYSMODULE_VIDEO_EXPORT);
-//	ret = cellSysmoduleLoadModule(CELL_SYSMODULE_MUSIC_EXPORT);
-//	ret = cellSysmoduleLoadModule(CELL_SYSMODULE_PHOTO_EXPORT);
+//	cellSysmoduleLoadModule(CELL_SYSMODULE_VIDEO_EXPORT);
+//	cellSysmoduleLoadModule(CELL_SYSMODULE_MUSIC_EXPORT);
+//	cellSysmoduleLoadModule(CELL_SYSMODULE_PHOTO_EXPORT);
 
 	cellMouseInit (1);
 	cellKbInit(1);
@@ -4298,6 +4301,7 @@ static int unload_modules()
 		fclose(flist);
 	}
 
+
 	enable_sc36();
 	ftp_off();
 	cellPadEnd();
@@ -4313,10 +4317,15 @@ static int unload_modules()
 					   cellSysmoduleUnloadModule(CELL_SYSMODULE_JPGDEC);
 	if(unload_mod & 1) cellSysmoduleUnloadModule(CELL_SYSMODULE_FS);
 
-	cellSysmoduleUnloadModule(CELL_SYSMODULE_VDEC_MPEG2);
+	//cellSysmoduleUnloadModule(CELL_SYSMODULE_VDEC_MPEG2);
 
 	cellSysmoduleUnloadModule( CELL_SYSMODULE_SYSUTIL_SCREENSHOT );
 	cellSysmoduleUnloadModule( CELL_SYSMODULE_AUDIO );
+	//cellSysmoduleUnloadModule( CELL_SYSMODULE_USBD );
+	cellSysmoduleUnloadModule( CELL_SYSMODULE_RESC );
+	cellSysmoduleUnloadModule( CELL_SYSMODULE_SPURS );
+
+
 	if(ve_initialized) cellSysmoduleUnloadModule( CELL_SYSMODULE_VIDEO_EXPORT );
 	if(me_initialized) cellSysmoduleUnloadModule( CELL_SYSMODULE_MUSIC_EXPORT );
 	if(pe_initialized) cellSysmoduleUnloadModule( CELL_SYSMODULE_PHOTO_EXPORT );
