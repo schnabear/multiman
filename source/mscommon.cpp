@@ -1,21 +1,3 @@
-/* SCE CONFIDENTIAL
-PLAYSTATION(R)3 Programmer Tool Runtime Library 192.001
-* Copyright (C) 2006 Sony Computer Entertainment Inc.
-* All Rights Reserved.
-*/
-
-/*
-    mscommon.cpp
-
-    A common set of function calls required by most samples
-
-	If using these common headers in your own projects be sure to specify
-	the preprocessor flag "MS_THREADED_SAMPLE" if linking against the 
-	MultiStream Threaded library (libmstreamThreadAT3.a or libmstreamThreadMP3.a).
-
-    Written by: A. Bowler
-*/
-
 #include "mscommon.h"
 
 static int audioInitCell(void);
