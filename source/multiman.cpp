@@ -661,6 +661,7 @@ u16 BUTTON_CROSS =	_BUTTON_CROSS;	 //(1<<12)
 u16 BUTTON_CIRCLE=	_BUTTON_CIRCLE;	 //(1<<13)
 
 u8 init_finished=0;
+bool mm_shutdown=0;
 
 char userBG[64];
 char auraBG[64];
@@ -4209,6 +4210,7 @@ void sort_xmb_col(xmbmem *_xmb, u16 max, int _first)
 
 static int unload_modules()
 {
+	mm_shutdown=true;
 	init_finished=0;
 	/*
 	if(text_bmp!=NULL)
@@ -13222,7 +13224,7 @@ static void _Multi_Stream_Update_Thread(uint64_t param)
 	(void)param;
 
     cellAudioPortStart(portNum);
-	while(!s_receivedExitGameRequest)
+	while(!s_receivedExitGameRequest && !mm_shutdown)
 	{
 		sys_timer_usleep(fps60/32);
 		s_pOutputBuffers = cellMSSystemSignalSPU();
