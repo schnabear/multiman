@@ -65,24 +65,24 @@ static void* loadFileF( uint8_t* fname, size_t *size, int offset, int addSize )
 }
 
 
-//J libfontライブラリのロード
+
 int Fonts_LoadModules()
 {
 	int ret;
 	
-	//J libfont モジュールのロード
+	
 	ret = cellSysmoduleLoadModule( CELL_SYSMODULE_FONT );
 	if ( ret == CELL_OK ) {
-		//J libfreetype モジュールのロード
+		
 		ret = cellSysmoduleLoadModule( CELL_SYSMODULE_FREETYPE );
 		if ( ret == CELL_OK ) {
-			//J libfontFT モジュールのロード
+			
 			ret = cellSysmoduleLoadModule( CELL_SYSMODULE_FONTFT );
 			if ( ret == CELL_OK ) {
 				return ret;
 			}
-//			else printf("Fonts: 'CELL_SYSMODULE_FONTFT' NG! %08x\n",ret);
-			//J 以下、ロードエラー時のアンロード処理
+
+			
 			cellSysmoduleUnloadModule( CELL_SYSMODULE_FREETYPE );
 		}
 //		else printf("Fonts: 'CELL_SYSMODULE_FREETYPE' NG! %08x\n",ret);
@@ -94,7 +94,7 @@ int Fonts_LoadModules()
 	return ret;
 }
 
-//J libfontライブラリのアンロード
+
 void Fonts_UnloadModules()
 {
 	cellSysmoduleUnloadModule( CELL_SYSMODULE_FONTFT );
@@ -102,32 +102,32 @@ void Fonts_UnloadModules()
 	cellSysmoduleUnloadModule( CELL_SYSMODULE_FONT );
 }
 
-//J libfont初期化
+
 Fonts_t* Fonts_Init()
 {
-	//J libfontに必要なリソース
+	
 	static CellFontEntry UserFontEntrys[USER_FONT_MAX];
 	static uint32_t FontFileCache[FONT_FILE_CACHE_SIZE/sizeof(uint32_t)];
 
 	CellFontConfig config;
 	int ret;
 
-	//J libfont 初期化パラメータ設定。
+	
 	//----------------------------------------------------------------------
 	CellFontConfig_initialize( &config );
 
-	//J ファイルキャッシュバッファを設定
+	
 	config.FileCache.buffer = FontFileCache;
 	config.FileCache.size   = FONT_FILE_CACHE_SIZE;
 
-	//J ユーザーフォント用、エントリバッファ設定。
+	
 	config.userFontEntrys   = UserFontEntrys;
 	config.userFontEntryMax = sizeof(UserFontEntrys)/sizeof(CellFontEntry);
 
-	//J フラグは現在 0 固定
+	
 	config.flags = 0;
 
-	//J libfontライブラリ 初期化
+	
 	//----------------------------------------------------------------------
 	ret = cellFontInit( &config );
 	if ( ret != CELL_OK ) {
@@ -139,23 +139,23 @@ Fonts_t* Fonts_Init()
 }
 
 
-//J フォントインターフェースライブラリ初期化 ( FreeType2を使用します。)
+
 int Fonts_InitLibraryFreeType( const CellFontLibrary** lib )
 {
 	CellFontLibraryConfigFT config;
 	const CellFontLibrary*  fontLib;
 	int ret;
 	
-	//J フォントインターフェースライブラリ初期化パラメータの初期化
+	
 	CellFontLibraryConfigFT_initialize( &config );
-	//J メモリーインターフェースの設定( 設定必須 )
+	
 	config.MemoryIF.Object  = NULL;
 	config.MemoryIF.Malloc  = fonts_malloc;
 	config.MemoryIF.Free    = fonts_free;
 	config.MemoryIF.Realloc = fonts_realloc;
 	config.MemoryIF.Calloc  = fonts_calloc;
 
-	//J フォントインターフェースライブラリ初期化
+	
 	ret = cellFontInitLibraryFreeType( &config, &fontLib );
 //	if ( ret != CELL_OK ) {
 //		Fonts_PrintError( "   Fonts:cellFontInitLibrary_FreeType=", ret );
@@ -165,7 +165,7 @@ int Fonts_InitLibraryFreeType( const CellFontLibrary** lib )
 	return ret;
 }
 
-//J レンダラー初期化。
+
 int Fonts_CreateRenderer( const CellFontLibrary* lib, uint32_t initSize, CellFontRenderer* rend )
 {
 	CellFontRendererConfig config;
@@ -174,7 +174,7 @@ int Fonts_CreateRenderer( const CellFontLibrary* lib, uint32_t initSize, CellFon
 	CellFontRendererConfig_initialize( &config );
 	CellFontRendererConfig_setAllocateBuffer( &config, initSize, 0 );
 	
-	//J レンダラの作成
+	
 	ret = cellFontCreateRenderer( lib, &config, rend );
 	if ( ret != CELL_OK ) {
 //		Fonts_PrintError( "   Fonts:cellFontCreateRenderer=", ret );
@@ -184,13 +184,13 @@ int Fonts_CreateRenderer( const CellFontLibrary* lib, uint32_t initSize, CellFon
 	return ret;
 }
 
-//J フォントのオープン
+
 int Fonts_OpenFonts( const CellFontLibrary*lib, Fonts_t* fonts, char* _app_usrdir )
 {
 	int n;
 	int ret=CELL_OK;
 	
-	//J システム搭載フォントセットのオープン例
+	
 	{
 		static struct {
 			uint32_t isMemory;
@@ -209,57 +209,46 @@ int Fonts_OpenFonts( const CellFontLibrary*lib, Fonts_t* fonts, char* _app_usrdi
 		CellFontType type;
 		
 		fonts->sysFontMax = 9;
-		//J オンメモリでオープンする
+		
 		for ( n=0; n < fonts->sysFontMax; n++ ) {
 			if (! openSystemFont[n].isMemory ) continue;
 			
 			type.type = openSystemFont[n].fontsetType;
 			type.map  = CELL_FONT_MAP_UNICODE;
-			//J システム搭載フォントセットオープン
+			
 			ret = cellFontOpenFontsetOnMemory( lib, &type, &fonts->SystemFont[n] );
 			if ( ret != CELL_OK ) {
 //				Fonts_PrintError( "   Fonts:cellFontOpenFontset=", ret );
-				Fonts_CloseFonts( fonts ); //J オープンした分、クローズして戻る。
+				Fonts_CloseFonts( fonts ); 
 				return ret;
 			}
 			fonts->openState |= (1<<n);
-			//J 初期スケール設定
-			#if 1
-			//J ポイントで指定
+		
 			cellFontSetResolutionDpi( &fonts->SystemFont[n], 72, 72 );
 			cellFontSetScalePoint( &fonts->SystemFont[n], 26.f, 26.f );
-			#else
-			//J ピクセルで指定
-			cellFontSetScalePixel( &fonts->SystemFont[n], 26.f, 26.f );
-			#endif
+
 		}
-		//J ファイルアクセスオープンする
+		
 		for ( n=0; n < fonts->sysFontMax; n++ ) {
 			if ( openSystemFont[n].isMemory ) continue;
 			
 			type.type = openSystemFont[n].fontsetType;
 			type.map  = CELL_FONT_MAP_UNICODE;
-			//J システム搭載フォントセットオープン
+			
 			ret = cellFontOpenFontset( lib, &type, &fonts->SystemFont[n] );
 			if ( ret != CELL_OK ) {
 //				Fonts_PrintError( "   Fonts:cellFontOpenFontset=", ret );
-				Fonts_CloseFonts( fonts ); //J オープンした分、クローズして戻る。
+				Fonts_CloseFonts( fonts ); 
 				return ret;
 			}
 			fonts->openState |= (1<<n);
-			//J 初期スケール設定
-			#if 1
-			//J ポイントで指定
+			
 			cellFontSetResolutionDpi( &fonts->SystemFont[n], 72, 72 );
 			cellFontSetScalePoint( &fonts->SystemFont[n], 26.f, 26.f );
-			#else
-			//J ピクセルで指定
-			cellFontSetScalePixel( &fonts->SystemFont[n], 26.f, 26.f );
-			#endif
 		}
 	}
 	
-	//J アプリケーションで用意したフォントのオープン例
+	
 	{
 		char ufontpath[256];
 		static struct {
@@ -289,7 +278,7 @@ int Fonts_OpenFonts( const CellFontLibrary*lib, Fonts_t* fonts, char* _app_usrdi
 			uint8_t* path = (uint8_t*)ufontpath; //userFont[n].filePath
 			
 			if (! userFont[n].isMemory ) {
-			  //J ファイルアクセスでオープン
+			  
 				ret = cellFontOpenFontFile( lib, path, 0, fontUniqueId, &fonts->UserFont[n] );
 				if ( ret != CELL_OK ) {
 //					Fonts_PrintError( "    Fonts:cellFontOpenFile=", ret );
@@ -299,7 +288,7 @@ int Fonts_OpenFonts( const CellFontLibrary*lib, Fonts_t* fonts, char* _app_usrdi
 				}
 			}
 			else {
-			  //J メモリーアクセスでオープン
+			  
 				size_t size;
 				void *p = loadFileF( path, &size, 0, 0 );
 				
@@ -316,15 +305,9 @@ int Fonts_OpenFonts( const CellFontLibrary*lib, Fonts_t* fonts, char* _app_usrdi
 			fontUniqueId++;
 			
 			if ( ret == CELL_OK ) {
-			  //J 初期スケール設定
-				#if 1
-				//J ポイントで指定
+			  
 				cellFontSetResolutionDpi( &fonts->UserFont[n], 72, 72 );
 				cellFontSetScalePoint( &fonts->UserFont[n], 26.f, 26.f );
-				#else
-				//J ピクセルで指定
-				cellFontSetScalePixel( &fonts->UserFont[n], 26.f, 26.f );
-				#endif
 			}
 		}
 	}
@@ -332,7 +315,7 @@ int Fonts_OpenFonts( const CellFontLibrary*lib, Fonts_t* fonts, char* _app_usrdi
 	return ret;
 }
 
-//J 行の高さとベースライン位置の取得。
+
 int Fonts_GetFontsHorizontalLayout( Fonts_t* fonts, uint32_t fontmask, float scale, float* lineHeight, float*baseLineY )
 {
 	float ascent  = 0.0f;
@@ -344,7 +327,7 @@ int Fonts_GetFontsHorizontalLayout( Fonts_t* fonts, uint32_t fontmask, float sca
 		CellFontHorizontalLayout Layout;
 		int n;
 		
-		//J システムフォントのレイアウトを調べる
+		
 		for ( n=0; n < fonts->sysFontMax; n++ ) {
 			if ( (fontmask & (1<<n))==0x00000000 ) continue;
 			
@@ -367,7 +350,7 @@ int Fonts_GetFontsHorizontalLayout( Fonts_t* fonts, uint32_t fontmask, float sca
 				descent = Layout.lineHeight - Layout.baseLineY;
 			}
 		}
-		//J ユーザーフォントのレイアウトを調べる
+		
 		for ( n=0; n < fonts->userFontMax; n++ ) {
 			if ( (fontmask & (1<<(FONT_USER_FONT0+n)))==0x00000000 ) continue;
 			
@@ -397,7 +380,7 @@ int Fonts_GetFontsHorizontalLayout( Fonts_t* fonts, uint32_t fontmask, float sca
 	return CELL_OK;
 }
 
-//J 指定したフォント取得。
+
 int Fonts_AttachFont( Fonts_t* fonts, int fontEnum, CellFont*cf )
 {
 	CellFont* openedFont = (CellFont*)0;
@@ -423,7 +406,7 @@ int Fonts_AttachFont( Fonts_t* fonts, int fontEnum, CellFont*cf )
 			}
 		}
 	}
-	//J すでにオープン済みのフォントのインスタンスを生成。
+	
 	ret = cellFontOpenFontInstance( openedFont, cf );
 //	if ( ret != CELL_OK ) {
 //		Fonts_PrintError( "    Fonts:AttachFont:cellFontOpenFontInstance=", ret );
@@ -431,7 +414,7 @@ int Fonts_AttachFont( Fonts_t* fonts, int fontEnum, CellFont*cf )
 	return ret;
 }
 
-//J フォントのスケール設定(ピクセル指定。縦横比１：１)
+
 int Fonts_SetFontScale( CellFont* cf, float scale )
 {
 	int ret;
@@ -443,7 +426,7 @@ int Fonts_SetFontScale( CellFont* cf, float scale )
 	return ret;
 }
 
-//J フォントの太さの調整値設定
+
 int Fonts_SetFontEffectWeight( CellFont* cf, float effWeight )
 {
 	int ret;
@@ -455,7 +438,7 @@ int Fonts_SetFontEffectWeight( CellFont* cf, float effWeight )
 	return ret;
 }
 
-//J フォントに与えるを傾きを設定
+
 int Fonts_SetFontEffectSlant( CellFont* cf, float effSlant )
 {
 	int ret;
@@ -467,7 +450,7 @@ int Fonts_SetFontEffectSlant( CellFont* cf, float effSlant )
 	return ret;
 }
 
-//J フォントの横書きレイアウトを取得
+
 int Fonts_GetFontHorizontalLayout( CellFont* cf, float* lineHeight, float*baseLineY )
 {
 	CellFontHorizontalLayout Layout;
@@ -484,7 +467,7 @@ int Fonts_GetFontHorizontalLayout( CellFont* cf, float* lineHeight, float*baseLi
 	return ret;
 }
 
-//J フォントの縦書きレイアウトを取得
+
 int Fonts_GetFontVerticalLayout( CellFont* cf, float* lineWidth, float*baseLineX )
 {
 	CellFontVerticalLayout Layout;
@@ -501,7 +484,7 @@ int Fonts_GetFontVerticalLayout( CellFont* cf, float* lineWidth, float*baseLineX
 	return ret;
 }
 
-//J 使用し終わったフォントの返却
+
 int Fonts_DetachFont( CellFont*cf )
 {
 	int ret = cellFontCloseFont( cf );
@@ -512,7 +495,7 @@ int Fonts_DetachFont( CellFont*cf )
 	return ret;
 }
 
-//J フォントのクローズ
+
 int Fonts_CloseFonts( Fonts_t* fonts )
 {
 	int n;
@@ -520,7 +503,7 @@ int Fonts_CloseFonts( Fonts_t* fonts )
 
 	if (! fonts ) return err;
 
-	//J システム搭載フォントセットのクローズ
+	
 	for ( n=0; n < fonts->sysFontMax; n++ ) {
 		uint32_t checkBit = (1<<n);
 		
@@ -534,7 +517,7 @@ int Fonts_CloseFonts( Fonts_t* fonts )
 			fonts->openState &= (~checkBit);
 		}
 	}
-	//J ユーザーフォントのクローズ
+	
 	for ( n=0; n < fonts->userFontMax; n++ ) {
 		uint32_t checkBit = (1<<(FONT_USER_FONT0+n));
 		
@@ -552,72 +535,28 @@ int Fonts_CloseFonts( Fonts_t* fonts )
 	return err;
 }
 
-//J レンダラを破棄
+
 int Fonts_DestroyRenderer( CellFontRenderer* renderer )
 {
 	int ret = cellFontDestroyRenderer( renderer );
 
-//	if ( ret != CELL_OK ) {
-//		Fonts_PrintError( "    Fonts:cellFontDestroyRenderer=", ret );
-//	}
 	return ret;
 }
 
-//J フォントインターフェースライブラリ 終了
+
 int Fonts_EndLibrary( const CellFontLibrary* lib )
 {
 	int ret = cellFontEndLibrary( lib );
 	
-//	if ( ret != CELL_OK ) {
-//		Fonts_PrintError( "    Fonts:cellFontEndLibrary=", ret );
-//	}
 	return ret;
 }
 
-//J libfont ライブラリ終了
+
 int Fonts_End()
 {
 	int ret = cellFontEnd();
-	
-//	if ( ret != CELL_OK ) {
-//		Fonts_PrintError( "    Fonts:cellFontEnd=", ret );
-//	}
+
 	return ret;
 }
 
-//J libfont のエラーをマクロ名でprintf出力
-/*
-void Fonts_PrintError( const char*mess, int d )
-{
-	const char* s;
-	switch( d ) {
-	case CELL_FONT_OK                              : s="CELL_FONT_OK";                               break;
-	case CELL_FONT_ERROR_FATAL                     : s="CELL_FONT_ERROR_FATAL";                      break;
-	case CELL_FONT_ERROR_INVALID_PARAMETER         : s="CELL_FONT_ERROR_INVALID_PARAMETER";          break;
-	case CELL_FONT_ERROR_UNINITIALIZED             : s="CELL_FONT_ERROR_UNINITIALIZED";              break;
-	case CELL_FONT_ERROR_INITIALIZE_FAILED         : s="CELL_FONT_ERROR_INITIALIZE_FAILED";          break;
-	case CELL_FONT_ERROR_INVALID_CACHE_BUFFER      : s="CELL_FONT_ERROR_INVALID_CACHE_BUFFER";       break;
-	case CELL_FONT_ERROR_ALREADY_INITIALIZED       : s="CELL_FONT_ERROR_ALREADY_INITIALIZED";        break;
-	case CELL_FONT_ERROR_ALLOCATION_FAILED         : s="CELL_FONT_ERROR_ALLOCATION_FAILED";          break;
-	case CELL_FONT_ERROR_NO_SUPPORT_FONTSET        : s="CELL_FONT_ERROR_NO_SUPPORT_FONTSET";         break;
-	case CELL_FONT_ERROR_OPEN_FAILED               : s="CELL_FONT_ERROR_OPEN_FAILED";                break;
-	case CELL_FONT_ERROR_READ_FAILED               : s="CELL_FONT_ERROR_READ_FAILED";                break;
-	case CELL_FONT_ERROR_FONT_OPEN_FAILED          : s="CELL_FONT_ERROR_FONT_OPEN_FAILED";           break;
-	case CELL_FONT_ERROR_FONT_NOT_FOUND            : s="CELL_FONT_ERROR_FONT_NOT_FOUND";             break;
-	case CELL_FONT_ERROR_FONT_OPEN_MAX             : s="CELL_FONT_ERROR_FONT_OPEN_MAX";              break;
-	case CELL_FONT_ERROR_FONT_CLOSE_FAILED         : s="CELL_FONT_ERROR_FONT_CLOSE_FAILED";          break;
-	case CELL_FONT_ERROR_NO_SUPPORT_FUNCTION       : s="CELL_FONT_ERROR_NO_SUPPORT_FUNCTION";        break;
-	case CELL_FONT_ERROR_NO_SUPPORT_CODE           : s="CELL_FONT_ERROR_NO_SUPPORT_CODE";            break;
-	case CELL_FONT_ERROR_NO_SUPPORT_GLYPH          : s="CELL_FONT_ERROR_NO_SUPPORT_GLYPH";           break;
-	case CELL_FONT_ERROR_RENDERER_ALREADY_BIND     : s="CELL_FONT_ERROR_RENDERER_ALREADY_BIND";      break;
-	case CELL_FONT_ERROR_RENDERER_UNBIND           : s="CELL_FONT_ERROR_RENDERER_UNBIND";            break;
-	case CELL_FONT_ERROR_RENDERER_INVALID          : s="CELL_FONT_ERROR_RENDERER_INVALID";           break;
-	case CELL_FONT_ERROR_RENDERER_ALLOCATION_FAILED: s="CELL_FONT_ERROR_RENDERER_ALLOCATION_FAILED"; break;
-	case CELL_FONT_ERROR_ENOUGH_RENDERING_BUFFER   : s="CELL_FONT_ERROR_ENOUGH_RENDERING_BUFFER";    break;
-	default:s="unknown!";
-	}
-	if (!mess) mess="";
-	printf("%s%s\n",mess,s);
-}
 
-*/

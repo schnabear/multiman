@@ -29,7 +29,7 @@ static uint32_t getUcs4( uint8_t*utf8, uint32_t*ucs4, uint32_t alterCode )
 		len++;
 		if ( code >= 0x80 ) {
 			while (1) {
-				//J UTF-8 先頭コードチェック。
+				
 				if ( code & 0x40 ) { 
 					uint64_t mask = 0x20L;
 					uint64_t encode;
@@ -40,7 +40,7 @@ static uint32_t getUcs4( uint8_t*utf8, uint32_t*ucs4, uint32_t alterCode )
 							len = n;
 							mask--;
 							if ( mask == 0 ) { // 0xFE or 0xFF 
-								//J 先頭コードエラー
+								
 								*ucs4 = 0x00000000;
 								return 0;
 							}
@@ -53,7 +53,7 @@ static uint32_t getUcs4( uint8_t*utf8, uint32_t*ucs4, uint32_t alterCode )
 					for ( n=1; n<len; n++ ) {
 						encode = (uint64_t)*utf8;
 						if ( (encode & 0xc0) != 0x80 ) {
-							//J 文字コードが途中で切れている！
+							
 							if ( ucs4 ) *ucs4 = alterCode;
 							return n;
 						}
@@ -62,9 +62,9 @@ static uint32_t getUcs4( uint8_t*utf8, uint32_t*ucs4, uint32_t alterCode )
 					}
 					break;
 				}
-				else { //J 先頭コードエラー
-					//J UTF-8の文字列であるならば文字コードの途中と判断。
-					//J 次の文字までスキップ。
+				else { 
+					
+					
 					for( ;; utf8++ ) {
 						code = (uint64_t)*utf8;
 						if ( code < 0x80 ) break;
@@ -525,8 +525,8 @@ static void cellFontRenderTrans_blendCast_ARGB8( CellFontImageTransInfo* transIn
 						             (( A0 * G0 + a0 * _g )/255<<40)| 
 						             (( A0 * B0 + a0 * _b )/255<<32)| 
 						             (a1<<24) |
-						             (( A1 * R1 + a1 * _r )/255<<16)| //J 背景とブレンド
-						             (( A1 * G1 + a1 * _g )/255<< 8)| //J 背景とブレンド
+						             (( A1 * R1 + a1 * _r )/255<<16)| 
+						             (( A1 * G1 + a1 * _g )/255<< 8)| 
 						             (( A1 * B1 + a1 * _b )/255    ); 
 */
 
