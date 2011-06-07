@@ -12830,12 +12830,12 @@ long TriggerStream( long nCh, long pSampleData1, long pSampleData2, const long n
 
 int LoadMP3(const char *mp3filename,long *addr, long *size, int *_mp3_freq)
 {
-	(void)_mp3_freq;
-//unsigned int tSize=0;	// total size
-//float tTime=0;			// total time
-//int ret;
-//CellMSMP3FrameHeader Hdr;
-//unsigned int offset=0;
+
+unsigned int tSize=0;	// total size
+float tTime=0;			// total time
+int ret;
+CellMSMP3FrameHeader Hdr;
+unsigned int offset=0;
 
 
 	if(!(mp3filename && addr && size))
@@ -12863,12 +12863,8 @@ int LoadMP3(const char *mp3filename,long *addr, long *size, int *_mp3_freq)
 	if((*size)>_mp3_buffer) (*size)=_mp3_buffer;
 	memset((void*)pDataB, 0x00 , (*size));
 	LoadFile(nFileHandle, pData, *size, 0, 0);
-
 	*addr=pData;
-//	printf("data size: 0x%x\n",(int)*size);
 
-	return(nFileHandle);
-/*
 	while(1)
 	{
 		ret=cellMSMP3GetFrameInfo((void*)pData,&Hdr);
@@ -12882,6 +12878,7 @@ int LoadMP3(const char *mp3filename,long *addr, long *size, int *_mp3_freq)
 		tSize+=Hdr.PacketSize;	// Update total file size
 		if ((Hdr.ID3==0)&&(Hdr.Tag==0))
 			tTime+=Hdr.PacketTime;	// Update total playing time (in seconds)
+
 		pData+=Hdr.PacketSize;	// Move forward to next packet
 		offset+=Hdr.PacketSize;
 
@@ -12889,7 +12886,7 @@ int LoadMP3(const char *mp3filename,long *addr, long *size, int *_mp3_freq)
 // Using the packet size and packet time information, it is possible to build "Seek Tables".
 // Then, by knowing approximately what time (in seconds) you require to playback from,
 // you can start playback from the closest data packet by searching for the closest record in the table.
-*/
+
 
 /*		if (Hdr.ID3!=0)
 		{
@@ -12917,8 +12914,8 @@ int LoadMP3(const char *mp3filename,long *addr, long *size, int *_mp3_freq)
 			printf("Packet Time (secs): %f\n",Hdr.PacketTime);
 		} */
 //		printf("Packet Size (bytes): 0x%x\n",Hdr.PacketSize);
-/*
-		if (tSize==(unsigned int)*size)
+
+		if (tSize>=(unsigned int)*size)
 		{
 //			printf("MP3 File is valid.\n");
 			*_mp3_freq=Hdr.Frequency;
@@ -12927,14 +12924,15 @@ int LoadMP3(const char *mp3filename,long *addr, long *size, int *_mp3_freq)
 //			printf("Total Playback Time at %d Hz = (secs): %f\n",Hdr.Frequency,tTime);
 			return(nFileHandle);
 		}
-		else if (tSize>(unsigned int)*size)
-		{
+
+//		else if (tSize>(unsigned int)*size)
+//		{
 //			printf("ERROR: PASSED END OF FILE!\n");
 //			printf("%x,%x\n",tSize,(int)*size);
-			return -1;
-		}
+//			return -1;
+//		}
 		
-	} */
+	} 
 }
 
 void main_mp3( char *temp_mp3)
@@ -13007,9 +13005,9 @@ int main_mp3_th( char *temp_mp3)
 
 	TriggerStream(	nChannel,
 								pSampleData,		// 1st buffer
-								pSampleData,					// 2nd buffer
+								pSampleData,		// 2nd buffer
 								nSizeSampleData, 	// size of data (in bytes)
-								nSizeSampleData, 					// size of data (in bytes)
+								nSizeSampleData,	// size of data (in bytes)
 						        mp3_freq,//SAMPLE_FREQUENCY,
 						        SAMPLE_CHANNELS);
 	if(nChannel == -1) return -1;
@@ -17316,6 +17314,7 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 				int first_xmb_mem = _xmb[_xmb_icon].first;
 				int cnmax=3;
 				if(_xmb[_xmb_icon].first>2 && _xmb_y_offset>0) {first_xmb_mem--; cn3--;}
+
 				for(int m=0;m<4;m++) // make it pleasureable to watch while loading column
 				{
 					if(m==1)
@@ -17480,7 +17479,7 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 						}
 
 
-						if(_xmb[_xmb_icon].member[cn].data==-1 && _xmb_x_offset==0 && !one_done/*|| (_xmb_icon != _xmb_icon_ && abs(_xmb_x_offset)==150)*/)// || (c_opacity_delta!=0 && dim==1 && c_opacity2>0x30 && c_opacity2<0x42))
+						if(_xmb[_xmb_icon].member[cn].data==-1 && _xmb_x_offset==0 && !one_done)
 						{
 							one_done=true;
 							if(xmb_txt_buf_max>=MAX_XMB_TEXTS) {redraw_column_texts(_xmb_icon); xmb_txt_buf_max=0;}
@@ -17488,7 +17487,7 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 							draw_xmb_title(xmb_txt_buf[xmb_txt_buf_max].data, _xmb[_xmb_icon].member, cn, COL_XMB_TITLE, COL_XMB_SUBTITLE, _xmb_icon);
 							xmb_txt_buf_max++;
 						}
-						if(_xmb[_xmb_icon].member[cn].data!=-1 && ((ss_timer<dim_setting && dim_setting) || _xmb[_xmb_icon].first==cn || dim_setting==0) && abs(_xmb_x_offset)<100/* || (_xmb_icon != _xmb_icon_ && abs(_xmb_x_offset)>150))*/)
+						if(_xmb[_xmb_icon].member[cn].data!=-1 && ((ss_timer<dim_setting && dim_setting) || _xmb[_xmb_icon].first==cn || dim_setting==0) && abs(_xmb_x_offset)<100)
 						{
 							u8 xo1=(_xmb_y_offset>0 ? 1 : 0);
 							u8 xo2=1-xo1;
