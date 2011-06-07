@@ -19,16 +19,12 @@ void *               s_pMultiStreamMemory    = NULL;
 #define   CHANNEL   CELL_AUDIO_PORT_8CH
 #define   BLOCK     CELL_AUDIO_BLOCK_8
 
-//CellAudioPortParam   audioParam;
-//CellAudioPortConfig  portConfig;
-
-
 /**********************************************************************************/
 // MultiStream thread defines
 /**********************************************************************************/
 #define STACK_SIZE              (0x4000) // 16 kb
 #define EXIT_CODE               (0xbee)
-#define SERVER_PRIO             (16)
+#define SERVER_PRIO             (128)
 
 
 /**********************************************************************************
@@ -44,75 +40,44 @@ static int audioInitCell(void)
 {
 	s_receivedExitGameRequest = false;
 	int ret = 0;
-//	int ret = cellSysutilRegisterCallback(0, systemCallback, NULL);
-//	if (ret != CELL_OK) {
-//		printf( "error: cellSysutilRegisterCallback() = 0x%x\n", ret);
-//		exit(1);
-//	}
-
 	unsigned int portNum = -1;
-	CellVideoOutConfiguration v_config;
-
-	(void)memset(&v_config, 0, sizeof(CellVideoOutConfiguration));
-
-	/* video configuration */
-	v_config.resolutionId = CELL_VIDEO_OUT_RESOLUTION_720;
-	v_config.format       = CELL_VIDEO_OUT_BUFFER_COLOR_FORMAT_X8R8G8B8;
-	v_config.pitch        = 1280 * 4;
-
-//	do{
-//		ret = cellVideoOutConfigure(CELL_VIDEO_OUT_PRIMARY, &v_config, NULL, 0);
-//	} while(ret!=CELL_OK);
 
 
 	//	cellMSSystemConfigureSysUtil returns the following data:
 	//	Bits 0-3:	Number of available output channels
 	//	Bit    4:	Dolby On status
-//	unsigned int retSysUtil = cellMSSystemConfigureSysUtil();
-//	unsigned int numChans = (retSysUtil & 0x0000000F);
-//	unsigned int dolbyOn = (retSysUtil & 0x00000010) >> 4;
-//	printf("Number Of Channels: %u\n", numChans);
-//	printf("Dolby enabled: %u\n", dolbyOn);
+	//	unsigned int retSysUtil = cellMSSystemConfigureSysUtil();
+	//	unsigned int numChans = (retSysUtil & 0x0000000F);
+	//	unsigned int dolbyOn = (retSysUtil & 0x00000010) >> 4;
+	//	printf("Number Of Channels: %u\n", numChans);
+	//	printf("Dolby enabled: %u\n", dolbyOn);
 
 	ret = cellAudioInit();
-	if (ret !=CELL_OK)
-	{
-//		printf("error cellAudioInit\n");
-		return -1;
-	}
+	if (ret !=CELL_OK)	return -1;
 
 	// audio port open.
 	audioParam.nChannel = CHANNEL;
 	audioParam.nBlock   = BLOCK;
 
 	ret = cellAudioPortOpen(&audioParam, &portNum);
-//	printf("cellAudioPortOpen() : %d  port %d\n", ret, portNum);
 	if (ret != CELL_OK)
 	{
 		cellAudioQuit();
-//		printf("Error cellAudioPortOpen()\n");
 		return -1;
 	}
 	 
 	// get port config.
 	ret = cellAudioGetPortConfig(portNum, &portConfig);
-//	printf("cellAudioGetPortConfig() : %d\n", ret);
 	if (ret != CELL_OK)
 	{
 		cellAudioQuit();
-//		printf("Error cellAudioGetPortConfig\n");
 		return -1;
 	}
 
 	cellMSSystemConfigureLibAudio(&audioParam, &portConfig);
 
-
 	return portNum;
-
-
 }
-
-
 
 
 /**********************************************************************************
@@ -140,9 +105,6 @@ long InitialiseAudio( const long nStreams, const long nmaxSubs, int &_nPortNumbe
 	uint8_t prios[8] = {1, 0, 0, 0, 0, 0, 0, 0};
 #endif
 
-//	printf("Initialising\n");
-
-// Setup system memory allocation
 
 	cfg.channelCount=nStreams;
 	cfg.subCount=nmaxSubs;
@@ -217,18 +179,13 @@ int OpenFile( const char* pszFilename, long* pnSize, int nStartOffset )
 int ret;
 int fd;
 uint64_t	pos=0;
-//    printf("Open file: %s\n", pszFilename);
 
     ret = cellFsOpen (pszFilename, CELL_FS_O_RDONLY, &fd, NULL, 0);
-    if (ret) {
-//        printf ("cellFsOpen(%s) returned %d\n", pszFilename, ret);
-		return(-1);
-    }
+    if (ret) return(-1);
 
 	ret = cellFsLseek(fd,0,CELL_FS_SEEK_END, &pos);
 	if (ret!=0)
 	{
-//		printf("seek to enderror %x\n",ret);
 		cellFsClose (fd);
 		return(-2);
 	}
@@ -238,7 +195,6 @@ uint64_t	pos=0;
 	ret = cellFsLseek(fd, nStartOffset ,CELL_FS_SEEK_SET,&pos);
 	if (ret!=0)
 	{
-//		printf("seek to start error %x\n",ret);
 		cellFsClose (fd);
 		return(-2);
 	}
@@ -277,19 +233,16 @@ long LoadFile( const int fd, long ppData, long nReadSize, int nStartOffset, int 
 		ret=cellFsRead(fd, (void*)ppData, loadSize, &nRead);
 		if (ret!=0)
 		{
-//			printf("read error %x\n",ret);
 			cellFsClose (fd);
 			return(-1);
 		}
 
 	    if( (long)nRead != loadSize )		// Reached end of file and more data still required
 	    {
-//			printf("Looping..\n");
 			nRead-=nEndOffset;
 			ret = cellFsLseek(fd,nStartOffset,CELL_FS_SEEK_SET,&pos);	// Seek back to start
 			if (ret!=0)
 			{
-//				printf("seek error %x\n",ret);
 				cellFsClose (fd);
 				return(-1);
 			}
@@ -297,7 +250,7 @@ long LoadFile( const int fd, long ppData, long nReadSize, int nStartOffset, int 
 		ppData+=nRead;
 		nReadSize-=nRead;
     }
-	return(0);	// All file loaded
+	return(0);
 }
 
 /**********************************************************************************

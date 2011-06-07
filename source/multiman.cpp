@@ -91,7 +91,7 @@
 #include "fonts.h"
 //#include "video.h"
 
-SYS_PROCESS_PARAM(64, 0x100000)
+SYS_PROCESS_PARAM(1001, 0x100000)
 
 //colors (COLOR.INI)
 u32 COL_PS3DISC=0xff807000;
@@ -2023,6 +2023,7 @@ bool is_vba(char *rom)
 {
 	if( (strstr(rom, ".gba")!=NULL || strstr(rom, ".GBA")!=NULL 
 		|| strstr(rom, ".gbc")!=NULL || strstr(rom, ".GBC")!=NULL
+		|| strstr(rom, ".zip")!=NULL || strstr(rom, ".ZIP")!=NULL
 		|| strstr(rom, ".gb")!=NULL || strstr(rom, ".GB")!=NULL)
 		&& strstr(rom, ".jpg")==NULL && strstr(rom, ".JPG")==NULL)
 		return true;
@@ -3876,36 +3877,9 @@ CellConsoleInputProcessorResult _cellConsoleRESTART
 
 	(void) pvDummy; (void) iContinuation; (void)uiConnection; (void)iContinuation; (void) pcInput;
     cellConsolePrintf(uiConnection, "\nShutting down multiMAN...\n");
-
-/*		char* launchenvp[2];
-		char* launchargv[0x100];
-		memset(launchenvp, 0, sizeof(launchenvp));
-		memset(launchargv, 0, sizeof(launchargv));
-
-		launchenvp[0] = (char*)malloc(0x440);
-		snprintf(launchenvp[0], 0x440, "%s", mmbin);
-*/
-//	cellFsChmod(mmbin, 0170777ULL);
-//		sysProcessExitSpawn2(mmbin, (const char**)launchargv, (const char**)launchenvp, NULL, 0, 1001, SYS_PROCESS_SPAWN_STACK_SIZE_1M);
-
-
-/*	cellSysmoduleLoadModule(CELL_SYSMODULE_SYSUTIL_NP);
-#define NP_POOL_SIZE (128*1024)
-	uint8_t np_pool[NP_POOL_SIZE];
-	sceNpInit(NP_POOL_SIZE, np_pool);
-	SceNpDrmKey* k_licensee = NULL;
-//	system_call_1(36, (uint32_t) app_usrdir);
-	sceNpDrmProcessExitSpawn2(k_licensee, (char*)"/dev_hdd0/game/BLES80608/USRDIR/mm.ppu.self", (const char**)launchargv, (const char**)launchenvp, NULL, 0, 1001, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
-	sceNpTerm();
-	cellSysmoduleUnloadModule(CELL_SYSMODULE_SYSUTIL_NP);
-	*/
-//	sprintf(filename, "/dev_hdd0/game/%s/RELOAD", app_usrdir);
-//	system_call_1(36, (uint32_t) filename);
-//	syscall_mount(filename, mount_bdvd);
 	cellConsolePrintf(uiConnection, "Trying to restart...\n");
 //	debug_print=102030;
 
-	//to_reboot=1;
 	char reload_self[128];
 	sprintf(reload_self, "%s/RELOAD.SELF", app_usrdir);
 	if(stat(reload_self,&s3)>=0)
@@ -3966,18 +3940,11 @@ static int load_modules()
 	screenshot_param.game_title = "multiMAN Screenshots";
 	screenshot_param.game_comment = current_version_NULL;
 	cellScreenShotSetParameter (&screenshot_param);
+	cellScreenShotSetOverlayImage(app_homedir,	(char*) "ICON0.PNG", 50, 850);
 	cellScreenShotEnable();
-//	cellScreenShotSetOverlayImage(app_homedir,	(char*) "ICON0.PNG", 50, 50);
 
-	//cellSysmoduleInitialize();
 	cellSysmoduleLoadModule( CELL_SYSMODULE_AUDIO );
-	//ret = cellSysmoduleLoadModule( CELL_SYSMODULE_USBD );
-	cellSysmoduleLoadModule( CELL_SYSMODULE_RESC );
 	cellSysmoduleLoadModule( CELL_SYSMODULE_SPURS );
-	
-//	cellSysmoduleLoadModule(CELL_SYSMODULE_VIDEO_EXPORT);
-//	cellSysmoduleLoadModule(CELL_SYSMODULE_MUSIC_EXPORT);
-//	cellSysmoduleLoadModule(CELL_SYSMODULE_PHOTO_EXPORT);
 
 	cellMouseInit (1);
 	cellKbInit(1);
@@ -12863,11 +12830,12 @@ long TriggerStream( long nCh, long pSampleData1, long pSampleData2, const long n
 
 int LoadMP3(const char *mp3filename,long *addr, long *size, int *_mp3_freq)
 {
-unsigned int tSize=0;	// total size
-float tTime=0;			// total time
-int ret;
-CellMSMP3FrameHeader Hdr;
-unsigned int offset=0;
+	(void)_mp3_freq;
+//unsigned int tSize=0;	// total size
+//float tTime=0;			// total time
+//int ret;
+//CellMSMP3FrameHeader Hdr;
+//unsigned int offset=0;
 
 
 	if(!(mp3filename && addr && size))
@@ -12892,13 +12860,15 @@ unsigned int offset=0;
 
 	pData=pDataB;
 	// Load file.
-	if(*size>_mp3_buffer) *size=_mp3_buffer;
+	if((*size)>_mp3_buffer) (*size)=_mp3_buffer;
 	memset((void*)pDataB, 0x00 , (*size));
 	LoadFile(nFileHandle, pData, *size, 0, 0);
 
 	*addr=pData;
 //	printf("data size: 0x%x\n",(int)*size);
 
+	return(nFileHandle);
+/*
 	while(1)
 	{
 		ret=cellMSMP3GetFrameInfo((void*)pData,&Hdr);
@@ -12919,6 +12889,7 @@ unsigned int offset=0;
 // Using the packet size and packet time information, it is possible to build "Seek Tables".
 // Then, by knowing approximately what time (in seconds) you require to playback from,
 // you can start playback from the closest data packet by searching for the closest record in the table.
+*/
 
 /*		if (Hdr.ID3!=0)
 		{
@@ -12946,7 +12917,7 @@ unsigned int offset=0;
 			printf("Packet Time (secs): %f\n",Hdr.PacketTime);
 		} */
 //		printf("Packet Size (bytes): 0x%x\n",Hdr.PacketSize);
-
+/*
 		if (tSize==(unsigned int)*size)
 		{
 //			printf("MP3 File is valid.\n");
@@ -12962,7 +12933,8 @@ unsigned int offset=0;
 //			printf("%x,%x\n",tSize,(int)*size);
 			return -1;
 		}
-	}
+		
+	} */
 }
 
 void main_mp3( char *temp_mp3)
@@ -12995,33 +12967,15 @@ int main_mp3_th( char *temp_mp3)
 					0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
 
-//    if( !LoadModules() )
-//    {
-//        printf( "ERROR loading modules, quitting\n" );
-//        return -1;
-//    }
-
-//	sys_spu_initialize(6, 0);
-
-//	CellAudioPortParam audioParam;
-//	CellAudioPortConfig portConfig;
-
-//	if(portNum==-1)
-
 	if(multiStreamStarted==0) 
 		InitialiseAudio(MAX_STREAMS, MAX_SUBS, portNum, audioParam, portConfig);
-//	else
-//		free(mp3Memory);
 
 	// Initialise MP3
-
 	if(multiStreamStarted==0) {
-	sizeNeeded=cellMSMP3GetNeededMemorySize(2);	// Maximum 256 mono MP3's playing at one time
-	mp3Memory=(int*)malloc(sizeNeeded);
-	if(mp3Memory==NULL) return -1;
-//	printf("MP3: Space required: 0x%x. Memory addr: 0x%x\n",sizeNeeded, (int)*mp3Memory);
-	if ( (returnVal = cellMSMP3Init(2, (void*)mp3Memory)) != 0 ) return -1;
-
+		sizeNeeded=cellMSMP3GetNeededMemorySize(2);	// Maximum 256 mono MP3's playing at one time
+		mp3Memory=(int*)malloc(sizeNeeded);
+		if(mp3Memory==NULL) return -1;
+		if ( (returnVal = cellMSMP3Init(2, (void*)mp3Memory)) != 0 ) return -1;
 	}
 
 	// Setup the volumes on sub buss 1. By default all sub busses route to the master bus
@@ -13050,13 +13004,7 @@ int main_mp3_th( char *temp_mp3)
 	mp3_freq=44100;
 	LoadMP3((char*) my_mp3, &pSampleData, &nSizeSampleData, &mp3_freq);
 
-// Open streams channel
-//    nChannel = cellMSStreamOpen();
 
-
-
-//	sys_timer_usleep(fps60*60*2);	// Wait for audio to settle..
-//nChannel =
 	TriggerStream(	nChannel,
 								pSampleData,		// 1st buffer
 								pSampleData,					// 2nd buffer
@@ -13064,7 +13012,7 @@ int main_mp3_th( char *temp_mp3)
 								nSizeSampleData, 					// size of data (in bytes)
 						        mp3_freq,//SAMPLE_FREQUENCY,
 						        SAMPLE_CHANNELS);
-	if(nChannel == -1){printf("Trigger Stream Error: \n"); return -1;}
+	if(nChannel == -1) return -1;
 
 // ----- Main Loop -----
 
@@ -13152,7 +13100,6 @@ float vol;
 
     cellMSStreamSetInfo(nCh, &MS_Info);
 
-// Note: No callback has been setup. This sound will just constantly play. No callbacks required.
 	(void) cellMSSystemSetGlobalCallbackFunc(mp3_callback); 
 
     cellMSStreamPlay(nCh);
@@ -16923,20 +16870,20 @@ void apply_theme (const char *theme_file, const char *theme_path)
 
 
 	sprintf(th_file, "%s", "XMB0.PNG"); sprintf(th2_file, "%s/%s", theme_path, th_file);
-	sprintf(filename,  "/dev_hdd0/game/%s/PIC0.PNG", app_path);
+	sprintf(filename,  "%s/PIC0.PNG", app_homedir);
 	if(stat(th2_file, &s3)>=0) {
-		sprintf(filename,  "/dev_hdd0/game/%s/PIC0.PNG", app_path);
+		sprintf(filename,  "%s/PIC0.PNG", app_homedir);
 		file_copy(th2_file, filename, 0);
 	} else remove(filename);
 
 	sprintf(th_file, "%s", "XMB1.PNG"); sprintf(th2_file, "%s/%s", theme_path, th_file);
 	if(stat(th2_file, &s3)>=0) {
-		sprintf(filename,  "/dev_hdd0/game/%s/PIC1.PNG", app_path);
+		sprintf(filename,  "%s/PIC1.PNG", app_homedir);
 		file_copy(th2_file, filename, 0);
 	}
 
 	sprintf(th_file, "%s", "SND0.AT3"); sprintf(th2_file, "%s/%s", theme_path, th_file);
-	sprintf(filename,  "/dev_hdd0/game/%s/SND0.AT3", app_path);
+	sprintf(filename,  "%s/SND0.AT3", app_homedir);
 	if(stat(th2_file, &s3)>=0) {
 		file_copy(th2_file, filename, 0);
 	} else remove(filename);
@@ -19799,9 +19746,9 @@ int main(int argc, char **argv)
 	is_reloaded=0;
 
 	struct stat s4;
+	sprintf(app_homedir, "/dev_hdd0/game/%s",app_path);
 	if(strstr(argv[0],"/dev_hdd0/game/")==NULL)
 	{
-		sprintf(app_homedir, "/dev_hdd0/game/%s",app_path);
 		mkdir(app_homedir, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); 
 		sprintf(app_usrdir, "/dev_hdd0/game/%s/USRDIR",app_path);
 		mkdir(app_usrdir, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); 
@@ -20208,8 +20155,8 @@ int main(int argc, char **argv)
 	sprintf(filename, "%s/XMB1.PNG",app_usrdir);
 	if(stat(filename, &s2)>=0 && stat(blankBG, &s2)<0 ) file_copy(filename, blankBG, 0); */
 
-	sprintf(blankBG, "/dev_hdd0/game/%s/ICON0.PNG",app_path);
-	sprintf(filename, "%s/ICON0.PNG",app_usrdir);
+	sprintf(blankBG, "%s/ICON0.PNG", app_homedir);
+	sprintf(filename, "%s/ICON0.PNG", app_usrdir);
 	if(stat(filename, &s2)>=0) file_copy(filename, blankBG, 0);
 
 	if(V_WIDTH>1280)
@@ -20279,9 +20226,6 @@ int main(int argc, char **argv)
 	sprintf(filename, "%s/XMB Video", app_usrdir);
 	if(stat(filename, &s3)<0) mkdir(filename, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
 
-	sprintf(cache_dir, "/dev_hdd0/game/%s/cache", app_path);
-	sprintf(filename, "%s/cache", app_usrdir);
-	if(stat(filename, &s3)<0) rename(cache_dir, filename);
 	sprintf(cache_dir, "%s/cache", app_usrdir);
 	if(stat(filename, &s3)<0)
 	{
@@ -20572,7 +20516,7 @@ int main(int argc, char **argv)
 						   0, "multiMAN_downqueue" );
 
 	sys_ppu_thread_create( &misc_thr_id, misc_thread_entry,
-						   NULL, 512, app_stack_size,
+						   NULL, 1001, app_stack_size,
 						   0, "multiMAN_misc" );//SYS_PPU_THREAD_CREATE_JOINABLE
 
 
@@ -25874,6 +25818,7 @@ static void download_thread_entry( uint64_t arg )
 				sys_timer_usleep(1000*1000);
 				//cellSysutilCheckCallback();
 			}
+			sys_timer_usleep(3336);
 		}
 		sys_timer_usleep(5000*1000);
 //		cellSysutilCheckCallback();
@@ -25904,7 +25849,7 @@ static void misc_thread_entry( uint64_t arg )
 			main_mp3_th(force_mp3_file);
 			force_mp3=false;
 		}
-
+		sys_timer_usleep(3336);
 	}
 	sys_ppu_thread_exit( 0 );
 }
