@@ -11971,7 +11971,7 @@ int my_game_delete(char *path)
 			if(abort_copy) break;
 			file_counter--;
 
-			goto display_mess;
+			goto display_message;
 			}
 		else
 			{
@@ -11984,7 +11984,7 @@ int my_game_delete(char *path)
 //			DPrintf("Deleted: %s\n\n", f);
 //			if(f) free(f);
 
-			display_mess:
+			display_message:
 
 			int seconds= (int) (time(NULL)-time_start);
 			file_counter++;
@@ -12832,11 +12832,9 @@ void video_export( char *filename_v, char *album, int to_unregister )
 			if(ve_result < 1) break;
 			if(ve_result == CELL_VIDEO_EXPORT_UTIL_RET_OK || ve_result == CELL_VIDEO_EXPORT_UTIL_RET_CANCEL || ve_result == CELL_OK) break;
 			sys_timer_usleep (500 * 1000);
-//			flip();
 		}
 		}
 	}
-//	ret = sys_memory_container_destroy( memory_container );
 }
 
 
@@ -12844,14 +12842,8 @@ void video_export( char *filename_v, char *album, int to_unregister )
 
 
 //MP3
-
 extern volatile bool s_receivedExitGameRequest;
 static bool s_multiStreamUpdateThreadRunning;
-
-
-/**********************************************************************************/
-// global variables
-/**********************************************************************************/
 static float*        s_pOutputBuffers        = NULL;
 
 long	fps60 = 1000000 / 60;
@@ -12867,20 +12859,7 @@ CellMSFXReverbParams rparam;
 int SUBNUM = 1;
 int PLAYSUB = SUBNUM | CELL_MS_BUS_FLAG;
 
-/**********************************************************************************/
-// Function Prototypes
-/**********************************************************************************/
 long TriggerStream( long nCh, long pSampleData1, long pSampleData2, const long nSize, const long nSize2, const long nFrequency, const long nSampleChannels );
-
-/**********************************************************************************/
-// Static Function Prototypes
-/**********************************************************************************/
-
-
-
-/**********************************************************************************/
-// The main function
-/**********************************************************************************/
 
 int LoadMP3(const char *mp3filename,long *addr, long *size, int *_mp3_freq)
 {
@@ -13003,16 +12982,6 @@ int main_mp3_th( char *temp_mp3)
 		file_copy(temp_mp3, my_mp3, 0);
 	}
 
-/*
-			if(strstr(my_mp3, "SOUND.BIN")==NULL && strstr(my_mp3, "SILENCE.BIN")==NULL){
-				char *pathpos=strrchr(my_mp3,'/');
-				if(pathpos!=NULL){
-					load_texture(text_bmpUPSR, playBGR, 1920);
-					generateTexture( text_bmpUPSR, 1920, 1080, pathpos+1);
-				}
-			}
-			*/
-//	int i;
 	int returnVal;
 
 	// bus volumes. (Maximum volume for each speaker)
@@ -13130,29 +13099,10 @@ int main_mp3_th( char *temp_mp3)
 			return ret;
 		}
 	}
-*/	
-	//Wait for the MultiStream update thread to end
-
-/*
-	while(s_multiStreamUpdateThreadRunning){
-		sys_timer_usleep(fps60); 
-		flip();
-		cellSysutilCheckCallback();
-		pad_read();
-		if(new_pad & BUTTON_TRIANGLE) break;
-	}
-
 cellMSStreamClose(nChannel);
 cellMSCoreStop(nChannel, 0);
-
-*/
-
-//	if(multiStreamStarted!=0) ShutdownMultiStream();
 //	ShutdownMultiStream();
-
-
-//    UnloadModules();
-//	free(mp3Memory);
+}*/
     return 0;
 }
 
@@ -13899,12 +13849,10 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 
 				}
 
-					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
-					mouseX+=mouseXD; mouseY+=mouseYD;
-					if(mouseX>0.995f) {mouseX=0.995f;mouseXD=0.0f;} if(mouseX<0.0f) {mouseX=0.0f;mouseXD=0.0f;}
-					if(mouseY>0.990f) {mouseY=0.990f;mouseYD=0.0f;} if(mouseY<0.0f) {mouseY=0.0f;mouseYD=0.0f;}
-//					draw_triangle((mouseX-0.5f)*2.0f, (0.5f-mouseY)*2.0f, 0.02f, 0.035f, -1.0f, 0x2080ffff);
-//					draw_triangle((mouseX-0.0011f-0.5f)*2.0f, (0.5f-mouseY+0.0015f)*2.0f, 0.0258f, 0.043f, -1.0f, 0xd0d0d0ff);
+				cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+				mouseX+=mouseXD; mouseY+=mouseYD;
+				if(mouseX>0.995f) {mouseX=0.995f;mouseXD=0.0f;} if(mouseX<0.0f) {mouseX=0.0f;mouseXD=0.0f;}
+				if(mouseY>0.990f) {mouseY=0.990f;mouseYD=0.0f;} if(mouseY<0.0f) {mouseY=0.0f;mouseYD=0.0f;}
 
 				time ( &rawtime );
 				timeinfo = localtime ( &rawtime );
@@ -14020,9 +13968,9 @@ quit_viewer:
 				new_pad=0; old_pad=0;
 
 				if(osk_open!=2)	{
-					OutputInfo.result = CELL_OSKDIALOG_INPUT_FIELD_RESULT_OK; /* Result on-screen keyboard dialog termination */ 
-					OutputInfo.numCharsResultString = 128;	/* Specify number of characters for returned text */
-					OutputInfo.pResultString = Result_Text_Buffer;   /* Buffer storing returned text */ ;
+					OutputInfo.result = CELL_OSKDIALOG_INPUT_FIELD_RESULT_OK;
+					OutputInfo.numCharsResultString = 128;
+					OutputInfo.pResultString = Result_Text_Buffer;
 					open_osk(2, (char*) list[e].name);
 				}
 
@@ -14472,31 +14420,9 @@ retry_showtime:
 							}
 							else
 							{
-/*								pad_read();
-								char* launchenvp[2];
-								char* launchargv[1];
-								memset(launchenvp, 0, sizeof(launchenvp));
-								memset(launchargv, 0, sizeof(launchargv));
-								launchenvp[0] = (char*)malloc(0x440);
-								snprintf(launchenvp[0], 0x440, "showtime=%s", my_mp3_file);
-								char args[512]; sprintf(args, "file://%s", my_mp3_file);
-								int argslen=strlen(args)+1;
-
-								int pos = 0;
-								int i = 0;
-								while (pos < argslen) {
-									int len = strlen((char*)args + pos);
-									if (!len)
-										break;
-									launchargv[i] = (char*)malloc(len + 1);
-									strcpy(launchargv[i], (char*)args + pos);
-									pos += len + 1;
-									i++;
-								} */
 								unload_modules();
 								sprintf(filename, "%s/SHOWTIME.SELF", app_usrdir);
 								sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
-//								sys_game_process_exitspawn2(filename, (const char**)launchargv, (const char**)launchenvp, NULL, 0, 1001, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 							}
 						}
 						else
@@ -15772,11 +15698,6 @@ void write_last_state()
 	fpA = fopen ( filename2, "w" );
 	char CrLf[2]; CrLf [0]=13; CrLf [1]=10; CrLf[2]=0;
 	filename3[0]=0;
-/*	sprintf(filename3, "fullpng=%i\r\n", cover_mode);			fputs (filename3,  fpA ); 
-	sprintf(filename3, "display_mode=%i\r\n", display_mode);	fputs (filename3,  fpA ); 
-	sprintf(filename3, "showdir=%i\r\n", dir_mode);				fputs (filename3,  fpA ); 
-	sprintf(filename3, "overscan=%i\r\n", (int)(overscan*100));	fputs (filename3,  fpA ); 
-*/
 	sprintf(filename3, "game_sel=%i\r\n", game_sel);			fputs (filename3,  fpA ); 
 	sprintf(filename3, "user_font=%i\r\n", user_font);			fputs (filename3,  fpA ); 
 	fclose(fpA);
@@ -15801,28 +15722,6 @@ void parse_last_state()
 		{
 			if(line[0]==35) continue;
 
-/*	if(lock_display_mode==-1)
-	{
-		if(strstr (line,"fullpng=0")!=NULL) cover_mode=0;
-		if(strstr (line,"fullpng=1")!=NULL) cover_mode=1;
-		if(strstr (line,"fullpng=2")!=NULL) cover_mode=2;
-		if(strstr (line,"fullpng=3")!=NULL) cover_mode=3;
-		if(strstr (line,"fullpng=4")!=NULL) cover_mode=4;
-		if(strstr (line,"fullpng=5")!=NULL) cover_mode=5;
-		if(strstr (line,"fullpng=6")!=NULL) cover_mode=6;
-		if(strstr (line,"fullpng=7")!=NULL) cover_mode=7;
-		if(strstr (line,"fullpng=8")!=NULL) cover_mode=8;
-	}
-
-		if(strstr (line,"display_mode=0")!=NULL) {display_mode=0;}
-		if(strstr (line,"display_mode=1")!=NULL) {display_mode=1;}
-		if(strstr (line,"display_mode=2")!=NULL) {display_mode=2;}
-
-		if(strstr (line,"showdir=0")!=NULL) {dir_mode=0;}
-		if(strstr (line,"showdir=1")!=NULL) {dir_mode=1;}
-		if(strstr (line,"showdir=2")!=NULL) {dir_mode=2;}
-
-*/
 		if(strstr (line,"user_font=")!=NULL) {if(line[10]!=0x30) user_font=line[10]-0x30;}
 
 		if(strstr (line,"game_sel=")!=NULL) {
@@ -15830,31 +15729,7 @@ void parse_last_state()
 			game_sel=strtol(string1, NULL, 10);
 			if(game_sel<0 || game_sel>max_menu_list-1) game_sel=0;
 		}
-
-
-/*		if(strstr (line,"overscan=")!=NULL) {
-			int len = strlen(line)-2; for(i = 9; i < len; i++) {overscanS[i-9] = line[i];} overscanS[i-9]=0;
-			if(overscanS[1]==0 && overscanS[0]!=0) overscan=(float) (overscanS[0]-48)/100.0f;
-			else
-			if(overscanS[2]==0 && overscanS[1]!=0 && overscanS[0]!=0) overscan=(float) ((overscanS[0]-48)*10.0f + (overscanS[1]-48))/100.0f;
-			}
-			if(overscan>0.12f) overscan=0.12f;
-			if(overscan<-0.06f) overscan=-0.06f;
-			overscanX=(int) (1920*overscan);
-			overscanY=(int) (1080*overscan);
-			int overscanP=(int) (overscan*100);
-
-			if(overscanP>0 && overscanP<16)
-			{
-				sprintf(overscan_head,"               ");
-				overscan_head[overscanP]=0;
-			}
-			else
-				overscan_head[0]=0;
-*/
-
-
-		}
+	}
 
 	fclose ( fp );
 	}
@@ -16087,9 +15962,6 @@ if ( fp != NULL )
 
 		if(strstr (line,"clear_activity_logs=0")!=NULL) clear_activity_logs=0;
 		if(strstr (line,"clear_activity_logs=1")!=NULL) clear_activity_logs=1;
-
-//		if(strstr (line,"load_last_state=0")!=NULL) load_last_state=0;
-//		if(strstr (line,"load_last_state=1")!=NULL) load_last_state=1;
 
 		if(strstr (line,"lock_display_mode=0")!=NULL) lock_display_mode=0;
 		if(strstr (line,"lock_display_mode=1")!=NULL) lock_display_mode=1;
@@ -17032,142 +16904,132 @@ void apply_theme (const char *theme_file, const char *theme_path)
 
 	sprintf(temp_text, "Applying \x22%s\x22 theme, please wait...", pathpos+(pathpos[1]=='_' ? 2 : 1));
 
-				dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, temp_text, dialog_fun2, (void*)0x0000aaab, NULL );
-				flipc(60);
+	dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, temp_text, dialog_fun2, (void*)0x0000aaab, NULL );
+	flipc(60);
 
-				char th_file[32], th2_file[64];
+	char th_file[32], th2_file[64];
 
-				sprintf(th_file, "%s", "AVCHD.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
-				if(stat(filename, &s3)>=0) file_copy(filename, avchdBG, 0);
+	sprintf(th_file, "%s", "AVCHD.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
+	if(stat(filename, &s3)>=0) file_copy(filename, avchdBG, 0);
 
-				sprintf(th_file, "%s", "PICBG.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
-				if(stat(filename, &s3)>=0) file_copy(filename, userBG, 0);
+	sprintf(th_file, "%s", "PICBG.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
+	if(stat(filename, &s3)>=0) file_copy(filename, userBG, 0);
 
-				sprintf(th_file, "%s", "ICON0.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);
-				if(stat(filename, &s3)>=0) file_copy(filename, blankBG, 0);
+	sprintf(th_file, "%s", "ICON0.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);
+	if(stat(filename, &s3)>=0) file_copy(filename, blankBG, 0);
 
-				sprintf(th_file, "%s", "PICPA.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);
-				if(stat(filename, &s3)>=0) 
-				{ 
-					file_copy(filename, playBGR, 0);
-					//sprintf(filename,  "/dev_hdd0/game/%s/PIC1.PNG", app_path);
-					//file_copy(playBGR, filename, 0);
-				}
+	sprintf(th_file, "%s", "PICPA.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);
+	if(stat(filename, &s3)>=0) 	file_copy(filename, playBGR, 0);
 
-				sprintf(th_file, "%s", "XMB0.PNG"); sprintf(th2_file, "%s/%s", theme_path, th_file);
-				sprintf(filename,  "/dev_hdd0/game/%s/PIC0.PNG", app_path);
-				if(stat(th2_file, &s3)>=0) {
-					sprintf(filename,  "/dev_hdd0/game/%s/PIC0.PNG", app_path);
-					file_copy(th2_file, filename, 0);
-				} else remove(filename);
 
-				sprintf(th_file, "%s", "XMB1.PNG"); sprintf(th2_file, "%s/%s", theme_path, th_file);
-				if(stat(th2_file, &s3)>=0) {
-					sprintf(filename,  "/dev_hdd0/game/%s/PIC1.PNG", app_path);
-					file_copy(th2_file, filename, 0);
-				}
+	sprintf(th_file, "%s", "XMB0.PNG"); sprintf(th2_file, "%s/%s", theme_path, th_file);
+	sprintf(filename,  "/dev_hdd0/game/%s/PIC0.PNG", app_path);
+	if(stat(th2_file, &s3)>=0) {
+		sprintf(filename,  "/dev_hdd0/game/%s/PIC0.PNG", app_path);
+		file_copy(th2_file, filename, 0);
+	} else remove(filename);
 
-				//sprintf(th_file, "%s", "XMB2.PNG"); sprintf(th2_file, "%s/%s", theme_path, th_file);
-				//sprintf(filename,  "/dev_hdd0/game/%s/PIC2.PNG", app_path);
-				//if(stat(th2_file, &s3)>=0) {
-				//	file_copy(th2_file, filename, 0);
-				//} else remove(filename);
+	sprintf(th_file, "%s", "XMB1.PNG"); sprintf(th2_file, "%s/%s", theme_path, th_file);
+	if(stat(th2_file, &s3)>=0) {
+		sprintf(filename,  "/dev_hdd0/game/%s/PIC1.PNG", app_path);
+		file_copy(th2_file, filename, 0);
+	}
 
-				sprintf(th_file, "%s", "SND0.AT3"); sprintf(th2_file, "%s/%s", theme_path, th_file);
-				sprintf(filename,  "/dev_hdd0/game/%s/SND0.AT3", app_path);
-				if(stat(th2_file, &s3)>=0) {
-					file_copy(th2_file, filename, 0);
-				} else remove(filename);
+	sprintf(th_file, "%s", "SND0.AT3"); sprintf(th2_file, "%s/%s", theme_path, th_file);
+	sprintf(filename,  "/dev_hdd0/game/%s/SND0.AT3", app_path);
+	if(stat(th2_file, &s3)>=0) {
+		file_copy(th2_file, filename, 0);
+	} else remove(filename);
 
-				sprintf(th_file, "%s", "FMS.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);
-				if(stat(filename, &s3)>=0) file_copy(filename, playBG, 0);
+	sprintf(th_file, "%s", "FMS.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);
+	if(stat(filename, &s3)>=0) file_copy(filename, playBG, 0);
 
-				sprintf(th_file, "%s", "HDD.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
-				if(stat(filename, &s3)>=0) file_copy(filename, iconHDD, 0);
-				sprintf(th_file, "%s", "USB.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
-				if(stat(filename, &s3)>=0) file_copy(filename, iconUSB, 0);
-				sprintf(th_file, "%s", "BLU.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
-				if(stat(filename, &s3)>=0) file_copy(filename, iconBLU, 0);
-				sprintf(th_file, "%s", "NET.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
-				if(stat(filename, &s3)>=0) file_copy(filename, iconNET, 0);
-				sprintf(th_file, "%s", "OFF.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
-				if(stat(filename, &s3)>=0) file_copy(filename, iconOFF, 0);
-				sprintf(th_file, "%s", "CFC.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
-				if(stat(filename, &s3)>=0) file_copy(filename, iconCFC, 0);
-				sprintf(th_file, "%s", "SDC.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
-				if(stat(filename, &s3)>=0) file_copy(filename, iconSDC, 0);
-				sprintf(th_file, "%s", "MSC.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
-				if(stat(filename, &s3)>=0) file_copy(filename, iconMSC, 0);
-				int flipF;
-				for(flipF = 0; flipF<9; flipF++){
-					sprintf(th_file, "AUR%i.JPG", flipF); sprintf(filename, "%s/%s", theme_path, th_file);
-					if(stat(filename, &s3)>=0) {sprintf(th2_file, "%s/%s", app_usrdir, th_file); file_copy(filename, th2_file, 0);}
-				}
+	sprintf(th_file, "%s", "HDD.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
+	if(stat(filename, &s3)>=0) file_copy(filename, iconHDD, 0);
+	sprintf(th_file, "%s", "USB.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
+	if(stat(filename, &s3)>=0) file_copy(filename, iconUSB, 0);
+	sprintf(th_file, "%s", "BLU.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
+	if(stat(filename, &s3)>=0) file_copy(filename, iconBLU, 0);
+	sprintf(th_file, "%s", "NET.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
+	if(stat(filename, &s3)>=0) file_copy(filename, iconNET, 0);
+	sprintf(th_file, "%s", "OFF.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
+	if(stat(filename, &s3)>=0) file_copy(filename, iconOFF, 0);
+	sprintf(th_file, "%s", "CFC.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
+	if(stat(filename, &s3)>=0) file_copy(filename, iconCFC, 0);
+	sprintf(th_file, "%s", "SDC.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
+	if(stat(filename, &s3)>=0) file_copy(filename, iconSDC, 0);
+	sprintf(th_file, "%s", "MSC.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);
+	if(stat(filename, &s3)>=0) file_copy(filename, iconMSC, 0);
+	int flipF;
+	for(flipF = 0; flipF<9; flipF++){
+		sprintf(th_file, "AUR%i.JPG", flipF); sprintf(filename, "%s/%s", theme_path, th_file);
+		if(stat(filename, &s3)>=0) {sprintf(th2_file, "%s/%s", app_usrdir, th_file); file_copy(filename, th2_file, 0);}
+	}
 
-				for(flipF = 0; flipF<9; flipF++){
-					sprintf(th_file, "font%i.ttf", flipF); sprintf(filename, "%s/%s", theme_path, th_file);
-					if(stat(filename, &s3)>=0) {sprintf(th2_file, "%s/fonts/user/%s", app_usrdir, th_file); file_copy(filename, th2_file, 0);}
-				}
+	for(flipF = 0; flipF<9; flipF++){
+		sprintf(th_file, "font%i.ttf", flipF); sprintf(filename, "%s/%s", theme_path, th_file);
+		if(stat(filename, &s3)>=0) {sprintf(th2_file, "%s/fonts/user/%s", app_usrdir, th_file); file_copy(filename, th2_file, 0);}
+	}
 
-				sprintf(th_file, "%s", "BOOT.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "LEGEND2.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "BOOT.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "LEGEND2.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
 
-				sprintf(th_file, "%s", "XMB.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "XMB64.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "XMB2.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "XMBBG.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "PRB.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "GLO.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "GLC.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "GLC2.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "GLC3.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "XMB.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "XMB64.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "XMB2.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "XMBBG.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "PRB.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "GLO.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "GLC.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "GLC2.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "GLC3.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
 
-				sprintf(th_file, "%s", "NOID.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "DOX.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				load_texture(text_DOX, th2_file, dox_width);
+	sprintf(th_file, "%s", "NOID.JPG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "DOX.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	load_texture(text_DOX, th2_file, dox_width);
 
-				sprintf(th_file, "%s", "SBOX.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);		sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "CBOX.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);		sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "CBOX2.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "CBOX3.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "CBOX4.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "GBOX.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);		sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "GBOX2.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "SBOX.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);		sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "CBOX.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);		sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "CBOX2.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "CBOX3.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "CBOX4.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "GBOX.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);		sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "GBOX2.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
 
-				sprintf(th_file, "%s", "MP_HR.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				sprintf(th_file, "%s", "MP_LR.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "MP_HR.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	sprintf(th_file, "%s", "MP_LR.PNG"); sprintf(filename, "%s/%s", theme_path, th_file);	sprintf(th2_file, "%s/%s", app_usrdir, th_file); if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
 
-				if(V_WIDTH>1280)
-					sprintf(filename, "%s/MP_HR.PNG",app_usrdir);
-				else
-				{
-					sprintf(filename, "%s/MP_LR.PNG",app_usrdir);
-					mp_WIDTH=15, mp_HEIGHT=21; //mouse icon LR
-				}
+	if(V_WIDTH>1280)
+		sprintf(filename, "%s/MP_HR.PNG",app_usrdir);
+	else
+	{
+		sprintf(filename, "%s/MP_LR.PNG",app_usrdir);
+		mp_WIDTH=15, mp_HEIGHT=21; //mouse icon LR
+	}
 
-				if(stat(filename, &s3)>=0) {load_texture((unsigned char *) mouse, filename, mp_WIDTH);}
+	if(stat(filename, &s3)>=0) {load_texture((unsigned char *) mouse, filename, mp_WIDTH);}
 
-				sprintf(th_file, "%s", "SOUND.BIN"); sprintf(filename, "%s/%s", theme_path, th_file);
-				sprintf(th2_file, "%s/%s", app_usrdir, th_file);
-				remove(th2_file);
-				if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
-				if((stat(th2_file, &s3)>=0 && !(current_mp3!=0 && max_mp3!=0)) && theme_sound)
-					main_mp3((char*)th2_file); 
-				else 
-					{
-						if(!(current_mp3!=0 && max_mp3!=0))
-						main_mp3((char*)"SILENCE.BIN");
-					}
+	sprintf(th_file, "%s", "SOUND.BIN"); sprintf(filename, "%s/%s", theme_path, th_file);
+	sprintf(th2_file, "%s/%s", app_usrdir, th_file);
+	remove(th2_file);
+	if(stat(filename, &s3)>=0) { file_copy(filename, th2_file, 0); }
+	if((stat(th2_file, &s3)>=0 && !(current_mp3!=0 && max_mp3!=0)) && theme_sound)
+		main_mp3((char*)th2_file); 
+	else 
+		{
+			if(!(current_mp3!=0 && max_mp3!=0))
+			main_mp3((char*)"SILENCE.BIN");
+		}
 
-				sprintf(th_file, "%s", "COLOR.INI"); sprintf(filename, "%s/%s", theme_path, th_file);
-				sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); 
-				if(stat(filename, &s3)>=0) file_copy(filename, th2_file, 0); 
-				else {
-					sprintf(filename, "%s/COLOR.BIN", app_usrdir);
-					sprintf(th2_file, "%s/COLOR.INI", app_usrdir);
-					if(stat(filename, &s3)>=0) file_copy(filename, th2_file, 0) ;
-				}
-
+	sprintf(th_file, "%s", "COLOR.INI"); sprintf(filename, "%s/%s", theme_path, th_file);
+	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file); 
+	if(stat(filename, &s3)>=0) file_copy(filename, th2_file, 0); 
+	else 
+	{
+		sprintf(filename, "%s/COLOR.BIN", app_usrdir);
+		sprintf(th2_file, "%s/COLOR.INI", app_usrdir);
+		if(stat(filename, &s3)>=0) file_copy(filename, th2_file, 0) ;
+	}
 
 	load_texture(text_bmpIC, blankBG, 320);
 	if(cover_mode!=8)
@@ -17194,24 +17056,9 @@ void apply_theme (const char *theme_file, const char *theme_path)
 
 void draw_xmb_title(u8 *buffer, xmbmem *member, int cn, u32 col1, u32 col2, u8 _xmb_col)
 {
-/*		if(c_opacity2<0x21) c_opacity2=0x21;
-		if(c_opacity2>=0x20)
-		{
-			col1&=(0x00ffffff)|(c_opacity2<<24);
-			col2&=(0x00ffffff)|(c_opacity2<<24);
-		}*/
-//		print_label_ex( 0.0f, 0.0f, 0.8f, 0xff101010, str1, 1.03f, 0.0f, 0, 3.0f, 24.0f, 0);
-//		print_label_ex( 0.0f, 0.62f, 0.5f, 0xff101010, str2, 1.00f, 0.0f, 0, 3.0f, 24.0f, 0);
 		memset(buffer, 0, XMB_TEXT_WIDTH*XMB_TEXT_HEIGHT*4); //flush_ttf(buffer, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT);
-		//for(int fsr=0; fsr<XMB_TEXT_WIDTH*XMB_TEXT_HEIGHT*4; fsr+=4) *(uint32_t*) ((uint8_t*)(buffer)+fsr)=0x10101001;
-
-//		blur_texture(buffer, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT, 0, 0, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT,  0, 0, 2, 2);
 		if((_xmb_col==6 || _xmb_col==7) && xmb_game_bg)
 		{
-//			print_label_ex( 0.004f, 0.04f, 0.75f, 0x101010ff, member[cn].name, 1.04f, 0.0f, 0, 3.0f, 22.0f, 0);
-//			print_label_ex( 0.003f, 0.00f, 0.75f, 0x101010ff, member[cn].name, 1.04f, 0.0f, 0, 3.0f, 22.0f, 0);
-//			print_label_ex( 0.003f, 0.02f, 0.75f, 0x101010ff, member[cn].name, 1.04f, 0.0f, 0, 3.0f, 22.0f, 0);
-//			print_label_ex( 0.007f, 0.02f, 0.75f, 0x101010ff, member[cn].name, 1.04f, 0.0f, 0, 3.0f, 22.0f, 0);
 			print_label_ex( 0.005f, 0.03f, 0.75f, 0x80101010, member[cn].name, 1.04f, 0.0f, 0, 3.0f, 22.0f, 0);
 		}
 
@@ -17222,11 +17069,7 @@ void draw_xmb_title(u8 *buffer, xmbmem *member, int cn, u32 col1, u32 col2, u8 _
 			print_label_ex( 0.0f, 0.57f, 0.5f, col2, member[cn].subname, 1.02f, 0.0f, 0, 3.0f, 23.0f, 0);
 
 		flush_ttf(buffer, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT);
-//		if((_xmb_col==6 || _xmb_col==7) && xmb_game_bg)
-//		{
-//			blur_texture(buffer, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT, 0, 0, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT-32,  0, 0, 1, 1);
-//			blur_texture(buffer, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT, 0, 0, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT-32,  0, 0, 1, 2);
-//		}
+
 		print_label_ex( 0.004f, 0.02f, 0.75f, col1, member[cn].name, 1.04f, 0.0f, 0, 3.0f, 22.0f, 0);
 		flush_ttf(buffer, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT);
 
@@ -17414,7 +17257,7 @@ void reset_xmb(u8 _flag)
 {
 	for(int n=0; n<MAX_XMB_ICONS; n++)
 	{
-		if(_flag && n!=8) //skip retro
+		if(_flag && n!=8) //skip retro when resetting xmmb
 		{
 			xmb[n].size=0;
 			xmb[n].first=0;
@@ -18703,46 +18546,7 @@ void add_video_column()
 void add_emulator_column()
 {
 	if(is_retro_loading || xmb[8].init) return;
-/*
-	char string1[1024];
-	sprintf(list_file_state, "%s/XMBS.008", app_usrdir);
-	FILE *flist = fopen(list_file_state, "rb");
-	if(flist!=NULL)
-	{
-		fread((char*) &string1, 8, 1, flist);
-		if(strstr(string1, XMB_COL_VER)!=NULL)
-		{
-			fseek(flist, 0, SEEK_END);
-			int llist_size=ftell(flist)-8;
-			fseek(flist, 8, SEEK_SET);
-			fread((char*) &xmb[8], llist_size, 1, flist);
-			fclose(flist);
-			free_all_buffers();
-			for(int n=0; n<MAX_XMB_TEXTS; n++)
-			{
-				xmb_txt_buf[n].used=0;
-				xmb_txt_buf[n].data=text_bmpUPSR+(n*XMB_TEXT_WIDTH*XMB_TEXT_HEIGHT*4);
-			}
-			xmb_txt_buf_max=0;
-			for(int n=0; n<xmb[8].size; n++) xmb[8].member[n].data=-1;
-
-			if(xmb[8].size<1)
-			{
-				remove(list_file_state);
-				is_retro_loading=1;
-			}
-			else
-				is_retro_loading=0;
-		}
-		else
-		{
-			fclose(flist);
-			remove(list_file_state);
-			is_retro_loading=1;
-		}
-	}
-	else */
-		is_retro_loading=1;
+	is_retro_loading=1;
 
 	if(is_retro_loading)
 	{
@@ -18824,40 +18628,40 @@ void parse_settings()
 		else if(!strcmp(oini, "time_format"))		time_format		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "clear_activity_logs"))	clear_activity_logs		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "ftpd_on"))			ftp_service		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
-		else if(!strcmp(oini, "disable_options"))	disable_options		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "disable_options"))	disable_options	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "mount_hdd1"))		mount_hdd1		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 
 		else if(!strcmp(oini, "scan_avchd"))		scan_avchd		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
-		else if(!strcmp(oini, "expand_avchd"))		expand_avchd		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "expand_avchd"))		expand_avchd	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 
 		else if(!strcmp(oini, "xmb_sparks"))		xmb_sparks		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "xmb_popup"))			xmb_popup		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "xmb_game_bg"))		xmb_game_bg		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "xmb_cover"))			xmb_cover		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "verify_data"))		verify_data		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
-		else if(!strcmp(oini, "scan_for_apps"))		scan_for_apps		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
-		else if(!strcmp(oini, "full_png"))			initial_cover_mode		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "scan_for_apps"))		scan_for_apps	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "full_png"))			initial_cover_mode	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "user_font"))			user_font		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "theme_sound"))		theme_sound		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
-		else if(!strcmp(oini, "lock_display_mode"))	lock_display_mode		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "lock_display_mode"))	lock_display_mode	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "lock_fileman"))		lock_fileman	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "overscan"))			overscan		=(float)((float)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10)/100.f);
-		else if(!strcmp(oini, "display_mode"))		display_mode		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "display_mode"))		display_mode	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "showdir"))			dir_mode		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
-		else if(!strcmp(oini, "game_details"))		game_details		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "game_details"))		game_details	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "animation"))			animation		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 
-		else if(!strcmp(oini, "game_bg_overlay"))	game_bg_overlay		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
-		else if(!strcmp(oini, "gray_poster"))		gray_poster			=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
-		else if(!strcmp(oini, "confirm_with_x"))	confirm_with_x		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
-		else if(!strcmp(oini, "hide_bd"))			hide_bd				=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "game_bg_overlay"))	game_bg_overlay	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "gray_poster"))		gray_poster		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "confirm_with_x"))	confirm_with_x	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "hide_bd"))			hide_bd			=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		
-		else if(!strcmp(oini, "progress_bar"))		progress_bar		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "progress_bar"))		progress_bar	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "dim_titles"))		dim_setting		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "ss_timeout"))		ss_timeout		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
-		else if(!strcmp(oini, "deadzone_x"))		xDZ		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
-		else if(!strcmp(oini, "deadzone_y"))		yDZ		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
-		else if(!strcmp(oini, "parental_level"))	parental_level		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "deadzone_x"))		xDZ				=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "deadzone_y"))		yDZ				=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "parental_level"))	parental_level	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 
 		else if(!strcmp(oini, "bd_emulator"))		bd_emulator		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 
@@ -19447,7 +19251,7 @@ void draw_xmb_clock(u8 *buffer, const int _xmb_icon)
 
 		char xmb_date[32];
 		time ( &rawtime ); timeinfo = localtime ( &rawtime );
-		//int sec_char=0x2e; if( (timeinfo->tm_sec)&1 ) sec_char=0x3a;
+
 //		if(_xmb_icon==0)
 		{
 			if(date_format==0)	sprintf(xmb_date, "%d/%d %s:%02d", timeinfo->tm_mday, timeinfo->tm_mon+1, tmhour(timeinfo->tm_hour), timeinfo->tm_min); //, timeinfo->tm_sec
@@ -19460,7 +19264,6 @@ void draw_xmb_clock(u8 *buffer, const int _xmb_icon)
 		{
 			if(_xmb_icon==-1)
 			{
-			//	sprintf(xmb_date, "%s", "Scanning, please wait!");
 				if(time(NULL)&1)
 				{
 					set_texture(xmb[0].data, 128, 128);
@@ -19472,9 +19275,6 @@ void draw_xmb_clock(u8 *buffer, const int _xmb_icon)
 				set_texture(xmb[_xmb_icon].data, 128, 128);
 				display_img(1834, 74, 64, 64, 128, 128, 0.6f, 128, 128);
 			}
-//			else
-//				sprintf(xmb_date, "Loading %s", xmb[_xmb_icon].name);
-//			print_label_ex( 0.5f, 0.0f, 0.7f, 0xc0c0c0c0, xmb_date, 1.00f, 0.0f, 2, 6.40f, 36.0f, 1);
 		}
 
 		memset(buffer, 0, 36000); flush_ttf(buffer, 300, 30);
@@ -19581,31 +19381,17 @@ void draw_stars()
 }
 
 void launch_web_browser(char *start_page)
-{ // start web browser
-
-//if(MEMORY_CONTAINER_SIZE_ACTIVE < MEMORY_CONTAINER_SIZE_WEB)
 {
-//	sys_memory_container_destroy( memory_container );
 	int ret = sys_memory_container_create( &memory_container_web, MEMORY_CONTAINER_SIZE_WEB);
 	if(ret!=CELL_OK) {
-//		sprintf(string1, "Failed to create new memory container!");dialog_ret=0;		cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
-//		ret = sys_memory_container_create( &memory_container, MEMORY_CONTAINER_SIZE_ACTIVE);
 		goto err_web;
 	}
-//	else
-//		MEMORY_CONTAINER_SIZE_ACTIVE=MEMORY_CONTAINER_SIZE_WEB;
-}
 
-	cellWebBrowserConfig2(&config_full, CELL_WEBBROWSER_MK_VER(2, 0)); // initialize config
+	cellWebBrowserConfig2(&config_full, CELL_WEBBROWSER_MK_VER(2, 0)); 
 	cellWebBrowserConfigSetFunction2(&config_full, CELL_WEBBROWSER_FUNCTION2_MOUSE | CELL_WEBBROWSER_FUNCTION2_URL_INPUT | CELL_WEBBROWSER_FUNCTION2_SETTING | CELL_WEBBROWSER_FUNCTION2_BOOKMARK);
 	cellWebBrowserConfigSetTabCount2(&config_full, 2);
-	cellWebBrowserConfigSetHeapSize2(&config_full, 36 * 1024 * 1024); //2tabs 34mb and 62 container works
-	#if (CELL_SDK_VERSION<=0x210001)
-	cellWebBrowserConfigSetViewCondition2(&config_full, CELL_WEBBROWSER_VIEWCOND2_NO_FULL_SCREEN);	
-	#else
+	cellWebBrowserConfigSetHeapSize2(&config_full, MB(36)); //2tabs 34mb and 62 container works
 	cellWebBrowserConfigSetViewCondition2(&config_full, CELL_WEBBROWSER_VIEWCOND2_OVERFLOW_AUTO | CELL_WEBBROWSER_VIEWCOND2_TRANSPARENT | CELL_WEBBROWSER_VIEWCOND2_NO_FULL_SCREEN);
-	#endif
-
 	cellWebBrowserConfigSetUnknownMIMETypeHook2(&config_full, unknown_mimetype_callback, NULL);
 	cellWebBrowserEstimate2(&config_full, &mc_size);
 
@@ -19615,8 +19401,7 @@ void launch_web_browser(char *start_page)
 		www_running = 1;
 		sprintf(www_info, "%s", "Web browser mode");
 		cellWebBrowserInitialize(system_callback, memory_container_web);
-		cellWebBrowserCreate2(&config_full, start_page);//?d=MTk1MA
-		//screen_saver();
+		cellWebBrowserCreate2(&config_full, start_page);
 	}
 	else
 	{
@@ -19625,7 +19410,6 @@ err_web:
 		sprintf(www_info, "%s", "Game mode");
 //		sprintf(string1, "Browser disabled during Remote Play!\n\nNot enough memory to launch web browser!\n\nRequired memory: %.2f MB (allocated %.2f MB)", (double) mc_size/1024/1024, (double) MEMORY_CONTAINER_SIZE_ACTIVE/1024/1024);dialog_ret=0;		cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 		dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, "Not enough memory to launch web browser!\n\nPlease restart multiMAN and try again.", dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
-
 	}
 }
 
@@ -20012,9 +19796,6 @@ int main(int argc, char **argv)
 			while(*s!=0 && *s!='/' && n<32) {app_path[n]=*s++; n++;} app_path[n]=0;
 			}
 
-//	sprintf(disclaimer,  "/dev_hdd0/game/%s/DISCLM.BIN",app_path);
-//	remove(disclaimer);
-//	if(strstr(argv[0], "/RELOAD.SELF")!=NULL) is_reloaded=1; else 
 	is_reloaded=0;
 
 	struct stat s4;
@@ -20028,13 +19809,10 @@ int main(int argc, char **argv)
 	else
 		sprintf(app_usrdir, "/dev_hdd0/game/%s/USRDIR",app_path);
 
-	//sprintf(mmbin, "%s/RELOAD/PS3_GAME/USRDIR/EBOOT.BIN", app_usrdir);
-
 	char string1x[512], string2x[512], string3x[512], string1[1024], filename[1024];
 
 	sprintf(disclaimer,  "%s/DISCLM.BIN", app_usrdir);
 	sprintf(string1  ,  "%s/DISACC.BIN", app_usrdir);
-
 	cellMsgDialogAbort();
 
 
@@ -20073,12 +19851,7 @@ int main(int argc, char **argv)
 	if(ret!=CELL_OK && ret!=0) sys_process_exit(1);
 	cellSysutilEnableBgmPlayback();
 
-
-//	xmb=(xmb_def*)vm;
-
-
-//	flip();
-
+	// allocate buffers for images (one big buffer ~76MB)
 	u32 buf_align= (1920 * 1080 * 4);
 	u32 frame_buf_size = (buf_align * 9)+4976640;// for text_bmpS 320x320x12 -> 1920*648 * 4
 	frame_buf_size = ( frame_buf_size + 0xfffff ) & ( ~0xfffff );
@@ -20095,12 +19868,6 @@ int main(int argc, char **argv)
 
 	//pData = (long)text_bmp + buf_align * 8;//(long)memalign(128, _mp3_buffer*1024*1024);
 
-
-
-//	u32 frame_buf_size4 = 1920 * 540 * 4;
-//	frame_buf_size4 = ( frame_buf_size4 + 0xfffff ) & ( ~0xfffff );
-//	text_FMS= (u8 *) memalign(0x100000, frame_buf_size4); 
-//	if(png_out_mapmem( text_FMS, frame_buf_size4)) exit(-1);
 
 	xmb_icon_globe	=	text_FMS+( 9*65536);
 	xmb_icon_help	=	text_FMS+(10*65536);
@@ -20135,10 +19902,6 @@ int main(int argc, char **argv)
 
 //	text_???		=	text_FMS+(51*65536);
 
-//	u32 frame_buf_size3 = buf_align * 12;
-//	frame_buf_size3 = ( frame_buf_size3 + 0xfffff ) & ( ~0xfffff );
-//	text_bmpS = (u8 *) memalign(0x100000, frame_buf_size3);
-//	if(png_out_mapmem( text_bmpS, frame_buf_size3)) exit(-1);
 
 
 	u32 buf_align2= (320 * 320 * 4);
@@ -20191,6 +19954,7 @@ int main(int argc, char **argv)
 	url_base[24]=0x69; url_base[25]=0x6d; url_base[26]=0x61; url_base[27]=0x6e;
 	url_base[28]=0x00;
 
+	// use 32MB virtual memory pool (with vm_real_size) real memory for mp3 playback
 	sys_vm_memory_map(MB(32), MB(vm_real_size), SYS_MEMORY_CONTAINER_ID_INVALID, SYS_MEMORY_PAGE_SIZE_64K, SYS_VM_POLICY_AUTO_RECOMMENDED, &vm);
 	sys_vm_touch(vm, MB(vm_real_size));
 
@@ -20421,13 +20185,13 @@ int main(int argc, char **argv)
 	del_temp(app_temp);
 
 	rnd=time(NULL)&0x03;
-	sprintf(auraBG, "%s/AUR%i.JPG",app_usrdir, rnd);
-	sprintf(userBG, "%s/PICBG.JPG",app_usrdir);
+	sprintf(auraBG,		"%s/AUR%i.JPG",app_usrdir, rnd);
+	sprintf(userBG,		"%s/PICBG.JPG",app_usrdir);
 
-	sprintf(xmbicons, "%s/XMB.PNG", app_usrdir);
-	sprintf(xmbicons2, "%s/XMB2.PNG", app_usrdir);
-	sprintf(xmbdevs, "%s/XMB64.PNG", app_usrdir);
-	sprintf(xmbbg, "%s/XMBBG.PNG", app_usrdir);
+	sprintf(xmbicons,	"%s/XMB.PNG", app_usrdir);
+	sprintf(xmbicons2,	"%s/XMB2.PNG", app_usrdir);
+	sprintf(xmbdevs,	"%s/XMB64.PNG", app_usrdir);
+	sprintf(xmbbg,		"%s/XMBBG.PNG", app_usrdir);
 
 	sprintf(filename, "%s/XMBR.PNG", app_usrdir); remove(filename);
 
@@ -20569,24 +20333,6 @@ int main(int argc, char **argv)
 				pokeq(0x80000000002D8498ULL, 0x38A000064BD7623DULL ); // 09 symbols search
 				pokeq(0x80000000002D8504ULL, 0x38A000024BD761D1ULL ); // 0x002D7800 (/app_home) 2 search
 //				enable_sc36();
-				/*
-				pokeq(0x80000000002D8600ULL, 0x2F6465765F626476ULL ); // /dev_bdvd
-				pokeq(0x80000000002D8608ULL, 0x6400000000000000ULL );
-
-				pokeq(0x80000000002D8700ULL, 0x2F6170705F686F6DULL ); // /app_home
-				pokeq(0x80000000002D8708ULL, 0x6500000000000000ULL );
-
-				pokeq(0x80000000002D84D5ULL, 0x0000000000000000ULL ); // remove old dev_bdvd string
-				pokeq(0x80000000002D84DFULL, 0x0000000000000000ULL ); // remove old app_home string
-
-				pokeq(0x80000000002D8490ULL, 0x67E4002D60848600ULL ); // 0x002D8600 (/dev_bdvd)
-				pokeq(0x80000000002D8498ULL, 0x38A000094BD7623DULL ); // 09 symbols search
-				pokeq(0x80000000002D84C0ULL, 0x389D00094BD761C1ULL ); // 09 symbols replace
-
-				pokeq(0x80000000002D8500ULL, 0x6084870038A00009ULL ); // 0x002D7800 (/app_home) 9 search
-				pokeq(0x80000000002D8528ULL, 0xE87F0008389D0009ULL ); // 9 replace 
-				*/
-
 			}//D
 
 			payload=-1;
@@ -20758,7 +20504,6 @@ int main(int argc, char **argv)
 		reset_mount_points();
 	disable_sc36();
 
-//    if(payload==2) progress_bar=0; //c_firmware<3.55f && 
 
 	if(cover_mode==3) load_texture(text_FONT, userBG, 1920);
 
@@ -20809,79 +20554,7 @@ int main(int argc, char **argv)
 	}
 	else closedir(dir);
 
-//	mkdir(hdd_folder, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-//	fix_perm_recursive(hdd_folder);
-
 	int find_device=0;
-
-//system_call_8(837, (u64)device, (u64)format, (u64)point, a, b, c, (u64)buffer, len);
-
-//  pokeq( 0x80000000003EF154ULL, 0x4641540000000000ULL); //FAT
-//  pokeq( 0x80000000003EF5e4ULL, 0x4641540000000000ULL);
-
-//  pokeq( 0x80000000003EF154ULL, 0x5544460000000000ULL); //UDF
-
-//  pokeq( 0x80000000003EF5e4ULL, 0x5544460000000000ULL);
-
-//  pokeq( 0x80000000003EF60DULL, 0x3241380000000000ULL);
-//  pokeq( 0x80000000003EF605ULL, 0x3242E88000000000ULL);
-
-//  pokeq( 0x800000000018F6B0ULL, 0x480000483C008001ULL ); //40 9E 00 48 3C 00 80 01
-//  pokeq( 0x800000000018F720ULL, 0x480001202F9F0000ULL ); //41 9E 01 20 2F 9F 00 00
-//  pokeq( 0x8000000000192480ULL, 0x4800004C4092FEC4ULL ); //40 9E 00 4C 40 92 FE C4
-//pokeq( 0x8000000000192520ULL, 0x600000002FBA0000ULL ); //41 82 02 DC 2F BA 00 00  !! PROBLEM
-//pokeq( 0x800000000019282CULL, 0x63BD06664BFFD67DULL ); //63 BD 00 2B 4B FF D6 7D
-
-//  pokeq( 0x800000000019282CULL, 0x63BD00004BFFD67DULL ); //63 BD 00 2B 4B FF D6 7D
-
-//uint64_t ret2=0x00ULL;
-
-//	ret2 = syscall_838("/dev_usb000");
-//	ret2 = syscall_838("/dev_usb001");
-//	ret2 = syscall_838("/dev_bdvd");
-//	ret2 = syscall_838("/app_home");
-
-//	ret2 = syscall_837("CELL_FS_IOS:USB_MASS_STORAGE000", "CELL_FS_UDF", "/dev_bdvd", 0, 1, 0, 0, 0);
-//					sprintf(filename, "Error (%08X) occured!", (u32)ret2);
-//					dialog_ret=0;
-//					ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );
-//					wait_dialog();
-
-//CELL_FS_IOS:BDVD_DRIVE
-//	ret2 = syscall_837("CELL_FS_IOS:USB_MASS_STORAGE000", "CELL_FS_FAT", "/dev_bdvd", 0, 1, 0, 0, 0);
-//	ret2 = syscall_837("CELL_FS_IOS:BDVD_DRIVE", "CELL_FS_UDF", "/dev_bdvd", 0, 1, 0, 0, 0);
-//	ret2 = syscall_837("CELL_FS_IOS:PATA0_BDVD_DRIVE", "CELL_FS_UDF", "/dev_bdvd", 0, 1, 0, 0, 0);
-//	ret2 = syscall_837("CELL_FS_IOS:PATA0_BDVD_DRIVE", "CELL_FS_UDF", "/dev_usb000", 0, 1, 0, 0, 0);
-//	ret2 = syscall_837("CELL_FS_IOS:PATA1_BDVD_DRIVE", "CELL_FS_UDF", "/app_home", 0, 1, 0, 0, 0);
-//	ret2 = syscall_837("CELL_FS_IOS:BDVD_DRIVE", "CELL_FS_ISO9660", "/dev_bdvd", 0, 1, 0, 0, 0);
-
-
-/*
-
-	ret2 = syscall_837("CELL_FS_IOS:USB_MASS_STORAGE", "CELL_FS_UDF", "/dev_usb", 0, 0, 0, 0, 0);
-					sprintf(filename, "Error (%08X) occured!", (u32)ret2);
-					dialog_ret=0;
-					ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );
-					wait_dialog();
-
-	ret2 = syscall_838("/dev_hdd1");
-
-					sprintf(filename, "Error (%08X) occured!", (u32)ret2);
-					dialog_ret=0;
-					ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );
-					wait_dialog();
-
-	ret2 = syscall_837("CELL_FS_UTILITY:HDD1", "CELL_FS_UDF", "/dev_hdd1", 0, 0, 0, 0, 0);
-					sprintf(filename, "Error (%08X) occured!", (u32)ret2);
-					dialog_ret=0;
-					ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );
-					wait_dialog();
-
-
-//int ret = lv2FsMount("CELL_FS_IOS:USB_MASS_STORAGE006", "CELL_FS_UDF", "/dev_usb006", 0, 0, 0, 0, 0);
-
-*/
-
 
 	game_last_page=-1;
 	last_selected=-1;
@@ -20908,7 +20581,7 @@ int main(int argc, char **argv)
 
 	get_free_memory();
 
-	if (meminfo.avail<16777216)
+	if (meminfo.avail<16777216) // Quit if less than 16MB RAM available (at least 12 required for copy operations + 4 to be on the safe side)
 	{
 			dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, "Please restart multiMAN from PS3 XMB\xE2\x84\xA2", dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 			unload_modules(); sys_process_exit(1);
@@ -20920,25 +20593,6 @@ int main(int argc, char **argv)
 	{
 start_of_loop:
 
-	/*if(to_reboot){
-		to_reboot=0;
-		unload_modules();
-		cellSysmoduleLoadModule( CELL_SYSMODULE_GCM_SYS );
-		ret = load_modules();
-		if(ret!=CELL_OK && ret!=0) sys_process_exit(1);
-
-		MEMORY_CONTAINER_SIZE_ACTIVE = MEMORY_CONTAINER_SIZE;
-		ret = sys_memory_container_create( &memory_container, MEMORY_CONTAINER_SIZE_ACTIVE);
-		if(ret!=CELL_OK) 
-		{
-			MEMORY_CONTAINER_SIZE_ACTIVE = MEMORY_CONTAINER_SIZE - (2 * 1024 * 1024);
-			ret = sys_memory_container_create( &memory_container, MEMORY_CONTAINER_SIZE_ACTIVE);
-		}
-		if(ret!=CELL_OK) sys_process_exit(1);
-		first_launch=1;
-
-		goto reboot;
-	}*/
 
 	if(dim_setting>0)
 		{
@@ -20947,7 +20601,6 @@ start_of_loop:
 		}
 	else
 		{	dimc=0; dim=0; c_opacity_delta=0;}
-	// scan for plug/unplug devices
 	
 	int count_devices=0;
 	int dev_changed=0;
@@ -20957,8 +20610,6 @@ start_of_loop:
 	if(one_time) {one_time=0;goto skip_find_device;}
 	CellFsStat status;
 
-//	for(find_device=0;find_device<16;find_device++)
-//    if (cellFsOpendir((char*) "/", &dir_fd) == CELL_FS_SUCCEEDED)
 
 	if( (time(NULL)-last_refresh)>1 || first_launch || forcedevices!=0 )
 	{
@@ -21000,17 +20651,7 @@ start_of_loop:
 		for(find_device=0;find_device<16;find_device++)
 		{
 
-			//if(find_device==13) sprintf(filename, "/dev_none"); else sprintf(filename, "/%s", entryF.d_name);
-
-/*			if(find_device>0 && find_device<10) sprintf(filename, "/dev_usb00%i", find_device-1);
-			if(find_device==11) sprintf(filename, "/dev_bdvd");
-			if(find_device==0) sprintf(filename, "/dev_hdd0");
-			if(find_device==13) sprintf(filename, "/dev_none");
-			if(find_device==14) sprintf(filename, "/dev_sd");
-			if(find_device==15) sprintf(filename, "/dev_ms"); */
-
 			{
-//				if((cellFsStat(filename, &status) == CELL_FS_SUCCEEDED && ((forcedevices>>find_device) & 1)==0) || find_device==0)
 				if( (( (fdevices0>>find_device) & 1 ) ))// && ((forcedevices>>find_device) & 1)==0))// || find_device==0
 				{
 					fdevices|= 1<<find_device;
@@ -21019,7 +20660,7 @@ start_of_loop:
 					fdevices&= ~ (1<<find_device);
 			}
 
-			// limit to 16 devices
+
 			if(((fdevices>>find_device) & 1) && find_device!=11)
 			{
 				count_devices++;
@@ -21691,16 +21332,6 @@ DM2_load_textB:
 					set_texture( text_bmp, 1920, 1080); //PIC1.PNG
 					display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 					flip(); */
-
-//mip_texture( text_FONT, text_bmp, 1920, 1080, -4); //scale to 480x270
-//mip_texture( text_bmp, text_FONT, 480, 270, 4); //scale to 1920x1080
-
-//mip_texture( text_FONT, text_bmp, 1920, 1080, -3); //scale to 640x360
-//mip_texture( text_bmp, text_FONT, 640, 360, 3); //scale to 1920x1080
-//blur_texture( text_bmp, 1920, 1080, 0, 0, 1920, 1080, 4, 0, 1, 2);
-
-//mip_texture( text_bmpS, text_bmp, 1920, 1080, 6); //scale to 320x180
-//blur_texture(text_bmpS, 320, 180, 0, 0, 320, 180, 0, 0, 1);
 
 					draw_list_text( text_bmp, 1920, 1080, menu_list, max_menu_list, game_sel | (0x10000 * ((menu_list[0].flags & 2048)!=0)), dir_mode, display_mode, cover_mode, c_opacity, 1);
 
@@ -22422,13 +22053,6 @@ fixed_cover_7:
 					counter_png=40; 
 				} //mode7
 
-				if(cover_mode==8)
-				{
-					//draw column name
-//					draw_xmb_icon_text(xmb_icon);
-//					xmb_legend_drawn=0;
-				}
-
 			}
 
 		}
@@ -22651,19 +22275,14 @@ rename_title:
 
 		game_last_page=-1;
 		goto start_of_loop;
-//		uint64_t ret2=0x00ULL;
-//		ret2 = syscall_838("/dev_bdvd");
-//		ret2 = syscall_837("CELL_FS_IOS:BDVD_DRIVE", "CELL_FS_SIMPLE", "/dev_bdvd", 0, 1, 0, 0, 0);
-//		delete_entries(menu_list, &max_menu_list, 1);
-//		game_sel=0;
 	}
 
 
 	 if ( (new_pad & BUTTON_R1) && (lock_display_mode==-1) ) {// && cover_mode!=5
 next_for_FM:
-//	 	if(multiStreamStarted!=0) { cellMSStreamClose(nChannel); cellMSCoreStop(nChannel, 0);}
+
 		c_opacity_delta=16;	dimc=0; dim=1;
-//		memset(text_bmp, 0x00, 1920*1080*4);
+
 		if(cover_mode==3) {slide_screen_left(text_FONT); load_texture(text_bmpUPSR, playBGR, 1920);} else
 		if(cover_mode==4 || cover_mode==5) slide_screen_left(text_bmpUPSR); else slide_screen_left(text_bmp);
 		last_cover_mode=cover_mode;
@@ -22817,28 +22436,6 @@ skip_find_device:
 	is_game_loading=0;
 	if(read_pad_info()) goto force_reload;
 
-    // update the game folder
-
-
-/*	 if ( (new_pad & BUTTON_L2) && 0){		
-//open_setup:
- 		new_pad=0; old_pad=0;
-		dir_fixed=0; parse_ini(options_ini,1);
-		parse_color_ini();
-		load_texture(text_BLU_1, iconBLU, 320);
-		//if(cover_mode<3 || cover_mode>5)  load_texture(text_FMS, legend, 1665); else load_texture(text_FMS, playBG, 1920);
-		game_last_page=-1; old_fi=-1;
-		goto force_reload;
-		}
-*/
-
-/*	 if ( new_pad & BUTTON_START){
-		game_sel=0;
-		mode_list^=1;
-		old_fi=-1;
-		counter_png=0;
-		cover_mode=0;
-		} */
 
 	if ((old_pad & BUTTON_SELECT) && (new_pad & BUTTON_L3)){
 refresh_list:
@@ -22852,14 +22449,6 @@ refresh_list:
 		reset_xmb(1);
 		//if(cover_mode==8) reset_xmb(1);
 		goto start_of_loop;
-//		uint64_t ret2=0x00ULL;
-//		ret2 = syscall_838("/dev_bdvd");
-//		{sprintf(filename, "Error (%08X) occured while unmounting /dev_bdvd!", (u32)ret2); dialog_ret=0; ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();}
-//		ret2 = syscall_837("CELL_FS_IOS:BDVD_DRIVE", "CELL_FS_UDF", "/dev_ps2disc", 0, 1, 0, 0, 0);
-//		ret2 = syscall_837("CELL_FS_IOS:BDVD_DRIVE", "CELL_FS_SIMPLE", "/dev_bdvd", 0, 1, 0, 0, 0);
-//		ret2 = syscall_837("CELL_FS_IOS:BDVD_DRIVE", "CELL_FS_UDF", "/dev_bdvd", 0, 1, 0, 0, 0);
-//		{sprintf(filename, "Error (%08X) occured while mounting /dev_bdvd!", (u32)ret2); dialog_ret=0; ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();} 
-		//game_sel=0;
 	}
 
 	 if ( new_pad & BUTTON_L3){
@@ -22940,50 +22529,13 @@ update_title:
 					}
 
 				}
-//						sprintf(filename,  "/dev_hdd0/game/%s/ICON0.PNG", app_path);
-//						sprintf(string1, "%s/XMB Video/-XMB virtual Video folder.PNG", app_usrdir);
-//						file_copy(filename, string1, 0);
 retry_showtime_mm:
 						sprintf(filename, "%s/SHOWTIME.SELF", app_usrdir);
 						if(stat(filename, &s3)>=0)
 						{
-							
-/*							FILE *flist; 
-							sprintf(string1, "%s/TEMP/SHOWTIME.TXT", app_usrdir);
-							remove(string1);
-							flist = fopen(string1, "w");
-							sprintf(filename, "file://%s/XMB Video", app_usrdir);fputs (filename,  flist ); 
-							fclose(flist); 
-*/
-//							pad_read();
 							unload_modules();
 							sprintf(filename, "%s/SHOWTIME.SELF", app_usrdir);
 							sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
-
-/*							char* launchenvp[2];
-							char* launchargv[1];
-							memset(launchenvp, 0, sizeof(launchenvp));
-							memset(launchargv, 0, sizeof(launchargv));
-							launchenvp[0] = (char*)malloc(0x440);
-							snprintf(launchenvp[0], 0x440, "showtime=%s", my_mp3_file);
-							char args[512]; sprintf(args, "file://%s/XMB Video/", app_usrdir);
-							int argslen=strlen(args)+1;
-
-							int pos = 0;
-							int i = 0;
-							while (pos < argslen) {
-								int len = strlen((char*)args + pos);
-								if (!len)
-									break;
-								launchargv[i] = (char*)malloc(len + 1);
-								strcpy(launchargv[i], (char*)args + pos);
-								pos += len + 1;
-								i++;
-							}
-							//unload_modules();
-							//sprintf(filename, "%s/SHOWTIME.SELF", app_usrdir);
-							//sys_game_process_exitspawn2(filename, (const char**)launchargv, (const char**)launchenvp, NULL, 0, 1001, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
-*/
 						}
 						else
 						{
@@ -23024,41 +22576,6 @@ setperm_title:
 			new_pad=0; old_pad=0;
 			cellMsgDialogAbort(); flip();
 		}
-/*
-	if ((old_pad & BUTTON_R1) && c_firmware==3.41f)
-	{	
-
-		old_pad=0;
-		c_opacity_delta=16;	dimc=0; dim=1;
-		if(peekq(0x80000000000505d0ULL) == memvalnew || patchmode == -1)
-		{
-			pokeq(0x80000000000505d0ULL, memvaloriginal);
-			patchmode = 0;
-		}
-		else
-		{
-			pokeq(0x80000000000505d0ULL, memvalnew);
-			patchmode = 1;
-		}
-			//reset game list
-			old_fi=-1;
-			counter_png=0;
-			forcedevices=0xffff;
-			max_menu_list=0;
-			delete_entries(menu_list, &max_menu_list, 1);
-//			game_sel=0;
-	}
-	*/
-	/*
-	if ((new_pad & BUTTON_R2) && 0)
-		{
-			new_pad=0;
-			if(stat(helpMME, &s3)>=0)
-			{
-				unload_modules();
-				sys_game_process_exitspawn2((char*) helpMME, NULL, NULL, NULL, 0, 1001, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);	
-			}	
-		} */
 
 	if ((new_pad & BUTTON_R2) && game_sel>=0 && max_menu_list>0 && mode_list==0 && 0)
 	{
@@ -23066,12 +22583,9 @@ test_title:
 		time_start= time(NULL);
 			
 		abort_copy=0;
-
 		initConsole();
-
 		file_counter=0;
 		new_pad=0;
-		
 		global_device_bytes=0;
 
 		num_directories= file_counter= num_files_big= num_files_split= 0;
@@ -23127,7 +22641,6 @@ test_title:
 			
 		}
  
-// delete from devices	
 
 	if ( (new_pad & BUTTON_SQUARE) && game_sel>=0 && max_menu_list>0 && mode_list==0 && (!(menu_list[game_sel].flags & 2048)) && disable_options!=1 && disable_options!=3 && strstr(menu_list[game_sel].path,"/pvd_usb")==NULL && 0){
 delete_title:
@@ -23216,7 +22729,6 @@ delete_title:
 			}
 		}
 
-// copy from devices
 
 	if ((new_pad & BUTTON_CIRCLE) && game_sel>=0 && max_menu_list>0 && mode_list==0 && disable_options!=2 && disable_options!=3 && 0)//  && !patchmode
 		{
@@ -23398,20 +22910,7 @@ copy_title:
 						sprintf(filename, "/dev_usb00%c/%s/_%s", 47+dest, ini_usb_dir, p);
 
 
-					// try rename
 					ret=rename(name, filename);
-
-					/*
-					if(dest==0)   sprintf(filename, "%s\n\nSplit game copied to internal HDD (non bootable)", menu_list[game_sel].title);
-					else
-						sprintf(filename, "%s\n\nSplit game copied to external USB00%c (non bootable)", menu_list[game_sel].title, 47+curr_device);
-					
-					dialog_ret=0;
-
-					ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );					
-					
-					wait_dialog();
-					*/
 
 					}
 
@@ -23780,22 +23279,6 @@ cancel_theme_exit:
 				} 
 			}
 			if(xmb[1].first==8 && net_used_ignore()) {unload_modules(); sys_process_exit(1);}
-//			kernel_panic(1);
-/*			if(xmb[1].first==9) {
-				//save_s soft reset
-				//unload_modules(); 
-cellSysmoduleLoadModule(CELL_SYSMODULE_SYSUTIL_NP);
-				char reload_self[128];
-				sprintf(reload_self, "%s/EBOOT.BIN", app_usrdir);
-#define NP_POOL_SIZE (128*1024)
-	uint8_t np_pool[NP_POOL_SIZE];
-	sceNpInit(NP_POOL_SIZE, np_pool);
-	SceNpDrmKey* k_licensee = NULL;
-	sceNpDrmProcessExitSpawn2(NULL, (char*)reload_self, NULL, NULL, NULL, 0, 1001, SYS_PROCESS_PRIMARY_STACK_SIZE_64K);
-	sceNpTerm();
-	cellSysmoduleUnloadModule(CELL_SYSMODULE_SYSUTIL_NP);
-	unload_modules(); sys_process_exit(1);
-			}*/
 		}
 
 		if(xmb_icon==2 && (xmb[2].member[xmb[2].first].option_size || xmb[2].first<2) ) //settings
@@ -24126,9 +23609,9 @@ retry_showtime_xmb:
 			}
 			else
 			{
-				if(xmb[xmb_icon].member[xmb[xmb_icon].first].type==8 ) launch_snes_emu(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
-				else if(xmb[xmb_icon].member[xmb[xmb_icon].first].type==9) launch_fceu_emu(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
-				else if(xmb[xmb_icon].member[xmb[xmb_icon].first].type==10) launch_vba_emu(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
+					 if(xmb[xmb_icon].member[xmb[xmb_icon].first].type== 8) launch_snes_emu(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
+				else if(xmb[xmb_icon].member[xmb[xmb_icon].first].type== 9) launch_fceu_emu(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
+				else if(xmb[xmb_icon].member[xmb[xmb_icon].first].type==10) launch_vba_emu (xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
 				else if(xmb[xmb_icon].member[xmb[xmb_icon].first].type==11) launch_genp_emu(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
 			}
 		}
@@ -24153,7 +23636,6 @@ retry_showtime_xmb:
 			while(1)
 				{ // Picture Viewer Mode
 				use_analog=1;
-				//cellSysutilCheckCallback();
 				sprintf(image_file, "%s", xmb[xmb_icon].member[current_image].file_path);
 				if(strstr(image_file, ".jpg")!=NULL || strstr(image_file, ".JPG")!=NULL || strstr(image_file, ".jpeg")!=NULL || strstr(image_file, ".JPEG")!=NULL)
 				{
@@ -24514,36 +23996,6 @@ start_title:
 		join_copy=0;
 		struct stat s;
 		c_opacity_delta=16;	dimc=0; dim=1;
-/*
-		if(mode_list==1)	
-			{
-//			int prio = 1001;
-//	    	uint64_t flags = SYS_PROCESS_PRIMARY_STACK_SIZE_64K;
-			sprintf(filename, "/dev_hdd0/game/%s/USRDIR/homebrew/PS3_GAME", app_path);
-			time_start= time(NULL);
-	
-			abort_copy=0;
-			initConsole();
-			file_counter=0;
-			new_pad=0;
-			copy_mode=0;
-			copy_is_split=0;
-			my_game_copy((char *) menu_homebrew_list[game_sel].path, (char *) filename);
-			flip();
-
-			sprintf(filename, "/dev_hdd0/game/%s/USRDIR/homebrew/PARAM_HOMEBREW.SFO", app_path);
-			sprintf(string1,  "/dev_hdd0/game/%s/USRDIR/homebrew/PS3_GAME/PARAM.SFO", app_path);
-//			file_copy((char *) filename, (char *) string1);
-
-			sprintf(filename, "/dev_hdd0/game/%s/USRDIR/homebrew", app_path);
-			syscall_mount( (char *) filename, mount_bdvd, (char *)mount_point);
-			ret = unload_modules();
-			sprintf(filename, "/dev_hdd0/game/%s/USRDIR/homebrew/PS3_GAME/USRDIR/EBOOT.BIN", app_path);
-//			sys_game_process_exitspawn(filename, NULL, NULL, 0, 0, prio, flags);
-			sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 3071, SYS_PROCESS_PRIMARY_STACK_SIZE_512K);
-			exit(0);
-			}
-*/
 
 		if(parental_level<menu_list[game_sel].plevel && parental_level>0)
 		{
@@ -25144,32 +24596,7 @@ again_sc8:
 
 							menu_list[game_sel].user|=IS_BDMIRROR;
 							set_game_flags(game_sel);
-
 							rename (usb_mount0, usb_mount1);
-
-/*
-//dev_bdvd
-pokeq(0x80000000002D8608ULL, 0x642F5053335F4741ULL );
-pokeq(0x80000000002D8610ULL, 0x4D452F5553524449ULL );
-pokeq(0x80000000002D8618ULL, 0x522F47414D452E44ULL );
-pokeq(0x80000000002D8620ULL, 0x4154000000000000ULL );
-
-pokeq(0x80000000002D8498ULL, 0x38A0001A4BD7623DULL ); // 09 symbols search
-pokeq(0x80000000002D84C0ULL, 0x389D00094BD761C1ULL ); // 09 symbols replace
-
-//app_home
-
-pokeq(0x80000000002D8700ULL, 0x2F6465765F626476ULL );
-pokeq(0x80000000002D8708ULL, 0x642F5053335F4741ULL );
-pokeq(0x80000000002D8710ULL, 0x4D452F5553524449ULL );
-pokeq(0x80000000002D8718ULL, 0x522F47414D452E44ULL );
-pokeq(0x80000000002D8720ULL, 0x4154000000000000ULL );
-
-pokeq(0x80000000002D8500ULL, 0x6084870038A00022ULL ); // 0x002D7800 (/app_home) 9 search
-pokeq(0x80000000002D8528ULL, 0xE87F0008389D0009ULL ); // 9 replace
-
-system_call_1(36, (uint32_t) "/dev_hdd0/cache/BLES00XXX");
-*/
 							ret = mod_mount_table(just_drive, 1); //modify
 
 							if(ret)
@@ -25376,36 +24803,35 @@ skip_to_FM:
 		goto force_reload;
 	}
 
-	if ( new_pad & BUTTON_CIRCLE && cover_mode!=5 && cover_mode!=8 && net_used_ignore()) {
+	if ( new_pad & BUTTON_CIRCLE && cover_mode!=5 && cover_mode!=8 && net_used_ignore()) 
+	{
 		new_pad=0; old_pad=0;
 		c_opacity_delta=16;	dimc=0; dim=1;
 		dialog_ret=0;
 		ret = cellMsgDialogOpen2( type_dialog_yes_no, "Quit to XMB\xE2\x84\xA2 screen?", dialog_fun1, (void*)0x0000aaaa, NULL );
 		wait_dialog();
  		
-		if(dialog_ret==1){
+		if(dialog_ret==1)
+		{
 			reset_mount_points();
 
-	char list_file2[128];
-	int i;
-	sprintf(list_file2, "%s/LLIST.TXT", app_usrdir);
-	FILE *flist; 
-	remove(list_file2);
-	
-	flist = fopen(list_file2, "w");
-	sprintf(filename, "%s", "\xEF\xBB\xBF"); fputs (filename,  flist ); 
-	for(i=0;i<max_menu_list;i++)
-	{
-		sprintf(filename, "[%s] %s\r\n", menu_list[i].title_id, menu_list[i].title); fputs (filename,  flist ); 
-		sprintf(filename, "        --> %s\r\n",  menu_list[i].path); fputs (filename,  flist ); 
-		sprintf(filename, "%s", "\r\n"); fputs (filename,  flist ); 
-	}
-	fclose(flist);
-
+			char list_file2[128];
+			int i;
+			sprintf(list_file2, "%s/LLIST.TXT", app_usrdir);
+			FILE *flist; 
+			remove(list_file2);
+			
+			flist = fopen(list_file2, "w");
+			sprintf(filename, "%s", "\xEF\xBB\xBF"); fputs (filename,  flist ); 
+			for(i=0;i<max_menu_list;i++)
+			{
+				sprintf(filename, "[%s] %s\r\n", menu_list[i].title_id, menu_list[i].title); fputs (filename,  flist ); 
+				sprintf(filename, "        --> %s\r\n",  menu_list[i].path); fputs (filename,  flist ); 
+				sprintf(filename, "%s", "\r\n"); fputs (filename,  flist ); 
+			}
+			fclose(flist);
 			unload_modules(); sys_process_exit(1); break;
 		}
-		//		break; // exit
-	
 	}
 
 		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
@@ -25963,8 +25389,10 @@ else
 							draw_dir_pane( pane_r, max_dir_r, first_right, 22-(int)((1080*new_offset)/18.0f+1), pane_x_r);
 						}
 
+
 						//memset(text_bmpUPSR, 0x00, V_WIDTH*V_HEIGHT*4);
-						for(int fsr=0; fsr<V_WIDTH*V_HEIGHT*4; fsr+=4) *(uint32_t*) ((uint8_t*)(text_bmpUPSR)+fsr)=0x32323280;
+						for(int fsr=0; fsr<V_WIDTH*V_HEIGHT*4; fsr+=4) 
+							*(uint32_t*) ((uint8_t*)(text_bmpUPSR)+fsr)=0x32323280;
 
 						flush_ttf(text_bmpUPSR, V_WIDTH, V_HEIGHT);
 
@@ -25987,16 +25415,6 @@ else
 			}
 
 
-//					cellDbgFontPrintf( 0.4f, 0.4f, 1.0f,0xa0a0a0a0,"     OS GUI\n\n(not implemented)");
-
-
-
-//		draw_square((mouseX-0.5f)*2.0f, (0.5f-mouseY)*2.0f, 0.02f, 0.035f, 0.0f, 0x2080ffff);
-//		draw_square(-1.0f, (0.5f - 0.02f)*2.0f, 2.0f, 0.10f, 0.0f, 0x90909080);
-//		draw_square(-1.0f, (0.5f - 0.92f)*2.0f, 2.0f, 0.13f, 0.0f, 0x90909080);
-
-//		draw_fileman();
-
 		if ( (new_pad & BUTTON_CROSS) && mouseX>=0.89459375f && mouseX<=0.9195f && mouseY>=0.05222f && mouseY<=0.09666f && net_used_ignore()) 
 		{
 		dialog_ret=0; new_pad=0; old_pad=0;
@@ -26010,8 +25428,8 @@ else
 			new_pad=0; old_pad=0;
 		}
 
-  time ( &rawtime );
-  timeinfo = localtime ( &rawtime );
+		time ( &rawtime );
+		timeinfo = localtime ( &rawtime );
 
 //  DPrintf("\nCurrent local time and date: %s", asctime (timeinfo) );
 //  DPrintf("%02d:%02d:%02d (%i) %02d/%02d/%04d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, timeinfo->tm_wday, timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900 );
@@ -26255,14 +25673,6 @@ else
 						cellDbgFontPrintf( 0.85f, 0.03f, 0.7f,0x90909080," USB patch");
 			}
 			
-			// square for screen
-//			draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.9f, 0x101010a0);
-
-			// square for titles
-//			if(cover_mode==0)
-
-
-
 			if(mode_list==0)
 			{
 				if(dim==1)
@@ -26299,24 +25709,13 @@ else
 		if(cover_mode==5) draw_mouse_pointer(0);
 
 		if(!first_launch) flip();
-
-		//cellSysutilCheckCallback();
-	
-	}
-
+	} //end of main loop
 
 	reset_mount_points();
 	ret = unload_modules();
-
+	sys_process_exit(1);
 	return 0;
-}
-
-/*static void waitFlip(void)
-{
-	
-	while (cellGcmGetFlipStatus()!=0);// sys_timer_usleep(100);
-	cellGcmResetFlipStatus();
-}*/
+} //end of main
 
 void flip(void)
 {
@@ -26355,13 +25754,15 @@ void change_bri(u8 *buffer, int delta, u32 size)
 	u32 deltaR;
 	u32 deltaG;
 	u32 deltaB;
-//	u32 delta2;
+	float delta2=1.0f;		//positive increases brightness
+	if(delta<0) delta2=0.f; //negative decreases brightness
+	delta=abs(delta);		//size=+/-%
 	for(u32 fsr=0; fsr<size; fsr+=4) 
 	{
 		pixel=*(uint32_t*) ((uint8_t*)(buffer)+fsr);
-		deltaR = ((u32)((float)((pixel>>24)&0xff)*(1.0f+(float)delta/100.f)));if(deltaR>0xff) deltaR=0xff;
-		deltaG = ((u32)((float)((pixel>>16)&0xff)*(1.0f+(float)delta/100.f)));if(deltaG>0xff) deltaG=0xff;
-		deltaB = ((u32)((float)((pixel>> 8)&0xff)*(1.0f+(float)delta/100.f)));if(deltaB>0xff) deltaB=0xff;
+		deltaR = ((u32)((float)((pixel>>24)&0xff)*(delta2+(float)delta/100.f)));if(deltaR>0xff) deltaR=0xff;
+		deltaG = ((u32)((float)((pixel>>16)&0xff)*(delta2+(float)delta/100.f)));if(deltaG>0xff) deltaG=0xff;
+		deltaB = ((u32)((float)((pixel>> 8)&0xff)*(delta2+(float)delta/100.f)));if(deltaB>0xff) deltaB=0xff;
 		*(uint32_t*) ((uint8_t*)(buffer)+fsr)= deltaR<<24 | deltaG<<16 | deltaB<<8 | pixel&0xff;
 	}
 }
