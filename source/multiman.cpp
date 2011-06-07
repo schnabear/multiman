@@ -13262,7 +13262,7 @@ int readmem(unsigned char *_x, uint64_t _fsiz, uint64_t _chunk) //read lv2 memor
 }
 
 
-//replacemem( 0x6170705F686F6D65UUL, 0x6465765F62647664UUL); //app_home -> dev_dvd
+//replacemem( 0x6170705F686F6D65UUL, 0x6465765F62647664UUL); //app_home -> dev_bdvd
 void replacemem(uint64_t _val_search1, uint64_t _val_replace1)
 {
 
@@ -16656,7 +16656,7 @@ if(get_param_sfo_field((char *)game_param_sfo, (char *)"APP_VER", (char *)temp_v
 		}
 		else
 		 {
-				sprintf(filename, "Cannot find update information for this game!"); 
+				sprintf(filename, "Cannot find update information for this title!"); 
 				dialog_ret=0;
 				ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );					
 				wait_dialog();
@@ -17526,7 +17526,7 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 				int first_xmb_mem = _xmb[_xmb_icon].first;
 				int cnmax=3;
 				if(_xmb[_xmb_icon].first>2 && _xmb_y_offset>0) {first_xmb_mem--; cn3--;}
-				for(int m=0;m<4;m++) // make it pleasureble to watch while loading column
+				for(int m=0;m<4;m++) // make it pleasureable to watch while loading column
 				{
 					if(m==1)
 					{
@@ -17764,7 +17764,7 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 		{
 			set_texture((http_active?xmb[9].data:xmb_icon_ftp), 128, 128);
 			display_img(1770, 74, 64, 64, 128, 128, 0.0f, 128, 128);
-			/*u8 pZ=32;
+			/*u8 pZ=32; // icon pulsing
 			if(angle<180.f)
 				pZ=(int)((angle/180.f) * 48.f);
 			else
@@ -19436,19 +19436,6 @@ void init_xmb_icons(t_menu_list *list, int max, int sel)
 		if(xmb_icon==3) add_photo_column();
 		if(xmb_icon==8) add_emulator_column();
 
-/*
-	u8 type; //0 unkn, 1 game, 2 video from gamelist, 3 showtime vid, 4 music, 5 photo, 6 function, 7 setting
-	u8 status; //0 idle, 1=loading, 2 loaded, 9 inactive
-	int game_id; //pointer to menu_list[id]
-	char name[128];
-	char subname[128];
-	int	data; //pointer to text image (xmbtexts) xmb_txt_buf
-	u8	*icon; //pointer to icon image
-	u16	iconw;
-	u16	iconh;
-	char file_path[512]; //path to entry file
-	char icon_path[512]; //path to entry icon
-*/
 
 }
 
@@ -19994,7 +19981,7 @@ int main(int argc, char **argv)
 	ret = cellSysmoduleLoadModule( CELL_SYSMODULE_GCM_SYS );
 	if (ret != CELL_OK) sys_process_exit(1);
 	else unload_mod|=8;
-//	fast_files_mem = memalign(8, sizeof(t_fast_files)*MAX_FAST_FILES);
+
 	host_addr = memalign(0x100000, 0x200000);
 	if(cellGcmInit(0x10000, 0x200000, host_addr) != CELL_OK) sys_process_exit(1);
 	if(initDisplay()!=0) sys_process_exit(1);
@@ -20524,12 +20511,6 @@ int main(int argc, char **argv)
 	load_texture(text_CFC_3, iconCFC, 320);
 	load_texture(text_SDC_4, iconSDC, 320);
 	load_texture(text_MSC_5, iconMSC, 320);
-
-//	sprintf(mmbin, "%s/RELOAD.SELF", app_usrdir);
-
-	sprintf(filename, "/dev_hdd0/game/%s/GAMES", app_path);
-	if(stat(filename, &s3)>=0) rmdir(filename);
-//	mkdir(filename, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); 
 
 	sprintf(filename, "%s/XMB Video", app_usrdir);
 	if(stat(filename, &s3)<0) mkdir(filename, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
