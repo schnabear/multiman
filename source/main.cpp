@@ -25,7 +25,7 @@
 //#include <sysutil/sysutil_discgame.h>
 #include <sysutil/sysutil_common.h>
 
-SYS_PROCESS_PARAM(1001, 0x100000)
+SYS_PROCESS_PARAM(64, 0x10000)
 
 int main(int argc, char **argv) 
 {
