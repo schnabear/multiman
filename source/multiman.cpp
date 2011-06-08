@@ -18089,7 +18089,8 @@ thumb_ok:
 				//if(xmb[5].size<9)	draw_xmb_bare(5, 1, 0, 0);
 				if(xmb[5].size>=MAX_XMB_MEMBERS) break;
 				sort_xmb_col(xmb[5].member, xmb[5].size, 2);
-		}
+				sys_timer_usleep(1668); //let other threads run, too
+			}
 		free_all_buffers();
 		free(pane);
 
@@ -18141,6 +18142,7 @@ static void add_photo_column_thread_entry( uint64_t arg )
 				/*type*/5, /*status*/i_status, /*game_id*/-1, /*icon*/xmb_icon_photo, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)t_ip, 0, 0);
 				//if(xmb[3].size<12)	draw_xmb_bare(3, 1, 0, 0);
 				if(xmb[3].size>=MAX_XMB_MEMBERS) break;
+				sys_timer_usleep(1668); //let other threads run, too
 			}
 		}
 
@@ -18199,6 +18201,7 @@ static void add_music_column_thread_entry( uint64_t arg )
 				//if(xmb[4].size<9)	draw_xmb_bare(4, 1, 0, 0);
 				if(xmb[4].size>=MAX_XMB_MEMBERS) break;
 				sort_xmb_col(xmb[4].member, xmb[4].size, 0);
+				sys_timer_usleep(1668); //let other threads run, too
 			}
 		}
 
@@ -18462,7 +18465,7 @@ void add_photo_column()
 	xmb[3].init=1;
 	sys_ppu_thread_create( &addpic_thr_id, add_photo_column_thread_entry,
 						   0, 
-						   misc_thr_prio, app_stack_size,
+						   misc_thr_prio-5, app_stack_size,
 						   0, "multiMAN_add_photo" );//SYS_PPU_THREAD_CREATE_JOINABLE
 }
 
@@ -18473,7 +18476,7 @@ void add_music_column()
 	xmb[4].init=1;
 	sys_ppu_thread_create( &addmus_thr_id, add_music_column_thread_entry,
 						   0, 
-						   misc_thr_prio, app_stack_size,
+						   misc_thr_prio-5, app_stack_size,
 						   0, "multiMAN_add_music" );//SYS_PPU_THREAD_CREATE_JOINABLE
 }
 
@@ -18485,7 +18488,7 @@ void add_video_column()
 	xmb[5].init=1;
 	sys_ppu_thread_create( &addvid_thr_id, add_video_column_thread_entry,
 						   0, 
-						   misc_thr_prio, app_stack_size,
+						   misc_thr_prio-5, app_stack_size,
 						   0, "multiMAN_add_video" );//SYS_PPU_THREAD_CREATE_JOINABLE
 }
 
@@ -18499,7 +18502,7 @@ void add_emulator_column()
 		xmb[8].init=1;
 		sys_ppu_thread_create( &addret_thr_id, add_retro_column_thread_entry,
 							   0, 
-							   misc_thr_prio, app_stack_size,
+							   misc_thr_prio-5, app_stack_size,
 							   0, "multiMAN_add_retro" );
 	}
 }
@@ -19181,11 +19184,15 @@ void init_xmb_icons(t_menu_list *list, int max, int sel)
 
 		is_game_loading=0;
 
-		if(xmb_icon==5) add_video_column();
+		/*if(xmb_icon==5) add_video_column();
 		if(xmb_icon==4) add_music_column();
 		if(xmb_icon==3) add_photo_column();
-		if(xmb_icon==8) add_emulator_column();
+		if(xmb_icon==8) add_emulator_column();*/
 
+		add_video_column();
+		add_music_column();
+		add_photo_column();
+		add_emulator_column();
 
 }
 
@@ -20515,7 +20522,7 @@ int main(int argc, char **argv)
 						   0, "multiMAN_downqueue" );
 
 	sys_ppu_thread_create( &misc_thr_id, misc_thread_entry,
-						   NULL, 1001, app_stack_size,
+						   NULL, misc_thr_prio, app_stack_size,
 						   0, "multiMAN_misc" );//SYS_PPU_THREAD_CREATE_JOINABLE
 
 
@@ -20844,18 +20851,18 @@ start_of_loop:
 		}
 		sort_entries(menu_list, &max_menu_list );
 		if(cover_mode!=5 && cover_mode!=8 && !first_launch) load_texture(text_FMS, legend, 1665);
-		if(cover_mode==8 && !first_launch) 
+		if(!first_launch) 
 		{
 			if(dev_removed)
 			{
 				reset_xmb_checked();
 				xmb[6].init=0; xmb[7].init=0;
-				init_xmb_icons(menu_list, max_menu_list, game_sel );
+				if(cover_mode==8) {free_all_buffers(); init_xmb_icons(menu_list, max_menu_list, game_sel );}
 			}
 			else
 			{
 				reset_xmb(1);
-				init_xmb_icons(menu_list, max_menu_list, game_sel );
+				if(cover_mode==8) {free_all_buffers(); init_xmb_icons(menu_list, max_menu_list, game_sel );}
 			}
 		}
 		dev_changed=0;
@@ -22381,6 +22388,7 @@ skip_find_device:
 
 
 	if ((old_pad & BUTTON_SELECT) && (new_pad & BUTTON_L3)){
+		reset_xmb(1);
 refresh_list:
 		new_pad=0; is_reloaded=0;
 		//sys_timer_usleep(1*1000*1000);
@@ -22389,7 +22397,7 @@ refresh_list:
 		counter_png=0;
 		forcedevices=0xFFFF;
 		max_menu_list=0;
-		reset_xmb(1);
+		
 		//if(cover_mode==8) reset_xmb(1);
 		goto start_of_loop;
 	}
@@ -22670,6 +22678,7 @@ delete_title:
 				}
 			termConsole();
 			}
+			xmb[6].init=0; xmb[7].init=0;
 		}
 
 
@@ -22938,7 +22947,7 @@ copy_title:
 			if(game_sel>max_menu_list-1) game_sel=max_menu_list-1;
 			termConsole();
 			}
-	
+			xmb[6].init=0; xmb[7].init=0;
 		}
 
 overwrite_cancel:
@@ -23140,6 +23149,7 @@ copy_from_bluray:
 			//forcedevices=(1);
 			if(game_sel>max_menu_list-1) game_sel=max_menu_list-1;
 			game_last_page=-1;
+			xmb[6].init=0; xmb[7].init=0;
 		}
 
 overwrite_cancel_bdvd:
@@ -25137,8 +25147,9 @@ else
 				}
 				else
 					cover_mode=4;
-				/*
+				
 				if(lock_display_mode!=-1) cover_mode=lock_display_mode;
+				/*
 				new_pad=0; old_pad=0; 
 				old_fi=-1;
 				counter_png=0; */
@@ -25819,6 +25830,7 @@ static void download_thread_entry( uint64_t arg )
 			}
 			sys_timer_usleep(3336);
 		}
+		sys_ppu_thread_yield();
 		sys_timer_usleep(5000*1000);
 //		cellSysutilCheckCallback();
 	}
@@ -25838,9 +25850,13 @@ static void misc_thread_entry( uint64_t arg )
 		{	
 			drawing_xmb=1;
 			draw_whole_xmb(xmb_icon);
+			sys_ppu_thread_yield();
 		}
 		else
-			sys_timer_usleep(1000*1000);
+			sys_timer_usleep(500*1000);
+
+		sys_ppu_thread_yield();
+
 
 		cellConsolePoll();
 		if(force_mp3)
