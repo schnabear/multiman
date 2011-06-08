@@ -20864,6 +20864,7 @@ start_of_loop:
 				reset_xmb(1);
 				if(cover_mode==8) {free_all_buffers(); init_xmb_icons(menu_list, max_menu_list, game_sel );}
 			}
+
 		}
 		dev_changed=0;
 		dev_removed=0;
@@ -20877,7 +20878,7 @@ start_of_loop:
 		sort_entries(menu_list, &max_menu_list );
 		sprintf(avchdBG, "%s/AVCHD.JPG",app_usrdir);
 		load_texture(text_bmpUBG, avchdBG, 1920);
-		//if(cover_mode==5) load_texture(text_bmpUPSR, playBGR, 1920);
+		
 		if(cover_mode==3) load_texture(text_FONT, userBG, 1920);
 		first_launch=0;
 		if(cover_mode!=5) load_texture(text_FMS, legend, 1665); else set_fm_stripes();

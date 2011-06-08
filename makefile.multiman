@@ -20,7 +20,6 @@ PSN_PKG_NPDRM = psn_package_npdrm
 CONTENT_ID=MM4PS3-$(APPID)_00-MULTIMANAGER0200
 
 PPU_SRCS = $(MM)graphics.cpp $(MM)multiman.cpp $(MM)peek_poke.cpp $(MM)mm.cpp $(MM)hvcall.cpp $(MM)syscall36.cpp $(MM)syscall8.c $(MM)fonts.c $(MM)fonts_render.c $(MM)mscommon.cpp 
-#PPU_SRCS += $(MM)of_ftpcmd.c $(MM)of_functions.c $(MM)of_sconsole.c $(MM)of_main.c
 PPU_SRCS += $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS) 
 PPU_TARGET = $(MM_REL)_BARE.elf
 
