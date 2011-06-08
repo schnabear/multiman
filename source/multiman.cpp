@@ -20903,8 +20903,6 @@ start_of_loop:
 	}
 
 	
-//	if(no_video) goto skip_1;
-//	if(cover_mode!=1 && cover_mode!=6 && cover_mode!=7) game_last_page=-1;
 	if(game_sel<0) game_sel=0;
 
 	if(is_reloaded) {is_reloaded=0; //max_menu_list=reloaded_menu_list; 
