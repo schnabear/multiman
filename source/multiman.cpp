@@ -5168,7 +5168,7 @@ int load_raw_texture(u8 *data, char *name, uint16_t _DW)
 			fseek(fpA, 0, SEEK_SET);
 			if(_DW!=_DWO)
 			{
-				unsigned char* buf = (unsigned char *) memalign(128, BUF_SIZE);
+				unsigned char* buf = (unsigned char *) memalign(128, ((_DWO * _DHO * 4)<BUF_SIZE?(_DWO * _DHO * 4):BUF_SIZE));
 				if(buf)
 				{
 					fread(buf, (_DWO * _DHO * 4), 1, fpA);
@@ -7590,7 +7590,7 @@ gs_cover:
 	y=top_o+(120.0f * 2.0f) + 77.0f;
 	sprintf(label, "Permanently delete game files."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
 	sprintf(label, "If you are running low on disk space, delete the game from your"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "hard disk drive. Use this option with care!"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
+	sprintf(label, "hard disk drive. Use this option with caution!"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
 
 	if(is_locked || !is_game) info_color=0xc0707070; else info_color=0xffa0a0a0;
 	y=top_o+(120.0f * 3.0f) + 77.0f;
@@ -16483,7 +16483,7 @@ void slide_xmb_right()
 void select_theme()
 {
 		slide_xmb_left(1);
-		t_dir_pane_bare *pane =  (t_dir_pane_bare *) malloc(sizeof(t_dir_pane_bare)*MAX_PANE_SIZE_BARE);
+		t_dir_pane_bare *pane =  (t_dir_pane_bare *) memalign(16, sizeof(t_dir_pane_bare)*MAX_PANE_SIZE_BARE);
 		int max_dir=0;
 		ps3_home_scan_ext_bare(themes_dir, pane, &max_dir, (char*)".mmt"); 
 		opt_list_max=0;
@@ -16544,7 +16544,7 @@ void select_theme()
 
 int delete_game_cache()
 {
-		t_dir_pane_bare *pane =  (t_dir_pane_bare *) malloc(sizeof(t_dir_pane_bare)*MAX_PANE_SIZE_BARE);
+		t_dir_pane_bare *pane =  (t_dir_pane_bare *) memalign(16, sizeof(t_dir_pane_bare)*MAX_PANE_SIZE_BARE);
 		int max_dir=0;
 		int ret_f=-1;
 		slide_xmb_left(2);
@@ -17958,7 +17958,7 @@ static void add_video_column_thread_entry( uint64_t arg )
 
 	if(init_finished && is_video_loading && xmb[5].init)
 	{
-		t_dir_pane_bare *pane =  (t_dir_pane_bare *) malloc(sizeof(t_dir_pane_bare)*MAX_PANE_SIZE_BARE);
+		t_dir_pane_bare *pane =  (t_dir_pane_bare *) memalign(16, sizeof(t_dir_pane_bare)*MAX_PANE_SIZE_BARE);
 
 		int max_dir=0;
 		char linkfile[512];
@@ -18043,7 +18043,7 @@ static void add_photo_column_thread_entry( uint64_t arg )
 		char t_ip[512];
 		int i_status;
 
-		t_dir_pane_bare *pane =  (t_dir_pane_bare *) malloc(sizeof(t_dir_pane_bare)*MAX_PANE_SIZE_BARE);
+		t_dir_pane_bare *pane =  (t_dir_pane_bare *) memalign(16, sizeof(t_dir_pane_bare)*MAX_PANE_SIZE_BARE);
 		int max_dir=0;
 
 		ps3_home_scan_bare((char*)"/dev_hdd0/photo", pane, &max_dir); 
@@ -18092,7 +18092,7 @@ static void add_music_column_thread_entry( uint64_t arg )
 
 	if(init_finished && is_music_loading && xmb[4].init)
 	{
-		t_dir_pane_bare *pane =  (t_dir_pane_bare *) malloc(sizeof(t_dir_pane_bare)*MAX_PANE_SIZE_BARE);
+		t_dir_pane_bare *pane =  (t_dir_pane_bare *) memalign(16, sizeof(t_dir_pane_bare)*MAX_PANE_SIZE_BARE);
 		int max_dir=0;
 
 		char linkfile[512];
@@ -18148,7 +18148,7 @@ static void add_retro_column_thread_entry( uint64_t arg )
 	if(init_finished && is_retro_loading && xmb[8].init)
 	{
 
-		t_dir_pane_bare *pane =  (t_dir_pane_bare *) malloc(sizeof(t_dir_pane_bare)*MAX_PANE_SIZE_BARE);
+		t_dir_pane_bare *pane =  (t_dir_pane_bare *) memalign(16, sizeof(t_dir_pane_bare)*MAX_PANE_SIZE_BARE);
 		int max_dir=0;
 
 		xmb[8].size=0;
