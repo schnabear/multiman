@@ -17611,18 +17611,23 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 {
 
 	int _xmb_icon = _xmb_icon_;
-
-	int xpos;
-	xpos=350;
+	
+	u16 xpos=350;
 	int ypos=0, tw=0, th=0;
 	u16 icon_x=0;
 	u16 icon_y=0;
 
-	float mo_of2=0.0f;
 	int _xmb_y_offset=(int) ((float)__xmb_y_offset*16.0/9.0f);
 
-
+	float mo_of=abs((float)_xmb_y_offset)/160.0f;
+	float mo_of2=0.0f;
 	char filename[1024];
+	u32 pixel, delta2;
+	float delta;
+	float c_persp=45.f;
+	float c_persp2=35.f;
+
+
 	if(xmb_bg_counter>0 && !xmb_bg_show && !key_repeat) xmb_bg_counter--;
 	if(xmb_bg_counter==0 && !xmb_bg_show && _xmb_y_offset==0 && xmb_game_bg==1 && !key_repeat && (_xmb_icon==6 && _xmb[_xmb_icon].first) && !is_game_loading)
 	{
@@ -17631,7 +17636,26 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 		{
 			load_png_texture(text_FONT, filename, 1920);
 			if(menu_list[_xmb[_xmb_icon].member[_xmb[_xmb_icon].first].game_id].split==1 || menu_list[_xmb[_xmb_icon].member[_xmb[_xmb_icon].first].game_id].title[0]=='_') gray_texture(text_FONT, 1920, 1080, 0);
-			change_opacity(text_FONT, -60, 8294400);
+			//change_opacity(text_FONT, -60, 8294400);
+			delta=100.f;
+			for(u32 fsr=0; fsr<3840000; fsr+=4) 
+			{
+				if(fsr%7680==0) delta-=0.2f;
+				pixel=*(uint32_t*) ((uint8_t*)(text_FONT+fsr));
+				delta2 = ((u32)((float)(pixel&0xff)*((float)abs(delta)/100.f)));
+				pixel= (pixel & 0xffffff00) | delta2;
+				*(uint32_t*) ((uint8_t*)(text_FONT)+fsr)= pixel;
+			}
+
+			for(u32 fsr=0; fsr<3840000; fsr+=4) 
+			{
+				if(fsr%7680==0) delta+=0.2f;
+				pixel=*(uint32_t*) ((uint8_t*)(text_FONT+fsr+3840000)); //5068800
+				delta2 = ((u32)((float)(pixel&0xff)*((float)abs(delta)/100.f)));
+				pixel= (pixel & 0xffffff00) | delta2;
+				*(uint32_t*) ((uint8_t*)(text_FONT)+fsr+3840000)= pixel;
+			} 
+
 			xmb_bg_show=1;
 		}
 		else
@@ -17711,7 +17735,7 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 			}
 
 			if(cn3!=5) {tw/=2; th/=2;}
-			mo_of2=2.f-(abs(_xmb_y_offset)/160.0f);
+			mo_of2=2.f-mo_of;
 
 			if( (_xmb_y_offset!=0) )
 			{
@@ -17810,21 +17834,25 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 					th, angle); 
 				else
 				{
+
 					if( _xmb_y_offset!=0 && ( cn3==5 || (cn3==4 && _xmb_y_offset>0) || (cn3==6 && _xmb_y_offset<0) ) )
 					{
-						//-(int)(abs(_xmb_y_offset)/160.0f)*20
 						if(cn3==5)
 						{
 							display_img_persp(icon_x, icon_y,	tw, th, tw,	th,	(cn!=5 ? 0.5f : 0.4f), tw, th,
-								(_xmb_y_offset>0 ? 0 : ((int)(20.f*(abs(_xmb_y_offset)/160.0f)))), 
-								(_xmb_y_offset>0 ? ((int)(20.f*(abs(_xmb_y_offset)/160.0f))) : 0)							
+								(_xmb_y_offset>0 ? ((int)(c_persp2*mo_of)) : ((int)(c_persp*mo_of))), 
+								(_xmb_y_offset>0 ? ((int)(c_persp*mo_of)) : ((int)(c_persp2*mo_of)))							
 								);
 						}
-					else if(cn3==4) display_img_persp(icon_x, icon_y,	tw, th, tw,	th,	(cn!=5 ? 0.5f : 0.4f), tw, th,
-								(int)(20.f - 20.f*(abs(_xmb_y_offset)/160.0f)), 0 );
+					else if(cn3==4) 
+						{
+							display_img_persp(icon_x, icon_y,	tw, th, tw,	th,	(cn!=5 ? 0.5f : 0.4f), tw, th,	(int)(c_persp - c_persp*mo_of), (int)(c_persp2 - c_persp2*mo_of) );
+						}
 
-					else if(cn3==6) display_img_persp(icon_x, icon_y,	tw, th, tw,	th,	(cn!=5 ? 0.5f : 0.4f), tw, th,
-								0, (int)(20.f - 20.f*(abs(_xmb_y_offset)/160.0f)));
+					else if(cn3==6)
+						{
+							display_img_persp(icon_x, icon_y,	tw, th, tw,	th,	(cn!=5 ? 0.5f : 0.4f), tw, th, (int)(c_persp2 - c_persp2*mo_of), (int)(c_persp - c_persp*mo_of));
+						}
 					}
 					else if (cn3==5) 
 						{
@@ -17839,8 +17867,14 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 							offX+=incZ; if(offX>30) {incZ=-0.3f;};if(offX<1) {incZ=0.6f;}; 
 
 						}
-					else if(cn3<5) display_img_persp(icon_x, icon_y,	tw, th, tw,	th,	(cn!=5 ? 0.5f : 0.4f), tw, th, 20, 0);
-					else if(cn3>5) display_img_persp(icon_x, icon_y,	tw, th, tw,	th,	(cn!=5 ? 0.5f : 0.4f), tw, th, 0, 20);
+					else if(cn3<5) 
+						{
+							display_img_persp(icon_x, icon_y,	tw, th, tw,	th,	(cn!=5 ? 0.5f : 0.4f), tw, th, (int)c_persp, (int)c_persp2);
+						}
+					else if(cn3>5) 
+						{
+							display_img_persp(icon_x, icon_y,	tw, th, tw,	th,	(cn!=5 ? 0.5f : 0.4f), tw, th, (int)c_persp2, (int)c_persp);
+						}
 				}
 
 			}
@@ -22595,7 +22629,10 @@ update_title:
 			if(ret_f) {slide_screen_left(text_FONT);memset(text_bmp, 0, 1920*1080*4);}
 			if(cover_mode==8 || ret_f==11) 
 			{	
-				load_texture(text_FMS, xmbicons, 128);	memset(text_bmp, 0, 8294400); load_texture(text_bmp, xmbbg, 1920);
+				load_texture(text_FMS, xmbicons, 128);	
+				load_texture(xmb_icon_retro, xmbicons2, 128);
+				memset(text_bmp, 0, 8294400); 
+				load_texture(text_bmp, xmbbg, 1920);
 				if(ret_f==11) {cover_mode=8; xmb_icon=2; init_xmb_icons(menu_list, max_menu_list, game_sel ); }
 			}
 			if(cover_mode==4) {load_texture(text_legend, legend, 1665);init_xmb_icons(menu_list, max_menu_list, game_sel );}
