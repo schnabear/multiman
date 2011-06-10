@@ -93,7 +93,7 @@ extern u8 *text_bmp;
 extern u8 *text_USB;
 extern u8 *text_HDD;
 extern u8 *text_BLU_1;
-extern u8 *text_FMS;
+extern u8 *text_legend;
 extern u8 *text_FONT;
 extern int legend_y, legend_h;
 extern int last_selected;
@@ -797,7 +797,7 @@ just_legend:
 //				float legend_font=0.9f;
 //				if(overscan>0.05) legend_font=(float)(legend_font-(legend_font*overscan));
 //				draw_text_stroke( 0.08f+(overscan/4.0f), (((float)th_legend_y/1080.f)+0.02f)-overscan,   legend_font, COL_LEGEND, "X - Load   [] - Game settings  [R1] - Next mode\nO - Exit   /\\ - System menu    [L1] - Prev mode" );
-				set_texture( text_FMS, 1665, 96);
+				set_texture( text_legend, 1665, 96);
 				display_img(127, th_legend_y+15, 1665, 96, 1665, 96, -0.5f, 1665, 96);
 		}
 
@@ -809,8 +809,8 @@ just_legend:
 			if(th_legend==1)
 			{
 				if( cover_mode==1 || cover_mode==6 || cover_mode==7)
-						put_texture_with_alpha( text_bmp, text_FMS, 1665, 96, 1665, 127, th_legend_y, 0, 0);
-				else 	put_texture_with_alpha( text_bmp, text_FMS, 1665, 96, 1665, 127, th_legend_y+15, 0, 0);
+						put_texture_with_alpha( text_bmp, text_legend, 1665, 96, 1665, 127, th_legend_y, 0, 0);
+				else 	put_texture_with_alpha( text_bmp, text_legend, 1665, 96, 1665, 127, th_legend_y+15, 0, 0);
 			}
 		if(th_device_separator==1)	draw_box( text_bmp, 1920, 2, 0, th_device_separator_y, 0x80808080);
 
@@ -993,7 +993,7 @@ void draw_list( t_menu_list *menu, int menu_size, int selected, int dir_mode, in
 				legend_y=tmp_legend_y;
 			} */
 			set_texture( text_bmp, 1920, legend_h);
-			display_img(0, 648, 1920, legend_h, 1920, legend_h, -0.5f, 1920, legend_h);
+			display_img(0, 728, 1920, legend_h, 1920, legend_h, -0.5f, 1920, legend_h);
 
 		}
 
@@ -1387,10 +1387,39 @@ int set_texture( u8 *buffer, u32 x_size, u32 y_size )
 
 }
 
+void display_img_persp(int x, int y, int width, int height, int tx, int ty, float z, int Dtx, int Dty, int keystone)
+{
+    vertex_text[vert_texture_indx].x= ((float) ((x)*2))/((float) 1920)-1.0f;
+    vertex_text[vert_texture_indx].y= ((float) ((y-keystone)*-2))/((float) 1080)+1.0f;
+    vertex_text[vert_texture_indx].z= z;
+    vertex_text[vert_texture_indx].tx= 0.0f;
+    vertex_text[vert_texture_indx].ty= 0.0f;
+
+    vertex_text[vert_texture_indx+1].x= ((float) ((x+width)*2))/((float) 1920)-1.0f;
+    vertex_text[vert_texture_indx+1].y= ((float) ((y-keystone)*-2))/((float) 1080)+1.0f;
+    vertex_text[vert_texture_indx+1].z= z;
+    vertex_text[vert_texture_indx+1].tx= ((float) tx)/Dtx;
+    vertex_text[vert_texture_indx+1].ty= 0.0f;
+
+    vertex_text[vert_texture_indx+2].x= ((float) ((x-keystone)*2))/((float) 1920)-1.0f;
+    vertex_text[vert_texture_indx+2].y= ((float) ((y+height+keystone)*-2))/((float) 1080)+1.0f;
+    vertex_text[vert_texture_indx+2].z= z;
+    vertex_text[vert_texture_indx+2].tx= 0.0f;
+    vertex_text[vert_texture_indx+2].ty= ((float) ty)/Dty;
+
+    vertex_text[vert_texture_indx+3].x= ((float) ((x+width+keystone)*2))/((float) 1920)-1.0f;
+    vertex_text[vert_texture_indx+3].y= ((float) ((y+height+keystone)*-2))/((float) 1080)+1.0f;
+    vertex_text[vert_texture_indx+3].z= z;
+    vertex_text[vert_texture_indx+3].tx= ((float) tx)/Dtx;
+    vertex_text[vert_texture_indx+3].ty=((float) ty)/Dty;
+
+    cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_TRIANGLE_STRIP, vert_texture_indx, 4 ); //CELL_GCM_PRIMITIVE_TRIANGLE_STRIP
+    vert_texture_indx+=4;
+}
 
 void display_img(int x, int y, int width, int height, int tx, int ty, float z, int Dtx, int Dty)
 {
-	if((cover_mode==8 || cover_mode==4) && V_WIDTH==720)
+	if((cover_mode==8) && V_WIDTH==720)
 	{
 		x-=(int)((float)width*0.04f);
 		y-=(int)((float)height*0.06f);
@@ -1475,7 +1504,7 @@ int angle_coord_y(int radius, float __angle)
 void display_img_angle(int x, int y, int width, int height, int tx, int ty, float z, int Dtx, int Dty, float _angle)
 {
 	int _radius;
-	if((cover_mode==8 || cover_mode==4) && V_WIDTH==720)
+	if((cover_mode==8) && V_WIDTH==720)
 	{
 		x-=(int)((float)width*0.04f);
 		y-=(int)((float)height*0.06f);
