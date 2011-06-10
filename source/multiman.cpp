@@ -17559,6 +17559,7 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 
 void load_coverflow_legend()
 {
+	if(cover_mode!=4) return;
 	if((xmb_icon==6 || xmb_icon==8) && xmb[xmb_icon].member[xmb[xmb_icon].first].game_id!=-1) game_sel=xmb[xmb_icon].member[xmb[xmb_icon].first].game_id;
 	int grey=(menu_list[game_sel].title[0]=='_' || menu_list[game_sel].split);
 	u32 color= (menu_list[game_sel].flags && game_sel==0)? COL_PS3DISC : ((grey==0) ?  COL_PS3 : COL_SPLIT);
@@ -17571,15 +17572,20 @@ void load_coverflow_legend()
 	memset(text_bmp, 0, 737280);
 	if(xmb[6].first)
 	{
-		char str[256];
-		sprintf(str, "%i of %i", xmb[6].first, xmb[6].size-1);
-		if(dir_mode==1)
-			put_label(text_bmp, 1920, 1080, (char*)menu_list[game_sel].title, (char*)str, (char*)menu_list[game_sel].path, color);
+		if(!key_repeat)
+		{
+			char str[256];
+			sprintf(str, "%i of %i", xmb[6].first, xmb[6].size-1);
+			if(dir_mode==1)
+				put_label(text_bmp, 1920, 1080, (char*)menu_list[game_sel].title, (char*)str, (char*)menu_list[game_sel].path, color);
+			else
+				put_label(text_bmp, 1920, 1080, (char*)menu_list[game_sel].title, (char*)str, (char*)menu_list[game_sel].title_id, color);
+		}
 		else
-			put_label(text_bmp, 1920, 1080, (char*)menu_list[game_sel].title, (char*)str, (char*)menu_list[game_sel].title_id, color);
+			put_label(text_bmp, 1920, 1080, (char*)menu_list[game_sel].title, (char*)" ", (char*)" ", color);
 	}
 	else
-		put_label(text_bmp, 1920, 1080, (char*)"Refresh Game List", (char*)" ", (char*)" ", color);
+		put_label(text_bmp, 1920, 1080, (char*)"Refresh Game List", (char*)" ", (char*)" ", COL_PS3);
 
 	legend_y=tmp_legend_y; 
 	xmb_bg_show=0;
@@ -17607,7 +17613,7 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 	int _xmb_icon = _xmb_icon_;
 
 	int xpos;
-	xpos=420;
+	xpos=350;
 	int ypos=0, tw=0, th=0;
 	u16 icon_x=0;
 	u16 icon_y=0;
@@ -17634,6 +17640,7 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 			xmb_bg_show=0;
 		}
 	}
+	if(_xmb_y_offset!=0) {offX=0; offY=0;}
 
 	if(xmb_bg_show && _xmb_y_offset==0 && !key_repeat)
 	{
@@ -17670,7 +17677,7 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 		int cn;
 		int cn3=-2;
 		int first_xmb_mem = _xmb[_xmb_icon].first-6;
-		int cnmax=12;
+		int cnmax=10; if(_xmb_y_offset==0) cnmax--;
 		if(_xmb[_xmb_icon].first>4 && _xmb_y_offset>0) {first_xmb_mem--; cn3--;}
 
 		for(cn=first_xmb_mem; (cn<_xmb[_xmb_icon].size && cn3<cnmax); cn++)
@@ -17734,11 +17741,12 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 				}
 			}
 
-			if(cn3<5) ypos=cn3*160+_xmb_y_offset;
-			//else if(cn3==4) ypos=cn3*160 + ( (_xmb_y_offset>0) ? (int)(_xmb_y_offset*3.566f) : (_xmb_y_offset) );
-			else if(cn3==5) {ypos = 800 + ( (_xmb_y_offset>0) ? (int)(_xmb_y_offset*1.8125f) : _xmb_y_offset );}
+			if(cn3<4) ypos=cn3*160+_xmb_y_offset-130;
+			else if(cn3==4) ypos=cn3*160 -130 + ( (_xmb_y_offset>0) ? (int)(_xmb_y_offset*1.8125f) : (_xmb_y_offset) );
+			else if(cn3==5) {ypos = 800 + ( (_xmb_y_offset>0) ? (int)(_xmb_y_offset*1.8125f) : (int)(_xmb_y_offset*1.8125f) );}
 			else if(cn3==6) ypos=(cn3-6)*160 + 1090 + ( (_xmb_y_offset>0) ? _xmb_y_offset : (int)(_xmb_y_offset*1.8125f) );
-			else if(cn3 >6) ypos=(cn3-6)*160 + 1090 + _xmb_y_offset;
+			else if(cn3 >6 && cn3<9) ypos=(cn3-6)*160 + 1090 + _xmb_y_offset;
+			else if(cn3>8) ypos=(cn3-6)*160 + 1090 + ( (_xmb_y_offset<0) ? _xmb_y_offset : (int)(_xmb_y_offset*1.8125f) );
 			ypos+=30;
 
 			if((_xmb[_xmb_icon].member[cn].status==1 || _xmb[_xmb_icon].member[cn].status==0) && !key_repeat)// || (c_opacity_delta!=0 && dim==1 && c_opacity2>0x30 && c_opacity2<0x42))
@@ -17773,9 +17781,9 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 			if(_xmb[_xmb_icon].member[cn].status==1 || (_xmb[_xmb_icon].member[cn].status==0 && (key_repeat)))
 			{
 				tw=128; th=128;
-				if(cn3!=2) {tw/=2; th/=2;}
-				icon_y=xpos+64-tw/2;
-				icon_x=ypos;
+				if(cn3!=5) {tw/=2; th/=2;}
+				icon_y=xpos+150-th/2;
+				icon_x=ypos+130-tw/2;
 
 				set_texture(_xmb[0].data, 128, 128); //icon
 				display_img_angle(icon_x, icon_y, tw, th, 128, 128, 0.5f, 128, 128, angle);
@@ -17784,8 +17792,8 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 
 			if(_xmb[_xmb_icon].member[cn].status==2)
 			{
-				icon_y=xpos+64-tw/2;
-				icon_x=ypos;
+				icon_y=xpos+150-th/2;
+				icon_x=ypos+130-tw/2;
 
 				set_texture(_xmb[_xmb_icon].member[cn].icon, _xmb[_xmb_icon].member[cn].iconw, _xmb[_xmb_icon].member[cn].iconh); //icon
 
@@ -17797,19 +17805,43 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 					th, 
 					tw,
 					th,
-					0.5f, 
+					(cn!=5 ? 0.5f : 0.4f), 
 					tw,
 					th, angle); 
 				else
+				{
+					if( _xmb_y_offset!=0 && ( cn3==5 || (cn3==4 && _xmb_y_offset>0) || (cn3==6 && _xmb_y_offset<0) ) )
+					{
+						//-(int)(abs(_xmb_y_offset)/160.0f)*20
+						if(cn3==5)
+						{
+							display_img_persp(icon_x, icon_y,	tw, th, tw,	th,	(cn!=5 ? 0.5f : 0.4f), tw, th,
+								(_xmb_y_offset>0 ? 0 : ((int)(20.f*(abs(_xmb_y_offset)/160.0f)))), 
+								(_xmb_y_offset>0 ? ((int)(20.f*(abs(_xmb_y_offset)/160.0f))) : 0)							
+								);
+						}
+					else if(cn3==4) display_img_persp(icon_x, icon_y,	tw, th, tw,	th,	(cn!=5 ? 0.5f : 0.4f), tw, th,
+								(int)(20.f - 20.f*(abs(_xmb_y_offset)/160.0f)), 0 );
 
-				display_img(icon_x, icon_y,
-					tw, 
-					th, 
-					tw, //_xmb[_xmb_icon].member[cn].iconw, 
-					th, //_xmb[_xmb_icon].member[cn].iconh, 
-					0.5f, 
-					tw, //_xmb[_xmb_icon].member[cn].iconw, 
-					th); //_xmb[_xmb_icon].member[cn].iconh);
+					else if(cn3==6) display_img_persp(icon_x, icon_y,	tw, th, tw,	th,	(cn!=5 ? 0.5f : 0.4f), tw, th,
+								0, (int)(20.f - 20.f*(abs(_xmb_y_offset)/160.0f)));
+					}
+					else if (cn3==5) 
+						{
+
+							if(offX<0 || offY<0 || offX>31 || animation==0 || animation==2) {offX=0; offY=0;} // offY>31 ||
+							if(animation==0 || animation==2) incZ=0;
+							if(tw<320)
+								offY=(float)(offX*1.1538f); 
+							else
+								offY=(float)(offX*0.5500f); 
+							display_img(icon_x-(int)offX, icon_y-(int)offY,	tw+(int)(offX*2.0f), th+(int)(offY*2.0f), tw,	th,	(cn!=5 ? 0.5f : 0.4f), tw, th);
+							offX+=incZ; if(offX>30) {incZ=-0.3f;};if(offX<1) {incZ=0.6f;}; 
+
+						}
+					else if(cn3<5) display_img_persp(icon_x, icon_y,	tw, th, tw,	th,	(cn!=5 ? 0.5f : 0.4f), tw, th, 20, 0);
+					else if(cn3>5) display_img_persp(icon_x, icon_y,	tw, th, tw,	th,	(cn!=5 ? 0.5f : 0.4f), tw, th, 0, 20);
+				}
 
 			}
 		}
@@ -19743,6 +19775,7 @@ u8 read_pad_info()
 					if(xmb_slide_y <0) { if(xmb[xmb_icon].first<xmb[xmb_icon].size-1) xmb[xmb_icon].first+=repeat_counter3; xmb_slide_y=0;}
 					if(xmb[xmb_icon].first==1 || xmb[xmb_icon].first>=xmb[xmb_icon].size) {repeat_counter1=120; repeat_counter2=8;repeat_counter3=1;repeat_counter3_inc=0.f;}
 					if(xmb[xmb_icon].first>=xmb[xmb_icon].size) xmb[xmb_icon].first=xmb[xmb_icon].size-1;
+					load_coverflow_legend();
 				}
 				//else
 				xmb_slide_step_y=10;
@@ -19788,6 +19821,7 @@ u8 read_pad_info()
 					if(xmb_slide_y >0) { if(xmb[xmb_icon].first>0) xmb[xmb_icon].first-=repeat_counter3; xmb_slide_y=0;}
 					if(xmb_slide_y <0) { if(xmb[xmb_icon].first<xmb[xmb_icon].size-1) xmb[xmb_icon].first+=repeat_counter3; xmb_slide_y=0;}
 					if(xmb[xmb_icon].first>=xmb[xmb_icon].size-2) {repeat_counter1=120; repeat_counter2=8;repeat_counter3=1;repeat_counter3_inc=0.f;}
+					load_coverflow_legend();
 				}
 				//else
 					xmb_slide_step_y=-10;

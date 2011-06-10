@@ -1387,33 +1387,33 @@ int set_texture( u8 *buffer, u32 x_size, u32 y_size )
 
 }
 
-void display_img_persp(int x, int y, int width, int height, int tx, int ty, float z, int Dtx, int Dty, int keystone)
+void display_img_persp(int x, int y, int width, int height, int tx, int ty, float z, int Dtx, int Dty, int keystoneL, int keystoneR)
 {
     vertex_text[vert_texture_indx].x= ((float) ((x)*2))/((float) 1920)-1.0f;
-    vertex_text[vert_texture_indx].y= ((float) ((y-keystone)*-2))/((float) 1080)+1.0f;
+    vertex_text[vert_texture_indx].y= ((float) ((y-keystoneL)*-2))/((float) 1080)+1.0f;
     vertex_text[vert_texture_indx].z= z;
     vertex_text[vert_texture_indx].tx= 0.0f;
     vertex_text[vert_texture_indx].ty= 0.0f;
 
     vertex_text[vert_texture_indx+1].x= ((float) ((x+width)*2))/((float) 1920)-1.0f;
-    vertex_text[vert_texture_indx+1].y= ((float) ((y-keystone)*-2))/((float) 1080)+1.0f;
+    vertex_text[vert_texture_indx+1].y= ((float) ((y-keystoneR)*-2))/((float) 1080)+1.0f;
     vertex_text[vert_texture_indx+1].z= z;
     vertex_text[vert_texture_indx+1].tx= ((float) tx)/Dtx;
     vertex_text[vert_texture_indx+1].ty= 0.0f;
 
-    vertex_text[vert_texture_indx+2].x= ((float) ((x-keystone)*2))/((float) 1920)-1.0f;
-    vertex_text[vert_texture_indx+2].y= ((float) ((y+height+keystone)*-2))/((float) 1080)+1.0f;
+    vertex_text[vert_texture_indx+2].x= ((float) ((x+width)*2))/((float) 1920)-1.0f;
+    vertex_text[vert_texture_indx+2].y= ((float) ((y+height+keystoneR)*-2))/((float) 1080)+1.0f;
     vertex_text[vert_texture_indx+2].z= z;
-    vertex_text[vert_texture_indx+2].tx= 0.0f;
-    vertex_text[vert_texture_indx+2].ty= ((float) ty)/Dty;
+    vertex_text[vert_texture_indx+2].tx= ((float) tx)/Dtx;
+    vertex_text[vert_texture_indx+2].ty=((float) ty)/Dty;
 
-    vertex_text[vert_texture_indx+3].x= ((float) ((x+width+keystone)*2))/((float) 1920)-1.0f;
-    vertex_text[vert_texture_indx+3].y= ((float) ((y+height+keystone)*-2))/((float) 1080)+1.0f;
+    vertex_text[vert_texture_indx+3].x= ((float) ((x)*2))/((float) 1920)-1.0f;
+    vertex_text[vert_texture_indx+3].y= ((float) ((y+height+keystoneL)*-2))/((float) 1080)+1.0f;
     vertex_text[vert_texture_indx+3].z= z;
-    vertex_text[vert_texture_indx+3].tx= ((float) tx)/Dtx;
-    vertex_text[vert_texture_indx+3].ty=((float) ty)/Dty;
+    vertex_text[vert_texture_indx+3].tx= 0.0f;
+    vertex_text[vert_texture_indx+3].ty= ((float) ty)/Dty;
 
-    cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_TRIANGLE_STRIP, vert_texture_indx, 4 ); //CELL_GCM_PRIMITIVE_TRIANGLE_STRIP
+    cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_QUADS, vert_texture_indx, 4 ); //CELL_GCM_PRIMITIVE_TRIANGLE_STRIP
     vert_texture_indx+=4;
 }
 
@@ -1439,19 +1439,19 @@ void display_img(int x, int y, int width, int height, int tx, int ty, float z, i
     vertex_text[vert_texture_indx+1].tx= ((float) tx)/Dtx;
     vertex_text[vert_texture_indx+1].ty= 0.0f;
 
-    vertex_text[vert_texture_indx+2].x= ((float) ((x)*2))/((float) 1920)-1.0f;
+    vertex_text[vert_texture_indx+2].x= ((float) ((x+width)*2))/((float) 1920)-1.0f;
     vertex_text[vert_texture_indx+2].y= ((float) ((y+height)*-2))/((float) 1080)+1.0f;
     vertex_text[vert_texture_indx+2].z= z;
-    vertex_text[vert_texture_indx+2].tx= 0.0f;
-    vertex_text[vert_texture_indx+2].ty= ((float) ty)/Dty;
+    vertex_text[vert_texture_indx+2].tx= ((float) tx)/Dtx;
+    vertex_text[vert_texture_indx+2].ty=((float) ty)/Dty;
 
-    vertex_text[vert_texture_indx+3].x= ((float) ((x+width)*2))/((float) 1920)-1.0f;
+    vertex_text[vert_texture_indx+3].x= ((float) ((x)*2))/((float) 1920)-1.0f;
     vertex_text[vert_texture_indx+3].y= ((float) ((y+height)*-2))/((float) 1080)+1.0f;
     vertex_text[vert_texture_indx+3].z= z;
-    vertex_text[vert_texture_indx+3].tx= ((float) tx)/Dtx;
-    vertex_text[vert_texture_indx+3].ty=((float) ty)/Dty;
+    vertex_text[vert_texture_indx+3].tx= 0.0f;
+    vertex_text[vert_texture_indx+3].ty= ((float) ty)/Dty;
 
-    cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_TRIANGLE_STRIP, vert_texture_indx, 4 ); //CELL_GCM_PRIMITIVE_TRIANGLE_STRIP
+    cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_QUADS, vert_texture_indx, 4 ); //CELL_GCM_PRIMITIVE_TRIANGLE_STRIP
     vert_texture_indx+=4;
 }
 
