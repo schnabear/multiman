@@ -22427,7 +22427,7 @@ next_for_FM:
 		if(cover_mode==3) load_texture(text_FONT, userBG, 1920);
 		if(cover_mode==5) set_fm_stripes();
 		if(cover_mode<3 || cover_mode>5)  load_texture(text_legend, legend, 1665);//&& last_cover_mode>2)
-		if(cover_mode==8 || cover_mode==4) {init_xmb_icons(menu_list, max_menu_list, game_sel );}
+		if(cover_mode==8 || cover_mode==4) {xmb[6].init=0; xmb[7].init=0; init_xmb_icons(menu_list, max_menu_list, game_sel );}
 		old_fi=-1;
 		counter_png=0;
 		goto force_reload;
@@ -22480,7 +22480,7 @@ next_for_FM:
 		if(cover_mode==3) load_texture(text_FONT, userBG, 1920);
 		if(cover_mode==5) set_fm_stripes();
 		if((cover_mode<3 || cover_mode>5) && last_cover_mode>2)  load_texture(text_legend, legend, 1665);
-		if(cover_mode==8 || cover_mode==4) {init_xmb_icons(menu_list, max_menu_list, game_sel );}
+		if(cover_mode==8 || cover_mode==4) {xmb[6].init=0; xmb[7].init=0; init_xmb_icons(menu_list, max_menu_list, game_sel );}
 		old_fi=-1;
 		counter_png=0;
 		goto force_reload;
