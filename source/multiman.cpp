@@ -1977,7 +1977,9 @@ bool is_snes9x(char *rom)
 		|| strstr(rom, ".dx2")!=NULL || strstr(rom, ".DX2")!=NULL 
 		|| strstr(rom, ".bsx")!=NULL || strstr(rom, ".BSX")!=NULL 
 		|| strstr(rom, ".swc")!=NULL || strstr(rom, ".SWC")!=NULL 
-		|| strstr(rom, ".zip")!=NULL || strstr(rom, ".ZIP")!=NULL 
+		|| ( (strstr(rom, ".zip")!=NULL || strstr(rom, ".ZIP")!=NULL) 
+				&& (strstr(rom, "/ROMS/snes/")!=NULL || strstr(rom, snes_roms)!=NULL) 
+			)
 		|| strstr(rom, ".jma")!=NULL || strstr(rom, ".JMA")!=NULL)
 		&& strstr(rom, ".jpg")==NULL && strstr(rom, ".JPG")==NULL)
 		return true;
@@ -2011,7 +2013,9 @@ bool is_genp(char *rom)
 		|| strstr(rom, ".smd")!=NULL || strstr(rom, ".SMD")!=NULL
 		|| strstr(rom, ".md")!=NULL || strstr(rom, ".MD")!=NULL
 		|| strstr(rom, ".sms")!=NULL || strstr(rom, ".SMS")!=NULL
-		|| strstr(rom, ".zip")!=NULL || strstr(rom, ".ZIP")!=NULL
+		|| ( (strstr(rom, ".zip")!=NULL || strstr(rom, ".ZIP")!=NULL) 
+				&& (strstr(rom, "/ROMS/gen/")!=NULL || strstr(rom, genp_roms)!=NULL) 
+			)
 		|| strstr(rom, ".gen")!=NULL || strstr(rom, ".GEN")!=NULL)
 		&& strstr(rom, ".jpg")==NULL && strstr(rom, ".JPG")==NULL)
 		return true;
@@ -2022,7 +2026,9 @@ bool is_genp(char *rom)
 bool is_fceu(char *rom)
 {
 	if( (strstr(rom, ".nes")!=NULL || strstr(rom, ".NES")!=NULL 
-		|| strstr(rom, ".zip")!=NULL || strstr(rom, ".ZIP")!=NULL
+		|| ( (strstr(rom, ".zip")!=NULL || strstr(rom, ".ZIP")!=NULL) 
+				&& (strstr(rom, "/ROMS/fceu/")!=NULL || strstr(rom, fceu_roms)!=NULL) 
+			)
 		|| strstr(rom, ".fds")!=NULL || strstr(rom, ".FDS")!=NULL
 		|| strstr(rom, ".unif")!=NULL || strstr(rom, ".UNIF")!=NULL)
 		&& strstr(rom, ".jpg")==NULL && strstr(rom, ".JPG")==NULL)
@@ -2035,7 +2041,9 @@ bool is_vba(char *rom)
 {
 	if( (strstr(rom, ".gba")!=NULL || strstr(rom, ".GBA")!=NULL 
 		|| strstr(rom, ".gbc")!=NULL || strstr(rom, ".GBC")!=NULL
-		|| strstr(rom, ".zip")!=NULL || strstr(rom, ".ZIP")!=NULL
+		|| ( (strstr(rom, ".zip")!=NULL || strstr(rom, ".ZIP")!=NULL) 
+				&& (strstr(rom, "/ROMS/vba/")!=NULL || strstr(rom, vba_roms)!=NULL) 
+			)
 		|| strstr(rom, ".gb")!=NULL || strstr(rom, ".GB")!=NULL)
 		&& strstr(rom, ".jpg")==NULL && strstr(rom, ".JPG")==NULL)
 		return true;
@@ -2045,8 +2053,11 @@ bool is_vba(char *rom)
 
 bool is_fba(char *rom)
 {
-	if( (strstr(rom, ".")==NULL ||
-		strstr(rom, ".zip")!=NULL || strstr(rom, ".ZIP")!=NULL)
+	if( (strstr(rom, ".")==NULL
+		|| ( (strstr(rom, ".zip")!=NULL || strstr(rom, ".ZIP")!=NULL) 
+				&& (strstr(rom, "/ROMS/fba/")!=NULL || strstr(rom, fba_roms)!=NULL) 
+			)
+		)
 		)
 		return true;
 	else
@@ -14373,6 +14384,11 @@ retry_showtime:
 		else if(is_vba(my_mp3_file) && strstr(my_mp3_file, "/net_host")==NULL)
 				{
 					launch_vba_emu(my_mp3_file);
+				}
+
+		else if(is_fba(my_mp3_file) && strstr(my_mp3_file, "/net_host")==NULL)
+				{
+					launch_fba_emu(my_mp3_file);
 				}
 
 		else if(strstr(my_mp3_file, ".mmt")!=NULL || strstr(my_mp3_file, ".MMT")!=NULL && strstr(my_mp3_file, "/net_host")==NULL)
