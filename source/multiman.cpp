@@ -694,6 +694,7 @@ char mouseInfo[128];//char mouseInfo2[128];
 	u8 *text_bmpS=NULL;
 //	u8 *text_bmpBG=NULL;
 	u8 *text_bmpUBG=NULL;
+	u8 *text_BOOT=NULL;
 
 	u8 *text_USB=NULL;
 	u8 *text_HDD=NULL;
@@ -9669,7 +9670,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 	check_usb_ps3game(path);
 	is_game_loading=0;
 //	reset_xmb(1);
-	if(is_reloaded==2 || (is_reloaded==1 && strstr(path, "/dev_hdd")==NULL) ) return;
+	if((is_reloaded==2) || (is_reloaded==1 && strstr(path, "/dev_hdd")==NULL) ) return;
 
 	is_game_loading=1;
 
@@ -9709,8 +9710,8 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 		if(first_launch)
 		{
 			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
-			put_texture( text_bmpUBG, text_FMS+(pb_step*4), 429, 20, 858, 745, 840, 0, 0);
-			set_texture( text_bmpUBG, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
+			put_texture( text_BOOT, text_FMS+(pb_step*4), 429, 20, 858, 745, 840, 0, 0);
+			set_texture( text_BOOT, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 			flip();
 		}
 
@@ -9719,26 +9720,9 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 		if(entry->d_name[0]=='.') continue;
 		if(!(entry->d_type & DT_DIR)) continue;
 		
-		if((skip_entry==0 || cover_mode==8) && !first_launch) {
-			//cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
-			//if(first_launch)
-			//{
-//				put_texture( text_bmpUBG, text_FMS+(pb_step*4), 429, 20, 858, 745, 840, 0, 0);
-//				set_texture( text_bmpUBG, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
-//				sprintf(string2, "Scanning for AVCHD content [%s/%s], please wait...", avchd_path, entry->d_name);
-//				cellDbgFontPrintf( (1.0f-(strlen(string2)*0.00625f))/2.0f, 0.80f, 0.5f, 0x90909090, string2);
-//				cellDbgFontDrawGcm();	
-//				max_ttf_label=0;
-//				print_label_ex( 0.5f, 0.8, 0.5f, 0x90909090, string2, 1.0f, 0.0f, 15, 1.0f, 1.0f, 1);
-//				cellDbgFontPrintf( 0.98f, 0.98f, 0.5f, 0x80808080, "A");
-//				cellDbgFontDrawGcm();	
-//			}
-//			else
-//			{
+		if(skip_entry==0 && !first_launch) 
+		{
 			if(cover_mode!=8)
-				//draw_xmb_bare(xmb_icon, 2, 0, 0);
-				//draw_whole_xmb(1);
-			//else
 			{
 				cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 				sprintf(string2, "Scanning for AVCHD content, please wait!\n\n[%s/%s]",avchd_path, entry->d_name);
@@ -9746,9 +9730,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 				set_texture( text_bmpIC, 320, 320);  display_img(800, 200, 320, 176, 320, 176, 0.0f, 320, 320);
 
 				cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string2);
-				//if(first_launch) cellDbgFontPrintf( 0.30f, 0.80f, 1.0f, 0x90909090, multi_loading);
 				cellDbgFontDrawGcm();	
-//			}
 				flip();
 			}
 		}
@@ -9847,8 +9829,8 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 		if(first_launch)
 		{
 			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
-			put_texture( text_bmpUBG, text_FMS+(pb_step*4), 429, 20, 858, 745, 840, 0, 0);
-			set_texture( text_bmpUBG, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
+			put_texture( text_BOOT, text_FMS+(pb_step*4), 429, 20, 858, 745, 840, 0, 0);
+			set_texture( text_BOOT, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 			flip();
 		}
 		struct dirent *entry=readdir (dir);
@@ -19538,41 +19520,45 @@ void init_xmb_icons(t_menu_list *list, int max, int sel)
 
 		free_all_buffers();
 
-		add_home_column();
-		add_settings_column();
-		add_web_column();
-
-		sprintf(xmb[4].name, "Music");
-		sprintf(xmb[3].name, "Photo");
-
-		//video column
-		sprintf(xmb[5].name, "Video");
-		if(!xmb[5].init)
+		if(cover_mode==8)
 		{
-			xmb[5].first=0;	
-			xmb[5].size=0;
-			add_xmb_member(xmb[5].member, &xmb[5].size, (char*)"Link Video Library to Showtime", (char*)"Make XMB\xE2\x84\xA2 video files available to Showtime",
-					/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_showtime, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
-			add_xmb_member(xmb[5].member, &xmb[5].size, (char*)"Start Showtime Media Center", (char*)"Launch Showtime to play movies and listen to music",
-					/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_showtime, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
+			add_home_column();
+			add_settings_column();
+			add_web_column();
+
+			sprintf(xmb[4].name, "Music");
+			sprintf(xmb[3].name, "Photo");
+
+			//video column
+			sprintf(xmb[5].name, "Video");
+			if(!xmb[5].init)
+			{
+				xmb[5].first=0;	
+				xmb[5].size=0;
+				add_xmb_member(xmb[5].member, &xmb[5].size, (char*)"Link Video Library to Showtime", (char*)"Make XMB\xE2\x84\xA2 video files available to Showtime",
+						/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_showtime, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
+				add_xmb_member(xmb[5].member, &xmb[5].size, (char*)"Start Showtime Media Center", (char*)"Launch Showtime to play movies and listen to music",
+						/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_showtime, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
+			}
+
+			//game column
+			sprintf(xmb[6].name, "Game");
+
+			//game favorites
+			sprintf(xmb[7].name, "Favorites");
+			if(!xmb[7].init)
+			{
+				xmb[7].first=0;	
+				xmb[7].size=0;
+			}
+
+			draw_xmb_icon_text(xmb_icon);
 		}
-
-		//game column
-		sprintf(xmb[6].name, "Game");
-
-		//game favorites
-		sprintf(xmb[7].name, "Favorites");
-		if(!xmb[7].init)
-		{
-			xmb[7].first=0;	
-			xmb[7].size=0;
-		}
-
-		draw_xmb_icon_text(xmb_icon);
 		add_game_column(list, max, sel, (cover_mode!=8));
 
 		if(cover_mode==4)
 		{
+			if(!xmb[6].first && xmb[6].size) xmb[6].first=1;
 			load_coverflow_legend();
 			load_texture(text_legend, legend, 1665);
 		}
@@ -20272,6 +20258,7 @@ int main(int argc, char **argv)
 	text_bmpS	= text_bmp + buf_align * 9;
 
 	text_legend = text_bmpUPSR + buf_align;
+	text_BOOT	= text_bmpUPSR + buf_align*2;
 	//pData = (long)text_bmp + buf_align * 8;//(long)memalign(128, _mp3_buffer*1024*1024);
 
 
@@ -20330,16 +20317,16 @@ int main(int argc, char **argv)
 //	flip();
 
 	sprintf(avchdBG, "%s/BOOT.PNG",app_usrdir); 
-	load_texture(text_bmpUBG, avchdBG, 1920);
+	load_texture(text_BOOT, avchdBG, 1920);
 	sprintf(string1, "%s/GLO.PNG", app_usrdir);
 	if(exist(string1)) 
 	{
 		load_texture(text_bmpUPSR, string1, 1920);
-		put_texture_with_alpha( text_bmpUBG, text_bmpUPSR, 1920, 1080, 1920, 0, 0, 0, 0);
+		put_texture_with_alpha( text_BOOT, text_bmpUPSR, 1920, 1080, 1920, 0, 0, 0, 0);
 	}
 
 	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
-	set_texture( text_bmpUBG, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
+	set_texture( text_BOOT, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 	flip();
 
 	MEMORY_CONTAINER_SIZE_ACTIVE = MEMORY_CONTAINER_SIZE;
@@ -20672,7 +20659,7 @@ int main(int argc, char **argv)
 		wait_dialog();
 	}
 	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
-	set_texture( text_bmpUBG, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
+	set_texture( text_BOOT, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 	flip();
 
 //	load_texture(text_bmpBG, userBG, 1920);
@@ -21347,8 +21334,8 @@ start_of_loop:
 		parse_last_state();
 
 		if(cover_mode==8 || cover_mode==4) {
+			if(cover_mode==4) xmb[6].init=0;
 			init_xmb_icons(menu_list, max_menu_list, game_sel );
-//			main_video();
 			if(xmb_icon_last!=6) 
 			{ 
 				xmb_icon=xmb_icon_last; draw_xmb_icon_text(xmb_icon);
@@ -21834,6 +21821,7 @@ DM2_load_text:
 
 				if(cover_mode==4)
 				{
+					//if(is_reloaded) xmb[6].init=0;
 				}
 
 //				if(cover_mode==5)	{	}
