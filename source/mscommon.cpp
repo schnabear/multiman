@@ -2,7 +2,6 @@
 
 static int audioInitCell(void);
 
-volatile bool s_receivedExitGameRequest;
 
 #ifndef MS_THREADED_SAMPLE
 
@@ -24,7 +23,7 @@ void *               s_pMultiStreamMemory    = NULL;
 /**********************************************************************************/
 #define STACK_SIZE              (0x4000) // 16 kb
 #define EXIT_CODE               (0xbee)
-#define SERVER_PRIO             (128)
+#define SERVER_PRIO             (50)
 
 
 /**********************************************************************************
@@ -38,7 +37,6 @@ audioInitCell
 **********************************************************************************/
 static int audioInitCell(void)
 {
-	s_receivedExitGameRequest = false;
 	int ret = 0;
 	unsigned int portNum = -1;
 
@@ -109,7 +107,7 @@ long InitialiseAudio( const long nStreams, const long nmaxSubs, int &_nPortNumbe
 	cfg.channelCount=nStreams;
 	cfg.subCount=nmaxSubs;
 	cfg.dspPageCount=2;//5;
-	cfg.flags=0;//3;//CELL_MS_STREAM_AUTOCLOSE;//CELL_MS_ROUTABLE_STREAMS_FLAG;//CELL_MS_NOFLAGS;
+	cfg.flags=CELL_MS_NOFLAGS;//CELL_MS_USE_SMOOTH_ENVELOPE;//CELL_MS_ROUTABLE_STREAMS_FLAG;//3;//CELL_MS_STREAM_AUTOCLOSE;//CELL_MS_ROUTABLE_STREAMS_FLAG;//CELL_MS_NOFLAGS;
 
 
     _nPortNumber = audioInitCell();
@@ -140,15 +138,6 @@ long InitialiseAudio( const long nStreams, const long nmaxSubs, int &_nPortNumbe
     return 0;
 }
 
-/**********************************************************************************
-ShutdownMultiStream
-
-	This function closes the MultiStream system.
-	All previously allocated memory is also free'd.
-	Note that there is no need to stop any streams here. Just by not calling the
-	update functions, no more data will be generated.
-
-**********************************************************************************/
 void ShutdownMultiStream()
 {
 	void* pMemory = cellMSSystemClose();
@@ -161,116 +150,15 @@ void ShutdownMultiStream()
 }
 
 
-/**********************************************************************************
-OpenFile
-
-	This function opens a file.
-
-	Requires:	pszFilename		Name of file to load
-				pnSize			Pointer to pass back the size of data loaded
-				nStartOffset	Offset in bytes to skip when reading file
-
-	Returns:	>= 0			File handle
-				-1				File not found
-				-2				Seek fail
-**********************************************************************************/
-int OpenFile( const char* pszFilename, long* pnSize, int nStartOffset )
-{
-int ret;
-int fd;
-uint64_t	pos=0;
-
-    ret = cellFsOpen (pszFilename, CELL_FS_O_RDONLY, &fd, NULL, 0);
-    if (ret) return(-1);
-
-	ret = cellFsLseek(fd,0,CELL_FS_SEEK_END, &pos);
-	if (ret!=0)
-	{
-		cellFsClose (fd);
-		return(-2);
-	}
-
-    *pnSize = (long )pos;
-
-	ret = cellFsLseek(fd, nStartOffset ,CELL_FS_SEEK_SET,&pos);
-	if (ret!=0)
-	{
-		cellFsClose (fd);
-		return(-2);
-	}
-
-	return(fd);
-}
-
-/**********************************************************************************
-LoadFile
-
-	This function loads a file into memory.
-
-	Requires:	fd				Handle of file to use
-				ppData			Pointer to pass back where file will be loaded
-				nReadSize	 	Size of data to load
-				nStartOffset	Offset to the read start point from the file beginning
-				nEndOffset		Offset from end of the file to stop reading
-
-	Returns:	0				OK
-				-1				File load failed
-**********************************************************************************/
-long LoadFile( const int fd, long ppData, long nReadSize, int nStartOffset, int nEndOffset)
-{
-	uint64_t nRead = 0;
-	uint64_t pos=0;
-	int ret;
-	int loadSize;
-
-	loadSize=nReadSize;			// Change this to allow file to be loaded in smaller chunks
-
-	while(nReadSize!=0)
-	{
-		if (loadSize>nReadSize)
-			loadSize=nReadSize;
-
-		ret=cellFsRead(fd, (void*)ppData, loadSize, &nRead);
-		if (ret!=0)
-		{
-			cellFsClose (fd);
-			return(-1);
-		}
-
-	    if( (long)nRead != loadSize )		// Reached end of file and more data still required
-	    {
-			nRead-=nEndOffset;
-			ret = cellFsLseek(fd,nStartOffset,CELL_FS_SEEK_SET,&pos);	// Seek back to start
-			if (ret!=0)
-			{
-				cellFsClose (fd);
-				return(-1);
-			}
-		}
-		ppData+=nRead;
-		nReadSize-=nRead;
-    }
-	return(0);
-}
-
-/**********************************************************************************
-StartMultiStreamUpdateThread
-	This function creates the thread to update multistream.
-	Requires:
-		_thread		Thread function to call to handle MS/libaudio buffer updates
-
-**********************************************************************************/
 long StartMultiStreamUpdateThread(void _thread (uint64_t param))
 {
    
 	// create the MultiStream / libaudio update thread
-	int nRet = sys_ppu_thread_create(&s_MultiStreamPuThread, _thread, NULL, SERVER_PRIO, STACK_SIZE, SYS_PPU_THREAD_CREATE_JOINABLE, "MultiStream PU Thread");
+	int nRet = sys_ppu_thread_create(&s_MultiStreamPuThread, _thread, NULL, SERVER_PRIO, STACK_SIZE, 0, "MultiStream PU Thread"); //SYS_PPU_THREAD_CREATE_JOINABLE
 	if(nRet)
 	{
-//		printf("ERROR creating Multistream update thread!!!\n");
 		return -1;
 	}
-//	printf("Multistream thread (%d) created OK.\n", (int)s_MultiStreamPuThread);
     return 0;
 }
 

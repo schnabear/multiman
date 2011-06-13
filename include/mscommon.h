@@ -48,16 +48,8 @@ long InitialiseAudio( const long nStreams, const long nmaxSubs, int &_nPortNumbe
 
 void LoadATRAC(const char *_filename, long &_sampleData, long &_sampleDataSize, int &_nSampleFormat, int &_nSampleChannels);
 int InitFile(const char *filename,long *addr, long *size);
-
-//long LoadFile( const int fd, long ppData, long nReadSize );
-long LoadFile( const int fd, long ppData, long nReadSize = 256*1024, int nStartOffset = 0, int nEndOffset = 0);
-int OpenFile( const char* pszFilename, long* pnSize, int nStartOffset = 0 );
-
 long StartMultiStreamUpdateThread( void _thread (uint64_t param));
 void ShutdownMultiStream();
-
-bool LoadModules();
-bool UnloadModules();
 
 #define SUPPRESS_COMPILER_WARNING(x) (void)x
 
