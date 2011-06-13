@@ -171,6 +171,7 @@ _meminfo meminfo;
 	u64 force_mp3_offset=0;
 	bool mm_audio=true; //goes to false if XMB BGM is playing
 	bool mm_is_playing=false;
+	bool is_theme_playing=false; 
 
 int StartMultiStream();
 void stop_audio();
@@ -2002,7 +2003,8 @@ void launch_snes_emu(char *rom)
 
 bool is_genp(char *rom)
 {
-	if( (strstr(rom, ".bin")!=NULL || strstr(rom, ".BIN")!=NULL 
+	if( ( ( (strstr(rom, ".bin")!=NULL || strstr(rom, ".BIN")!=NULL) 
+			&& (strstr(rom, "/ROMS/gen/")!=NULL || strstr(rom, genp_roms)!=NULL))
 		|| strstr(rom, ".smd")!=NULL || strstr(rom, ".SMD")!=NULL
 		|| strstr(rom, ".md")!=NULL || strstr(rom, ".MD")!=NULL
 		|| strstr(rom, ".sms")!=NULL || strstr(rom, ".SMS")!=NULL
@@ -5652,7 +5654,7 @@ static void mp3_callback( int nCh, void *userData,	int callbackType,	void *readB
 			if(force_mp3_fd<1)
 				if(CELL_FS_SUCCEEDED!=cellFsOpen (force_mp3_file, CELL_FS_O_RDONLY, &force_mp3_fd, NULL, 0)) goto try_next_mp3;
 			if(CELL_FS_SUCCEEDED!=cellFsLseek(force_mp3_fd, force_mp3_offset, CELL_FS_SEEK_SET, &pos)) {cellFsClose(force_mp3_fd); force_mp3_fd=-1; goto try_next_mp3; }
-			if(CELL_FS_SUCCEEDED!=cellFsRead(force_mp3_fd, (void*)readBuffer, KB(MP3_BUF), &nRead)) {cellFsClose(force_mp3_fd); force_mp3_fd=-1; goto try_next_mp3;}
+			cellFsRead(force_mp3_fd, (void*)readBuffer, KB(MP3_BUF), &nRead);
 			if(nRead>0) force_mp3_offset+=nRead; else {cellFsClose(force_mp3_fd); force_mp3_fd=-1; goto try_next_mp3;}
 		}
 
@@ -12919,8 +12921,10 @@ void main_mp3( char *temp_mp3)
 	force_mp3_fd=-1;
 	sprintf(force_mp3_file, "%s", temp_mp3);
 	force_mp3=true;
+	is_theme_playing=false;
 	if(strstr(temp_mp3, "SOUND.BIN")!=NULL)
 	{
+		is_theme_playing=true;
 		max_mp3=1;
 		current_mp3=1;
 		sprintf(mp3_playlist[max_mp3].path, "%s", temp_mp3);
@@ -16896,11 +16900,11 @@ void apply_theme (const char *theme_file, const char *theme_path)
 	sprintf(th2_file, "%s/%s", app_usrdir, th_file);
 	remove(th2_file);
 	if(exist(filename)) { file_copy(filename, th2_file, 0); }
-	if((exist(th2_file) && !(current_mp3!=0 && max_mp3!=0)) && theme_sound)
+	if((exist(th2_file) && is_theme_playing) && theme_sound)
 		main_mp3((char*)th2_file); 
 	else 
 		{
-			if(!(current_mp3!=0 && max_mp3!=0))
+			if(is_theme_playing)
 			stop_audio();
 		}
 
@@ -23545,9 +23549,10 @@ xmb_pin_ok2:
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "theme_sound"))
 			{
 
-				if((!(current_mp3!=0 && max_mp3!=0)) && !theme_sound)
+				if(is_theme_playing && !theme_sound)
 					stop_audio();
-				if((!(current_mp3!=0 && max_mp3!=0)) && theme_sound)
+
+				if(is_theme_playing && theme_sound)
 						sprintf(filename, "%s/SOUND.BIN", app_usrdir);
 						if(exist(filename))
 							main_mp3((char*)filename); 
