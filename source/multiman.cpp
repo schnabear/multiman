@@ -57,7 +57,7 @@
 #include <sysutil/sysutil_oskdialog.h>
 #include <sysutil/sysutil_syscache.h>
 #include <sysutil/sysutil_sysparam.h>
-//#include <sysutil/sysutil_discgame.h>
+
 #include <sysutil/sysutil_common.h>
 #include <sysutil/sysutil_screenshot.h>
 #include <sysutil/sysutil_bgmplayback.h>
@@ -128,10 +128,18 @@ int th_drive_icon_x=1790;
 int th_drive_icon_y=964;
 
 
-//NTFS
-//#define MAX_PFS_VOLUMES 1
+//NTFS/PFS driver
 int max_usb_volumes=1;
 
+typedef struct _DEV_INFO {
+    struct _DEV_INFO *next;
+	PFSM_DEVICE dev;
+} DEV_INFO;
+static DEV_INFO *dev_info;
+
+typedef uint64_t u64;
+
+//memory info
 typedef struct {
 	uint32_t total;
 	uint32_t avail;
@@ -139,26 +147,18 @@ typedef struct {
 _meminfo meminfo;
 
 
-#if (CELL_SDK_VERSION>0x210001)
-typedef struct _DEV_INFO {
-    struct _DEV_INFO *next;
-	PFSM_DEVICE dev;
-} DEV_INFO;
-static DEV_INFO *dev_info;
-#endif
-
-typedef uint64_t u64;
+#define MP3_MEMORY_KB 256
+#define MP3_BUF (MP3_MEMORY_KB/2)
 
 	CellAudioPortParam audioParam;
 	CellAudioPortConfig portConfig;
 	int sizeNeeded;
 	int *mp3Memory;
-	int _mp3_buffer=KB(128);
-#define MP3_BUF 64
-	//u8 vm_real_size=1;
+	int _mp3_buffer=KB(MP3_MEMORY_KB);
+
 	int mp3_freq=44100;
 	int mp3_durr=0;
-	char mp3_now_playing[128];
+	char mp3_now_playing[512];
 	float mp3_volume=0.5f;
 	char *pData=NULL;
 	char *pDataB=NULL;
@@ -177,10 +177,9 @@ void stop_audio();
 
 void *color_base_addr;
 u32 frame_index = 0;
-//u32 c_frame_index = 0;
+
 u32 video_buffer;
 int V_WIDTH, V_HEIGHT;//, _V_WIDTH, _V_HEIGHT;
-//bool use_depth=1; //for blend/alpha
 
 int mp_WIDTH=30, mp_HEIGHT=42; //mouse icon HR
 
@@ -454,11 +453,6 @@ int dox_rs_y=196;
 int dox_rs_w=58;
 int dox_rs_h=56;
 
-//int dox_pad_x=0;
-//int dox_pad_y=200;
-//int dox_pad_w=64;
-//int dox_pad_h=50;
-
 int dox_pad_x=7;
 int dox_pad_y=200;
 int dox_pad_w=53;
@@ -561,7 +555,6 @@ int my_game_copy_pfsm(char *path, char *path2);
 char current_version[9]="02.00.04";
 char current_version_NULL[10];
 char versionUP[64];
-
 
 char hdd_folder[64]="/dev_hdd0/GAMES/";
 
@@ -697,7 +690,6 @@ char mouseInfo[128];//char mouseInfo2[128];
 
 	u8 *text_bmp=NULL;
 	u8 *text_bmpS=NULL;
-//	u8 *text_bmpBG=NULL;
 	u8 *text_bmpUBG=NULL;
 	u8 *text_BOOT=NULL;
 
@@ -749,7 +741,6 @@ FILE *fpV;
 int do_move=0;
 int no_real_progress=0;
 
-float new_offset=0.025f; //for filemanager overscan
 int payload=0;
 char payloadT[2];
 int socket_handle;
@@ -1322,7 +1313,6 @@ void flipc(int _fc)
 	{
 		sys_timer_usleep(3336);
 		flip();
-		//cellSysutilCheckCallback();
 	}
 }
 
@@ -1746,7 +1736,6 @@ void screen_saver()
 			setRenderColor();
 			flip();
 			sys_timer_usleep(3336);
-			//cellSysutilCheckCallback();
 
 			initial_skip++;
 			new_pad=0; old_pad=0;
@@ -1768,13 +1757,9 @@ void slide_screen_left(uint8_t *buffer)
 			display_img((int)slide, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 			setRenderColor();
 			flip();
-			//cellSysutilCheckCallback();
-
-//			new_pad=0; old_pad=0;
-//			pad_read();
-//			if ( (new_pad || old_pad || c_opacity_delta==16)) { new_pad=0; old_pad=0; break;}
+			
 		}
-			max_ttf_label=0; memset(buffer, 0, 1920*1080*4); //0x505050
+			max_ttf_label=0; memset(buffer, 0, FB(1)); //0x505050
 			sprintf(string1, "%s", "Please wait...");
 			print_label_ex( 0.5f, 0.50f, 1.0f, 0xffffffff, string1, 1.04f, 0.0f, 15, 1.0f, 1.0f, 1);
 			flush_ttf(buffer, 1920, 1080);
@@ -1800,7 +1785,7 @@ void slide_screen_right(uint8_t *buffer)
 //			pad_read();
 //			if ( (new_pad || old_pad || c_opacity_delta==16)) { new_pad=0; old_pad=0; break;}
 		}
-			max_ttf_label=0; memset(buffer, 0, 1920*1080*4);
+			max_ttf_label=0; memset(buffer, 0, FB(1));
 			sprintf(string1, "%s", "Please wait...");
 			print_label_ex( 0.5f, 0.50f, 1.0f, 0xffffffff, string1, 1.04f, 0.0f, 15, 1.0f, 1.0f, 1);
 			flush_ttf(buffer, 1920, 1080);
@@ -1809,7 +1794,7 @@ void slide_screen_right(uint8_t *buffer)
 			display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 			setRenderColor();
 			flip();
-			//cellSysutilCheckCallback();
+			
 }
 
 
@@ -1881,7 +1866,7 @@ void wait_dialog()
 
 	while(!dialog_ret)
 		{
-		//cellSysutilCheckCallback();
+		
 		if(init_finished)
 		{
 			if(cover_mode==8) draw_whole_xmb(xmb_icon);//draw_xmb_bare(xmb_icon, 1, 0, 0);
@@ -1923,7 +1908,7 @@ void wait_dialog_simple()
 
 	while(!dialog_ret)
 		{
-		//cellSysutilCheckCallback();
+		
 		sys_timer_usleep(1668);
 		flip();
 		}
@@ -2567,7 +2552,7 @@ void net_folder_copy(char *path, char *path_new, char *path_name)
 
 	pad_read();
 	if ( (new_pad & BUTTON_TRIANGLE) || (new_pad & BUTTON_CIRCLE) || dialog_ret==3) break;
-		//cellSysutilCheckCallback();
+		
 	}  //while
 
 //	DPrintf("Sending WAIT command... ");
@@ -5654,28 +5639,27 @@ static void mp3_callback( int nCh, void *userData,	int callbackType,	void *readB
 {
 		
 		(void) nCh;//streamNumber; 
-		(void)userData; //(void)readBuffer; (void)readSize;
-		uint64_t nRead = 0;
+		(void)userData; 
 		if(!mm_is_playing) return;
+		uint64_t nRead = 0;
+		uint64_t pos = 0;
 
-		sprintf(www_info, "[%s]: %.f / %i", force_mp3_file, (double)force_mp3_offset, readSize);
-
+		//sprintf(www_info, "[%s]: %.f / %i", force_mp3_file, (double)force_mp3_offset, readSize);
 
 		if(readSize && callbackType==1)// && exist(force_mp3_file))
 		{
 
-			uint64_t pos=0;
-			int ret;
-
 			if(force_mp3_fd<1)
-			ret = cellFsOpen (force_mp3_file, CELL_FS_O_RDONLY, &force_mp3_fd, NULL, 0); 
-			ret = cellFsLseek(force_mp3_fd, force_mp3_offset, CELL_FS_SEEK_SET, &pos); 
-			ret = cellFsRead(force_mp3_fd, (void*)readBuffer, KB(MP3_BUF), &nRead);
-			if(nRead>0) force_mp3_offset+=nRead;
+				if(CELL_FS_SUCCEEDED!=cellFsOpen (force_mp3_file, CELL_FS_O_RDONLY, &force_mp3_fd, NULL, 0)) goto try_next_mp3;
+			if(CELL_FS_SUCCEEDED!=cellFsLseek(force_mp3_fd, force_mp3_offset, CELL_FS_SEEK_SET, &pos)) {cellFsClose(force_mp3_fd); force_mp3_fd=-1; goto try_next_mp3; }
+			if(CELL_FS_SUCCEEDED!=cellFsRead(force_mp3_fd, (void*)readBuffer, KB(MP3_BUF), &nRead)) {cellFsClose(force_mp3_fd); force_mp3_fd=-1; goto try_next_mp3;}
+			if(nRead>0) force_mp3_offset+=nRead; else {cellFsClose(force_mp3_fd); force_mp3_fd=-1; goto try_next_mp3;}
 		}
 
 		if(callbackType!=1 && callbackType!=0)
 		{
+try_next_mp3:
+			stop_audio();
 			if(max_mp3!=0) {
 				current_mp3++;
 				if(current_mp3>max_mp3) current_mp3=1;
@@ -6669,7 +6653,7 @@ void draw_list_text( uint8_t *buffer, uint32_t width, uint32_t height, t_menu_li
 {
 //uint8_t *buffer = NULL;
 //buffer=(uint8_t*)(color_base_addr)+video_buffer*frame_index;
-	if(to_draw && (_cover_mode==0))	memset(buffer, 0x00, (1920*1080*4));
+	if(to_draw && (_cover_mode==0))	memset(buffer, 0x00, FB(1));
 	float y = 0.1f, yb;
 	int i = 0, c=0;
 	char str[256];
@@ -7453,7 +7437,7 @@ int open_submenu(uint8_t *buffer, int *_game_sel)
 {
 	xmb_bg_show=0;
 	xmb_bg_counter=200;
-	memcpy(text_FONT, buffer, 1920*1080*4);
+	memcpy(text_FONT, buffer, FB(1));
 
 reload_submenu:
 	char label[256];
@@ -7748,16 +7732,8 @@ gs_cover:
 	print_label_ex( (425.0f/1920.f), ((873.0f+top_o)/1080.f), 1.0f, 0xc0c0c0c0, label, 1.00f, 0.0f, 18, 1.0f, 1.0f, 1);
 	flush_ttf(text_FONT, 1920, 1080);
 
-	//u32 b_color=0x0080ffd0;
-
-//	memcpy(buffer, text_FONT, 1920*1080*4);
-
 	if(V_WIDTH<1280)
-	{
-		//sub_menu_open=0;
 		blur_texture(text_FONT, 1920, 1080, 0, 0, 1920, 1080,  0, 0, 1, 1);
-		//sub_menu_open=1;
-	}
 
 	for(m=200; m>100; m-=10)
 	{
@@ -7774,7 +7750,7 @@ gs_cover:
 
 	u32 b_color = 0x0080ffff;
 	while (1) {
-		//cellSysutilCheckCallback();
+
 		pad_read();
 
 		if ( (new_pad & BUTTON_L1)) {
@@ -7783,7 +7759,7 @@ gs_cover:
 			(*_game_sel)--;
 			if((*_game_sel)<0) (*_game_sel)=(max_menu_list-1);
 			sprintf(label, "%s/%s_1920.PNG", cache_dir, menu_list[*_game_sel].title_id);
-			if(exist(label))	load_texture(text_FONT, label, 1920); else memset(text_FONT, 0, 1920*1080*4);
+			if(exist(label))	load_texture(text_FONT, label, 1920); else memset(text_FONT, 0, FB(1));
 			goto reload_submenu;
 			} 
 
@@ -7793,7 +7769,7 @@ gs_cover:
 			(*_game_sel)++;
 			if((*_game_sel)>=max_menu_list) (*_game_sel)=0;
 			sprintf(label, "%s/%s_1920.PNG", cache_dir, menu_list[*_game_sel].title_id);
-			if(exist(label))	load_texture(text_FONT, label, 1920); else memset(text_FONT, 0, 1920*1080*4);
+			if(exist(label))	load_texture(text_FONT, label, 1920); else memset(text_FONT, 0, FB(1));
 			goto reload_submenu;
 			} 
 
@@ -7820,7 +7796,7 @@ gs_cover:
 				menu_list[*_game_sel].user=(gflags & (u32)(~(15<<16))) | ((u32)(strtod(opt_list[ret_f].value, NULL))<<16);
 				set_game_flags(*_game_sel);
 				sprintf(label, "%s/%s_1920.PNG", cache_dir, menu_list[*_game_sel].title_id);
-				if(exist(label))	load_texture(text_FONT, label, 1920); else memset(text_FONT, 0, 1920*1080*4);
+				if(exist(label))	load_texture(text_FONT, label, 1920); else memset(text_FONT, 0, FB(1));
 				goto reload_submenu;
 			}
 			else new_pad=0;
@@ -8223,7 +8199,6 @@ int open_mm_submenu(uint8_t *buffer) //, int *_game_sel
 
 	flush_ttf(text_FONT, 1920, 1080);
 
-//	memcpy(buffer, text_FONT, 1920*1080*4);
 
 	if(V_WIDTH<1280) blur_texture(text_FONT, 1920, 1080, 0, 0, 1920, 1080,  0, 0, 1, 1);
 
@@ -8248,7 +8223,7 @@ int open_mm_submenu(uint8_t *buffer) //, int *_game_sel
 
 //	u32 b_color = 0x0080ffff;
 	while (1) {
-		//cellSysutilCheckCallback();
+		
 		pad_read();
 
 		if ( (new_pad & BUTTON_TRIANGLE) || (new_pad & BUTTON_CIRCLE) ) {result=0; break;} //quit sub-menu
@@ -8400,7 +8375,7 @@ void fix_perm_recursive(const char* start_path)
 {
 	new_pad=0; old_pad=0;
 	if(abort_rec==1) return;
-	//cellSysutilCheckCallback();
+	
 	if(strstr(start_path,"/pvd_usb")!=NULL) return;
 
     int dir_fd;
@@ -8409,7 +8384,7 @@ void fix_perm_recursive(const char* start_path)
     CellFsDirent dir_ent;
     CellFsErrno err;
     cellFsChmod(start_path, 0777);
-	//cellSysutilCheckCallback();
+	
 	flip();
     if (cellFsOpendir(start_path, &dir_fd) == CELL_FS_SUCCEEDED)
     {
@@ -10959,7 +10934,7 @@ if( ( ( ((int)(global_device_bytes*100ULL/copy_global_bytes)) - lastINC2)>0 || (
 	flip();
 
 }
-	//cellSysutilCheckCallback();
+	
 	pad_read();
 	if ( old_pad & BUTTON_TRIANGLE || new_pad & BUTTON_CIRCLE || dialog_ret==3) {abort_copy=1; new_pad=0; old_pad=0; break;}
 
@@ -11091,7 +11066,7 @@ void cache_png(char *path, char *title_id)
 			file_copy((char *)tmp2, (char*)dst, 0);
 		}
 
-		memset(text_bmp, 0x50, 1920*1080*4);
+		memset(text_bmp, 0x50, FB(1));
 
 		if(strstr(path, "/pvd_usb")!=NULL)
 		{
@@ -11131,7 +11106,7 @@ void cache_png(char *path, char *title_id)
 					{
 						load_texture( text_bmp, src, 310);
 						mip_texture( text_FONT, text_bmp, 310, 250, 2); //scale to 620x500
-						memset(text_bmp, 0x00, 1920*1080*4);
+						memset(text_bmp, 0x00, FB(1));
 						put_texture( text_bmp, text_FONT, 620, 500, 620, 650, 290, 0, 0);
 					}
 					else
@@ -11150,7 +11125,7 @@ void cache_png(char *path, char *title_id)
 					file_copy((char *)src, (char*)dst, 0); 
 					load_texture( text_bmp, dst, 1920);
 				}
-				else memset(text_bmp, 0x50, 1920*1080*4);
+				else memset(text_bmp, 0x50, FB(1));
 				src[strlen(src)-5]=0x30;
 				if(exist(src))
 				{
@@ -12090,7 +12065,7 @@ if(lastINC3>0 || (time(NULL)-seconds2)!=0 )
 	seconds2= (int) (time(NULL));
 }
 
-	//cellSysutilCheckCallback();
+	
 	pad_read();
 	if ( old_pad & BUTTON_TRIANGLE || new_pad & BUTTON_CIRCLE) {abort_copy=1; new_pad=0; old_pad=0; break;}
 
@@ -12397,7 +12372,7 @@ void photo_export( char *filenape_v, char *album, int to_unregister )
 	ret = photo_initialize();
 
 	while (1) {
-		//cellSysutilCheckCallback();
+		
 		if(pe_result < 1) break;
 		if(pe_result == CELL_PHOTO_EXPORT_UTIL_RET_OK  || pe_result == CELL_PHOTO_EXPORT_UTIL_RET_CANCEL || pe_result == CELL_OK) break;
 	}
@@ -12415,7 +12390,7 @@ void photo_export( char *filenape_v, char *album, int to_unregister )
 //	else
 		{
 		while (1) {
-			//cellSysutilCheckCallback();
+			
 			if(pe_result < 1) break;
 			if(pe_result == CELL_PHOTO_EXPORT_UTIL_RET_OK || pe_result == CELL_PHOTO_EXPORT_UTIL_RET_CANCEL || pe_result == CELL_OK) break;
 			sys_timer_usleep (500 * 1000);
@@ -12429,7 +12404,7 @@ void photo_export( char *filenape_v, char *album, int to_unregister )
 		ret = photo_finalize();
 
 		while (1) {
-			//cellSysutilCheckCallback();
+			
 			if(pe_result < 1) break;
 			if(pe_result == CELL_PHOTO_EXPORT_UTIL_RET_OK || pe_result == CELL_PHOTO_EXPORT_UTIL_RET_CANCEL || pe_result == CELL_OK) break;
 			sys_timer_usleep (50 * 1000);
@@ -12797,11 +12772,7 @@ void video_export( char *filename_v, char *album, int to_unregister )
 
 
 
-
-
 //MP3
-static float*        s_pOutputBuffers        = NULL;
-long	fps60 = 1000000 / 60;
 int nChannel;
 int nDSPHandle;
 int SUBNUM = 1;
@@ -12831,6 +12802,8 @@ int StartMultiStream()
 					0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
 					0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
+	pData = (char*) memalign(16, _mp3_buffer); //allocate 2 buffers for mp3 playback (64KB)
+	pDataB = pData;
 
 	InitialiseAudio(MAX_STREAMS, MAX_SUBS, portNum, audioParam, portConfig);
 
@@ -13058,7 +13031,7 @@ CellMSInfo  MS_Info;
 
     MS_Info.SubBusGroup         = CELL_MS_MASTER_BUS;
 
-    MS_Info.FirstBuffer         = pDataB; //128KB buffer split in two 64KB chunks
+    MS_Info.FirstBuffer         = pDataB; //64KB buffer split in two 32KB chunks
     MS_Info.FirstBufferSize     = KB(MP3_BUF);
     MS_Info.SecondBuffer        = pDataB+KB(MP3_BUF);
     MS_Info.SecondBufferSize    = KB(MP3_BUF);
@@ -13088,8 +13061,11 @@ static void _Multi_Stream_Update_Thread(uint64_t param)
 	while(!mm_shutdown)
 	{
 		sys_timer_usleep(200);
-		cellMSSystemSignalSPU();
-		cellMSSystemGenerateCallbacks();
+		if(mm_is_playing)
+		{
+			cellMSSystemSignalSPU();
+			cellMSSystemGenerateCallbacks();
+		}
 	}
 	cellAudioPortStop(portNum);
     sys_ppu_thread_exit(0);
@@ -13250,7 +13226,7 @@ int mod_mount_table(const char *new_path, int _mode) //mode 0/1 = reset/change
 
 void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_lines, float x_offset)
 {
-	float y_offset=0.12f+new_offset;
+	float y_offset=0.12f+0.025f;
 	int e=first_to_show;
 	float e_size=0.0f;
 	char str[128], e_stype[8], e_name[256], e_sizet[16], this_dev[128], other_dev[128], e_date[16], str_date[16], temp_pane[1024], entry_name[512], e_attributes[16], e_attributes2[48];
@@ -13391,9 +13367,9 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 				else
 					sprintf(e_name,"File: %s", list[e].name);
 				e_name[86]=0;
-				cellDbgFontPrintf( 0.04f+new_offset, 0.895f, 0.7f , COL_HEXVIEW, e_name);
+				cellDbgFontPrintf( 0.04f+0.025f, 0.895f, 0.7f , COL_HEXVIEW, e_name);
 				sprintf(e_name,"Date: %s %s:%02d:%02d%s", e_date, tmhour(timeinfo->tm_hour), timeinfo->tm_min, timeinfo->tm_sec, e_attributes2);
-				cellDbgFontPrintf( 0.04f+new_offset, 0.916f, 0.7f , COL_HEXVIEW, e_name);
+				cellDbgFontPrintf( 0.04f+0.025f, 0.916f, 0.7f , COL_HEXVIEW, e_name);
 			}
 			//color=0xc01010a0;
 
@@ -13767,12 +13743,12 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 				else
 					sprintf(e_name,"File: %s", list[e].name);
 				e_name[86]=0;
-				cellDbgFontPrintf( 0.04f+new_offset, 0.895f, 0.7f , COL_HEXVIEW, e_name);
+				cellDbgFontPrintf( 0.04f+0.025f, 0.895f, 0.7f , COL_HEXVIEW, e_name);
 				if(view_mode==1)
 					sprintf(e_name,"Memory offset: 0x%08X / 0x%08X | [SELECT] for file view", (int)fsiz, (int)msiz);
 				else
 					sprintf(e_name,"Offset: 0x%X (%.0f) / 0x%X (%.0f) | [SELECT] for LV2 view", (int)fsiz, (double)fsiz, (int)msiz, (double)msiz); //Date: %s |  e_date,
-				cellDbgFontPrintf( 0.04f+new_offset, 0.916f, 0.7f , COL_HEXVIEW, e_name);
+				cellDbgFontPrintf( 0.04f+0.025f, 0.916f, 0.7f , COL_HEXVIEW, e_name);
 
 				for(li=0; li<32; li++)
 				{
@@ -13803,12 +13779,12 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 					sprintf(clin, "%-48s |  %-16s", clin, clintxt);  
 					if(mouseX>=0.11f && mouseX<=0.89f && mouseY>=(0.07f+li*0.024f) && mouseY<=(0.07f+li*0.024f)+0.026f)
 					{
-						draw_square((0.11f+new_offset-0.015f-0.5f)*2.0f, (0.5f-(0.07f+li*0.024f))*2.0f, 1.52f, 0.048f, 0.0f, 0x0080ff80);
+						draw_square((0.11f+0.025f-0.015f-0.5f)*2.0f, (0.5f-(0.07f+li*0.024f))*2.0f, 1.52f, 0.048f, 0.0f, 0x0080ff80);
 						select_color=0xc0e0e0e0;
 					}
 					else
 						select_color=COL_HEXVIEW;
-					cellDbgFontPrintf( 0.11f+new_offset, 0.07f+li*0.024f, 0.7f ,select_color, "0x%04X%04X: %s  |", (unsigned int)((fsiz+li*16)/0x10000), (unsigned int)((fsiz+li*16)%0x10000), clin, clintxt);
+					cellDbgFontPrintf( 0.11f+0.025f, 0.07f+li*0.024f, 0.7f ,select_color, "0x%04X%04X: %s  |", (unsigned int)((fsiz+li*16)/0x10000), (unsigned int)((fsiz+li*16)%0x10000), clin, clintxt);
 				}
 
 
@@ -13845,7 +13821,7 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 					draw_mouse_pointer(0);					
 					flip();
 
-					//cellSysutilCheckCallback();
+					
 
 					if ( (new_pad & BUTTON_TRIANGLE) || (new_pad & BUTTON_CIRCLE)) break;
 
@@ -13949,7 +13925,7 @@ quit_viewer:
 				if((new_pad & BUTTON_TRIANGLE)) e=0;
 
 				first_to_show=0;
-				mouseY=0.12f+new_offset+0.013f; //move mouse to top of folder list
+				mouseY=0.12f+0.025f+0.013f; //move mouse to top of folder list
 
 				if(strstr (list[e].path,"/net_host")!=NULL)
 				{
@@ -14052,7 +14028,7 @@ quit_viewer:
 					setRenderColor();
 					cellDbgFontDrawGcm();
 					flip(); 
-					//cellSysutilCheckCallback();
+					
 					if(osk_dialog==1 || osk_dialog==-1) break;
 					}
 				cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
@@ -14456,7 +14432,7 @@ skip_BD:
 			mouseYDR=mouseXDR=mouseYDL=mouseXDL=0.0000f;
 			while(1)
 				{ // Picture Viewer Mode
-				//cellSysutilCheckCallback();
+				
 				sprintf(my_mp3_file, "%s", list[current_image].path);
 				if(strstr(my_mp3_file, ".jpg")!=NULL || strstr(my_mp3_file, ".JPG")!=NULL || strstr(my_mp3_file, ".jpeg")!=NULL || strstr(my_mp3_file, ".JPEG")!=NULL)
 				{
@@ -14528,17 +14504,6 @@ skip_BD:
 								set_texture( text_FONT, 1920, 1080); 
 								display_img((int)((1920-png_w2)/2)+pic_posX, (int)((1080-png_h2)/2)+pic_posY, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
 							}
-/*						if(show_info==1){
-
-							sprintf(pic_info,"Name: %s", list[current_image].name); pic_info[95]=0;
-							draw_text_stroke( 0.04f+new_offset, 0.867f, 0.7f ,0xc0a0a0a0, pic_info);
-							timeinfo = localtime ( &list[current_image].time );
-							sprintf(pic_info,"Info: JPEG %ix%i (Zoom: %3.0f)\nDate: %02d/%02d/%04d", png_w, png_h, pic_zoom*100.0f, timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900);
-							draw_text_stroke( 0.04f+new_offset, 0.89f, 0.7f ,0xc0a0a0a0, pic_info);
-
-							cellDbgFontDrawGcm();
-						}
-*/
 
 				}
 
@@ -14632,14 +14597,14 @@ skip_BD:
 						if(show_info==1){
 							if(slide_show) sprintf(ss_status, "%s", "Stop"); else sprintf(ss_status, "%s", "Start");
 							sprintf(pic_info,"   Name: %s", list[current_image].name); pic_info[95]=0;
-							draw_text_stroke( 0.04f+new_offset, 0.867f, 0.7f ,0xc0a0a0a0, pic_info);
+							draw_text_stroke( 0.04f+0.025f, 0.867f, 0.7f ,0xc0a0a0a0, pic_info);
 							timeinfo = localtime ( &list[current_image].time );
 							if(strstr(my_mp3_file, ".png")!=NULL || strstr(my_mp3_file, ".PNG")!=NULL)
 								sprintf(pic_info,"   Info: PNG %ix%i (Zoom: %3.0f)\n   Date: %02d/%02d/%04d\n[START]: %s slideshow", png_w, png_h, pic_zoom*100.0f, timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900, ss_status);
 							else
 								sprintf(pic_info,"   Info: JPEG %ix%i (Zoom: %3.0f)\n   Date: %02d/%02d/%04d\n[START]: %s slideshow", png_w, png_h, pic_zoom*100.0f, timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900, ss_status);
 
-							draw_text_stroke( 0.04f+new_offset, 0.89f, 0.7f ,0xc0a0a0a0, pic_info);
+							draw_text_stroke( 0.04f+0.025f, 0.89f, 0.7f ,0xc0a0a0a0, pic_info);
 
 							cellDbgFontDrawGcm();
 						}
@@ -16496,7 +16461,7 @@ void slide_xmb_left(int _xmb_icon)
 		draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
 	
 		flip();
-		//cellSysutilCheckCallback();
+		
 	}
 	xmb_sublevel=1;
 	xmb_slide=0;
@@ -16522,7 +16487,7 @@ void slide_xmb_right()
 			draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
 		
 			flip();
-			//cellSysutilCheckCallback();
+			
 		}
 
 		xmb_slide=0;
@@ -16689,12 +16654,9 @@ void draw_fileman()
 		//if(c_opacity2<0x01) return;
 
 		set_texture( text_OFF_2, 320, 320); 
-		display_img(1775-(int)(1920.0f*new_offset), 24+(int)(1080.0f*new_offset), 48, 48, 96, 96, -0.2f, 320, 320);
+		display_img(1775-(int)(1920.0f*0.025f), 24+(int)(1080.0f*0.025f), 48, 48, 96, 96, -0.2f, 320, 320);
 
 		update_fm_stripe();
-
-//		draw_square(-1.0f, (0.5f - 0.00f)*2.0f, 2.0f, 0.087f, 0.0f, 0x000000ff);
-//		draw_square(-1.0f, (0.5f - 0.90f)*2.0f, 2.0f, 0.20f, 0.0f, 0x000000ff);
 
 		set_texture( text_FMS+737280, 1920, 48); 
 		display_img(0, 47, 1920, 60, 1920, 48, 0.0f, 1920, 48);
@@ -17874,10 +17836,8 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 	if(xmb_slide_step_y!=0) //sliding horizontally
 	{
 		xmb_slide_y+=xmb_slide_step_y;
-			 if(xmb_slide_y == 10) xmb_slide_step_y = 4;
-		else if(xmb_slide_y ==-10) xmb_slide_step_y =-4;
-		else if(xmb_slide_y == 30) xmb_slide_step_y = 5;
-		else if(xmb_slide_y ==-30) xmb_slide_step_y =-5;
+			 if(xmb_slide_y == 10) xmb_slide_step_y = 5;
+		else if(xmb_slide_y ==-10) xmb_slide_step_y =-5;
 		else if(xmb_slide_y == 50) xmb_slide_step_y = 2;
 		else if(xmb_slide_y ==-50) xmb_slide_step_y =-2;
 		else if(xmb_slide_y == 80) xmb_slide_step_y = 1;
@@ -17998,14 +17958,11 @@ int open_theme_menu(char *_caption, int _width, theme_def *list, int _max, int _
 		draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
 
 		set_texture(text_LIST, _width, _height);
-//		display_img(_x, _y, _width, _height, _width, _height, 0.0f, _width, _height);
 		display_img((int)(mouseX*1920.f), (int)(mouseY*1080.f), _width, _height, _width, _height, 0.0f, _width, _height);
 		set_texture(text_LIST+3024000, 680, 630);
 		display_img((int)(mouseX*1920.f)+_width+(V_WIDTH==1920?20:70), (int)(mouseY*1080.f), 680, _height, 680, _height, 0.0f, 680, _height);
 
 		flip();
-
-		//cellSysutilCheckCallback();
 
 		mouseX+=mouseXD; mouseY+=mouseYD;
 		if(mouseX>0.995f) {mouseX=0.995f;mouseXD=0.0f;} if(mouseX<0.0f) {mouseX=0.0f;mouseXD=0.0f;}
@@ -18050,7 +18007,7 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 {
 	if(_max_entries>16) _max_entries=16;
 	u8 *text_LIST = NULL;
-	text_LIST = text_bmpUBG + (1920*1080*4);
+	text_LIST = text_bmpUBG + (FB(1));
 	int line_h = 30;
 	int _height = (_max_entries+5) * line_h;
 
@@ -18126,7 +18083,7 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 		display_img((int)(mouseX*1920.f), (int)(mouseY*1080.f), _width, _height, _width, _height, 0.0f, _width, _height);
 
 		flip();
-		//cellSysutilCheckCallback();
+		
 
 		mouseX+=mouseXD; mouseY+=mouseYD;
 		if(mouseX>0.995f) {mouseX=0.995f;mouseXD=0.0f;} if(mouseX<0.0f) {mouseX=0.0f;mouseXD=0.0f;}
@@ -18225,7 +18182,7 @@ int open_list_menu(char *_caption, int _width, t_opt_list *list, int _max, int _
 
 
 		flip();
-		//cellSysutilCheckCallback();
+		
 
 		mouseX+=mouseXD; mouseY+=mouseYD;
 		if(mouseX>0.995f) {mouseX=0.995f;mouseXD=0.0f;} if(mouseX<0.0f) {mouseX=0.0f;mouseXD=0.0f;}
@@ -18320,7 +18277,7 @@ int open_dd_menu(char *_caption, int _width, t_opt_list *list, int _max, int _x,
 		cellDbgFontPrintf( 0.83f, 0.895f, 0.70f ,COL_HEXVIEW, "%s\n %s:%02d:%02d ", string1, tmhour(timeinfo->tm_hour), timeinfo->tm_min, timeinfo->tm_sec);
 
 		flip();
-		//cellSysutilCheckCallback();
+		
 
 		mouseX+=mouseXD; mouseY+=mouseYD;
 		if(mouseX>0.995f) {mouseX=0.995f;mouseXD=0.0f;} if(mouseX<0.0f) {mouseX=0.0f;mouseXD=0.0f;}
@@ -19376,10 +19333,14 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 			xmb[6].size=0;
 			add_xmb_member(xmb[6].member, &xmb[6].size, (char*)"Refresh", (char*)"Scan all connected devices and refresh game list",
 					/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb[0].data, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
+
+			xmb[7].first=0;	
+			xmb[7].size=0;
 		}
 
 		if(!xmb[6].init || !xmb[5].init  || !xmb[7].init)
 		{
+
 			for(int m=0; m<max; m++)
 			{
 				if(!strcmp(list[m].content, "PS3"))
@@ -20299,7 +20260,7 @@ int main(int argc, char **argv)
 	cellSysutilEnableBgmPlayback();
 
 	// allocate buffers for images (one big buffer ~76MB)
-	u32 buf_align= (1920 * 1080 * 4);
+	u32 buf_align= FB(1);
 	u32 frame_buf_size = (buf_align * 9)+4976640;// for text_bmpS 320x320x12 -> 1920*648 * 4
 	frame_buf_size = ( frame_buf_size + 0xfffff ) & ( ~0xfffff );
 
@@ -20403,12 +20364,10 @@ int main(int argc, char **argv)
 	url_base[24]=0x69; url_base[25]=0x6d; url_base[26]=0x61; url_base[27]=0x6e;
 	url_base[28]=0x00;
 
-	// use 32MB virtual memory pool (with vm_real_size) real memory for mp3 playback
+	// use 32MB virtual memory pool (with vm_real_size) real memory
 	//sys_vm_memory_map(MB(32), MB(vm_real_size), SYS_MEMORY_CONTAINER_ID_INVALID, SYS_MEMORY_PAGE_SIZE_64K, SYS_VM_POLICY_AUTO_RECOMMENDED, &vm);
 	//sys_vm_touch(vm, MB(vm_real_size));
 
-	pData = (char*) memalign(16, _mp3_buffer);
-	pDataB = pData;
 	multiStreamStarted = StartMultiStream();
 
     char last_play_id[10];
@@ -21711,37 +21670,19 @@ fixed_cover:
 						if(menu_list[game_sel].title[0]=='_' || menu_list[game_sel].split) 
 							gray_texture(text_bmp, 1920, 1080, 0);
 
-
-//works
-//mip_texture( text_FONT, text_bmp, 1920, 1080, -6); //scale to 320x180
-//mip_texture( text_bmp, text_FONT, 320, 180, 6); //scale to 1920x1080
-//blur_texture( text_bmp, 1920, 1080, 0, 0, 1920, 1080, 0, 0, 1, 2);
-
-//mip_texture( text_FONT, text_bmp, 1920, 1080, -4); //scale to 480x270
-//mip_texture( text_bmp, text_FONT, 480, 270, 4); //scale to 1920x1080
-//blur_texture( text_bmp, 1920, 1080, 0, 0, 1920, 1080, 0, 0, 1, 1);
-
-//to_565_texture( text_bmp, text_FONT, 1920, 1080);
-//to_RGB_texture( text_FONT, text_bmp, 1920, 1080);
-
-
-//to_333_texture( text_bmp, text_FONT, 1920, 1080);
-//to_RGB3_texture( text_FONT, text_bmp, 1920, 1080);
-
 					}
 
-						cover_available=0;
-						sprintf(filename, "%s/%s.PNG", covers_dir, menu_list[game_sel].title_id);
-						if(!exist(filename)) sprintf(filename, "%s/%s.JPG", covers_dir, menu_list[game_sel].title_id);
-						if(!exist(filename) && menu_list[game_sel].cover!=-1 && menu_list[game_sel].cover!=1) {download_cover(menu_list[game_sel].title_id, filename);
-						//if(!exist(filename)) menu_list[game_sel].cover=-1;
-						}
+					cover_available=0;
+					sprintf(filename, "%s/%s.PNG", covers_dir, menu_list[game_sel].title_id);
+					if(!exist(filename)) sprintf(filename, "%s/%s.JPG", covers_dir, menu_list[game_sel].title_id);
+					if(!exist(filename) && menu_list[game_sel].cover!=-1 && menu_list[game_sel].cover!=1) {download_cover(menu_list[game_sel].title_id, filename);}
 
-						if(exist(filename)) {
+					if(exist(filename)) 
+					{
 						cover_available=1;
 						load_texture(text_bmpS, filename, 320);
 						if(menu_list[game_sel].title[0]=='_' || menu_list[game_sel].split) gray_texture(text_bmpS, 320, 320, 0);
-						}
+					}
 
 					if(cover_available==0){
 						sprintf(filename, "%s/COVER.JPG", menu_list[game_sel].path);
@@ -21828,24 +21769,14 @@ DM2_load_textB:
 									cover_available=1;
 								else
 								{
-//									if(strstr(menu_list[game_sel].path, "/pvd_usb")!=NULL)
-										sprintf(filename, "%s/%s_320.PNG", cache_dir, menu_list[game_sel].title_id);
-//									else
-									{
-//										sprintf(filename, "%s/PS3_GAME/ICON0.PNG", menu_list[game_sel].path);
-										if(!exist(filename)) sprintf(filename, "%s/ICON0.PNG", menu_list[game_sel].path);
-									}
+									sprintf(filename, "%s/%s_320.PNG", cache_dir, menu_list[game_sel].title_id);
+									if(!exist(filename)) sprintf(filename, "%s/ICON0.PNG", menu_list[game_sel].path);
 								}
 							}
 							else
 							{
-//								if(strstr(menu_list[game_sel].path, "/pvd_usb")!=NULL)
-									sprintf(filename, "%s/%s_320.PNG", cache_dir, menu_list[game_sel].title_id);
-//								else
-								{
-//									sprintf(filename, "%s/PS3_GAME/ICON0.PNG", menu_list[game_sel].path);
-									if(!exist(filename)) sprintf(filename, "%s/ICON0.PNG", menu_list[game_sel].path);
-								}
+								sprintf(filename, "%s/%s_320.PNG", cache_dir, menu_list[game_sel].title_id);
+								if(!exist(filename)) sprintf(filename, "%s/ICON0.PNG", menu_list[game_sel].path);
 							}
 						}
 						else
@@ -21885,19 +21816,10 @@ DM2_load_text:
 					counter_png=40;
 					}
 
-				if(cover_mode==4)
-				{
-					//if(is_reloaded) xmb[6].init=0;
-				}
-
-//				if(cover_mode==5)	{	}
-
 				if(cover_mode==6)
 				{
 					int a_offset=40, alpha_cbox=1, alpha_gbox=1;
 					legend_y=170;
-
-					//rnd=time(NULL)&0x03;
 
 					sprintf(auraBG, "%s/AUR%i.JPG", app_usrdir, 4);
 					load_texture(text_bmp, auraBG, 1920);
@@ -21907,19 +21829,16 @@ DM2_load_text:
 					last_selected=-1;
 					int game_rel=0, game_rel2;//, c_x=0, c_y=0, c_game=0;
 					game_rel2=int(game_sel/8)*8;
-//					for (game_rel=game_rel2; (((game_rel-game_rel2)<8) && game_rel<max_menu_list); game_rel++)
 					game_rel=game_sel;
 
-//					if(game_last_page==-1)
-//					{
-						sprintf(filename, "%s/CBOX2.PNG", app_usrdir);
-						if(!exist(filename)) {sprintf(filename, "%s/CBOX.PNG", app_usrdir); alpha_cbox=0;}
-						load_texture(text_FONT+1024*1024*1, filename, 459);
+					sprintf(filename, "%s/CBOX2.PNG", app_usrdir);
+					if(!exist(filename)) {sprintf(filename, "%s/CBOX.PNG", app_usrdir); alpha_cbox=0;}
+					load_texture(text_FONT+1024*1024*1, filename, 459);
 
-						sprintf(filename, "%s/GBOX2.PNG", app_usrdir);
-						if(!exist(filename)) {sprintf(filename, "%s/GBOX.PNG", app_usrdir); alpha_gbox=0;}
-						load_texture(text_FONT+1024*1024*2, filename, 717);
-//					}
+					sprintf(filename, "%s/GBOX2.PNG", app_usrdir);
+					if(!exist(filename)) {sprintf(filename, "%s/GBOX.PNG", app_usrdir); alpha_gbox=0;}
+					load_texture(text_FONT+1024*1024*2, filename, 717);
+
 
 					game_last_page=int(game_sel/8);
 
@@ -22406,7 +22325,7 @@ rename_title:
 					flip(); 
 				}
 
-				//cellSysutilCheckCallback();
+				
 				if(osk_dialog==1 || osk_dialog==-1) break;
 			}
 
@@ -22680,7 +22599,7 @@ update_title:
 		{
 			if(cover_mode==4) {	sprintf(auraBG, "%s/AUR5.JPG", app_usrdir); load_texture(text_bmp, auraBG, 1920);}
 			int ret_f=open_mm_submenu(text_bmp);//, &game_sel);
-			if(ret_f) {slide_screen_left(text_FONT);memset(text_bmp, 0, 1920*1080*4);}
+			if(ret_f) {slide_screen_left(text_FONT);memset(text_bmp, 0, FB(1));}
 			if(cover_mode==8 || ret_f==11) 
 			{	
 				load_texture(text_FMS, xmbicons, 128);	
@@ -23310,15 +23229,6 @@ copy_from_bluray:
 							sprintf(filename, "/dev_usb00%c/%s/_%s", 47+curr_device, ini_usb_dir, id);
 						
 						ret=rename(name, filename);
-/*
-						if(curr_device==0)   sprintf(filename, "%s\n\nSplit game copied to internal HDD (non bootable)", id);
-						else
-							sprintf(filename, "%s\n\nSplit game copied to external USB00%c (non bootable)", id, 47+curr_device);
-
-						dialog_ret=0;
-						ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );
-						wait_dialog();
-*/						
 						}
 
 					while(1)
@@ -23816,19 +23726,6 @@ retry_showtime_xmb:
 						if(pic_reload!=0){
 							cellDbgFontDrawGcm();
 							pic_zoom=-1.0f;
-							/*if(strstr(xmb[xmb_icon].member[current_image].file_path,"/net_host")!=NULL) //network copy
-							{
-
-								char cpath[1024], cpath2[1024];
-								int chost=0; int pl=strlen(xmb[xmb_icon].member[current_image].file_path);
-								chost=xmb[xmb_icon].member[current_image].file_path[9]-0x30;
-								for(int n=11;n<pl;n++)
-								{cpath[n-11]=xmb[xmb_icon].member[current_image].file_path[n]; cpath[n-10]=0;}
-								sprintf(cpath2, "/%s", cpath); //host_list[chost].root,, 
-								sprintf(image_file, "%s/TEMP/net_view.bin", app_usrdir);
-								network_com((char*)"GET", (char*)host_list[chost].host, host_list[chost].port, (char*) cpath2, (char*) image_file, 0);
-							} */
-
 							if(strstr(xmb[xmb_icon].member[current_image].file_path,"/pvd_usb")!=NULL) //ntfs
 							{
 								sprintf(image_file, "%s/TEMP/net_view.bin", app_usrdir);
@@ -23880,17 +23777,6 @@ retry_showtime_xmb:
 								set_texture( text_bmp, 1920, 1080); 
 								display_img((int)((1920-png_w2)/2)+pic_posX, (int)((1080-png_h2)/2)+pic_posY, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
 							}
-/*						if(show_info==1){
-
-							sprintf(pic_info,"Name: %s", xmb[xmb_icon].member[current_image].name); pic_info[95]=0;
-							draw_text_stroke( 0.04f+new_offset, 0.867f, 0.7f ,0xc0a0a0a0, pic_info);
-							//timeinfo = localtime ( &xmb[xmb_icon].member[current_image].time );
-							sprintf(pic_info,"Info: JPEG %ix%i (Zoom: %3.0f)\nDate: %s", png_w, png_h, pic_zoom*100.0f, xmb[xmb_icon].member[current_image].subname);
-							draw_text_stroke( 0.04f+new_offset, 0.89f, 0.7f ,0xc0a0a0a0, pic_info);
-
-							cellDbgFontDrawGcm();
-						}
-*/
 
 				}
 
@@ -23898,18 +23784,6 @@ retry_showtime_xmb:
 				{
 						cellDbgFontDrawGcm();
 						if(pic_reload!=0){
-							/*if(strstr(xmb[xmb_icon].member[current_image].file_path,"/net_host")!=NULL) //network copy
-							{
-
-								char cpath[1024], cpath2[1024];
-								int chost=0; int pl=strlen(xmb[xmb_icon].member[current_image].file_path);
-								chost=xmb[xmb_icon].member[current_image].file_path[9]-0x30;
-								for(int n=11;n<pl;n++)
-								{cpath[n-11]=xmb[xmb_icon].member[current_image].file_path[n]; cpath[n-10]=0;}
-								sprintf(cpath2, "/%s", cpath); //host_list[chost].root,
-								sprintf(image_file, "%s/TEMP/net_view.bin", app_usrdir);
-								network_com((char*)"GET", (char*)host_list[chost].host, host_list[chost].port, (char*) cpath2, (char*) image_file, 0);
-							}*/
 
 							if(strstr(xmb[xmb_icon].member[current_image].file_path,"/pvd_usb")!=NULL) //ntfs
 							{
@@ -23919,7 +23793,6 @@ retry_showtime_xmb:
 
 							load_png_texture(text_bmp, image_file, 1920);
 							slide_time=0;
-							//if(png_w>1920 || png_h>1080) goto cancel_exit;
 						}
 
 						png_w2=png_w; png_h2=png_h;
@@ -23976,7 +23849,7 @@ retry_showtime_xmb:
 					char ss_status[8];
 
 					while(1){
-						//cellSysutilCheckCallback();
+						
 						pad_read();
 						cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 						set_texture( text_bmp, 1920, 1080); 
@@ -23987,14 +23860,14 @@ retry_showtime_xmb:
 						if(show_info==1){
 							if(slide_show) sprintf(ss_status, "%s", "Stop"); else sprintf(ss_status, "%s", "Start");
 							sprintf(pic_info,"   Name: %s", xmb[xmb_icon].member[current_image].name); pic_info[95]=0;
-							draw_text_stroke( 0.04f+new_offset, 0.867f, 0.7f ,0xc0a0a0a0, pic_info);
+							draw_text_stroke( 0.04f+0.025f, 0.867f, 0.7f ,0xc0a0a0a0, pic_info);
 							//timeinfo = localtime ( &xmb[xmb_icon].member[current_image].time );
 							if(strstr(image_file, ".png")!=NULL || strstr(image_file, ".PNG")!=NULL)
 								sprintf(pic_info,"   Info: PNG %ix%i (Zoom: %3.0f)\n   Date: %s\n[START]: %s slideshow", png_w, png_h, pic_zoom*100.0f, xmb[xmb_icon].member[current_image].subname, ss_status);
 							else
 								sprintf(pic_info,"   Info: JPEG %ix%i (Zoom: %3.0f)\n   Date: %s\n[START]: %s slideshow", png_w, png_h, pic_zoom*100.0f, xmb[xmb_icon].member[current_image].subname, ss_status);
 
-							draw_text_stroke( 0.04f+new_offset, 0.89f, 0.7f ,0xc0a0a0a0, pic_info);
+							draw_text_stroke( 0.04f+0.025f, 0.89f, 0.7f ,0xc0a0a0a0, pic_info);
 
 							cellDbgFontDrawGcm();
 						}
@@ -24185,7 +24058,7 @@ start_title:
 					setRenderColor();
 					cellDbgFontDrawGcm();
 					flip(); 
-					//cellSysutilCheckCallback();
+					
 					if(osk_dialog==1 || osk_dialog==-1) break;
 					}
 				cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
@@ -24245,13 +24118,6 @@ pass_ok:
 
 
 					dialog_ret=0;
-					/*if(direct_launch==1) 
-					{	sprintf(string1, "Do you want to start the game without exiting to XMB?\n\nWarning: Some games do not support such launch mode!"); 
-						ret = cellMsgDialogOpen2( type_dialog_yes_no, string1, dialog_fun1, (void*)0x0000aaaa, NULL );
-						wait_dialog(); 
-					}
-					if(dialog_ret==3) {goto cancel_exit_2;} */
-
 					if(menu_list[game_sel].user & IS_DBOOT)  
 					{
 						write_last_play( (char *)fileboot, (char *)menu_list[game_sel].path, (char *)menu_list[game_sel].title, (char *)menu_list[game_sel].title_id, 1);
@@ -24672,7 +24538,6 @@ again_sc8:
 				selx=0;
 				get_game_flags(game_sel);
 				FILE *fpA;
-				//if(strstr(menu_list[game_sel].path,"/dev_hdd0/game/")!=NULL) direct_launch_forced=1;
 
 				if(strstr(menu_list[game_sel].path, "/dev_usb")!=NULL && ( c_firmware==3.15f || c_firmware==3.41f || c_firmware==3.55f) && ((direct_launch_forced==1 && !(menu_list[game_sel].user & IS_DBOOT)) || (menu_list[game_sel].user & IS_BDMIRROR)) )
 					{
@@ -24697,12 +24562,6 @@ again_sc8:
 					char usb_mount0[512], usb_mount1[512], usb_mount2[512];
 					char path_backup[512], path_bup[512];
 				
-					/* // test
-					sprintf(fileboot, "%s", menu_list[game_sel].path);
-					syscall_mount(fileboot, mount_bdvd);
-					ret = mod_mount_table(just_drive, 1); //modify
-					unload_modules(); sys_process_exit(1); */
-
 					ret = mod_mount_table((char *) "restore", 0); //restore
 					if(ret)
 					{
@@ -24948,7 +24807,7 @@ skip_to_FM:
 		if(cover_mode==4) {	sprintf(auraBG, "%s/AUR5.JPG", app_usrdir); load_texture(text_bmp, auraBG, 1920);}
 		int ret_f=open_submenu(text_bmp, &game_sel);
 		old_fi=-1;
-		if(ret_f) {slide_screen_left(text_FONT);memset(text_bmp, 0, 1920*1080*4);}
+		if(ret_f) {slide_screen_left(text_FONT);memset(text_bmp, 0, FB(1));}
 		if(cover_mode==8 || cover_mode==4) { {xmb[6].init=0; xmb[7].init=0;}init_xmb_icons(menu_list, max_menu_list, game_sel );}
 		if(cover_mode==3) load_texture(text_FONT, userBG, 1920);
 
@@ -25000,18 +24859,13 @@ skip_to_FM:
 		if(c_opacity2<0x21) c_opacity2=0x00;
 
 		//mouse pointer
-		if(cover_mode==5) {// && c_opacity2>0x20) {
+		if(cover_mode==5) 
+		{
 			mouseX+=mouseXD; mouseY+=mouseYD;
 			if(mouseX>0.995f) {mouseX=0.995f;mouseXD=0.0f;} if(mouseX<0.0f) {mouseX=0.0f;mouseXD=0.0f;}
 			if(mouseY>0.990f) {mouseY=0.990f;mouseYD=0.0f;} if(mouseY<0.0f) {mouseY=0.0f;mouseYD=0.0f;}
-//			draw_triangle((mouseX-0.5f)*2.0f, (0.5f-mouseY)*2.0f, 0.02f, 0.035f, -1.0f, 0x2080ffff);
-//			draw_triangle((mouseX-0.0011f-0.5f)*2.0f, (0.5f-mouseY+0.0015f)*2.0f, 0.0258f, 0.043f, -1.0f, 0xd0d0d0ff);
-
 		}
 
-//char stick_data[20]=" ";
-//sprintf(stick_data,"%i %i X=%f Y=%f", padRXstick, padRYstick, mouseXD, mouseYD);
-//cellDbgFontPrintf( 0.5f, 0.03f, 0.7f,0x90909080,stick_data);		
 
 		if(!no_video)
 		{
@@ -25081,55 +24935,16 @@ skip_to_FM:
 
 				if(cover_mode==4 && max_menu_list>0)
 				{	
-
 					if(!xmb[6].init)
-					{
 						init_xmb_icons(menu_list, max_menu_list, game_sel);
-					}
-
-/*
-					if(game_icon>=0) {
-//						sprintf(filename, "%s/PS3_GAME/ICON0.PNG", menu_list[game_icon].path);
-						sprintf(filename, "%s/%s_320.PNG", cache_dir, menu_list[game_icon].title_id);
-						if(strstr(menu_list[game_icon].content,"PS2")!=NULL)	sprintf(filename, "%s", ps2png);
-						if(strstr(menu_list[game_icon].content,"DVD")!=NULL)	sprintf(filename, "%s", dvdpng);
-						if(!exist(filename)) sprintf(filename, "%s", blankBG);
-
-						cover_available_1=0;
-						sprintf(string1, "%s/%s.PNG", covers_dir, menu_list[game_icon].title_id);
-						if(!exist(string1)) sprintf(string1, "%s/%s.JPG", covers_dir, menu_list[game_icon].title_id);
-						if(!exist(string1) && menu_list[game_icon].cover!=-1 && menu_list[game_icon].cover!=1) {download_cover(menu_list[game_icon].title_id, string1);
-						//if(!exist(string1)) menu_list[game_icon].cover=-1;
-						}
-						if(exist(string1)) {
-							cover_available_1=1;
-							sprintf(filename,"%s",string1);
-						}
-						if(cover_available_1==0){
-							sprintf(string1, "%s/COVER.JPG", menu_list[game_icon].path);
-							if(!exist(string1)) sprintf(string1, "%s/COVER.PNG", menu_list[game_icon].path);
-							if(!exist(string1)) sprintf(string1, "%s/HDAVCTN/BDMT_O1.jpg", menu_list[game_icon].path);
-							if(!exist(string1)) sprintf(string1, "%s/BDMV/META/DL/HDAVCTN_O1.jpg", menu_list[game_icon].path);
-							if(exist(string1)) {
-							cover_available_1=1;
-							sprintf(filename,"%s",string1);
-							}
-						}
-
-						load_texture(text_BLU_1, filename, 320);
-						if(menu_list[game_icon].title[0]=='_' || menu_list[game_icon].split) gray_texture(text_BLU_1, 320, 320, 0);
-					}
-
-					counter_png=25;*/
 					
 					xmb_icon=6;
 					draw_coverflow_icons(xmb, xmb_icon, xmb_slide_y);
 				}
 
 				if(cover_mode==8)
-				{
 					draw_whole_xmb(0);
-				}
+
 
 				if(cover_mode==5) {
 
@@ -25140,8 +24955,8 @@ skip_to_FM:
 		if ( ((old_pad & BUTTON_R2) || (old_pad & BUTTON_L2)) && (new_pad & BUTTON_UP)   ) { state_draw=1; if(mouseX<0.54f) first_left=0; else first_right=0; new_pad=0;}//
 		if ( ((old_pad & BUTTON_R2) || (old_pad & BUTTON_L2)) && (new_pad & BUTTON_DOWN) ) { state_draw=1; if(mouseX<0.54f) first_left=max_dir_l-20; else first_right=max_dir_r-20; new_pad=0;}//
 
-		if ( ((new_pad & BUTTON_UP) && mouseY>=(0.12f+new_offset) && mouseY<=(0.12f+new_offset+0.026f)) ) { state_draw=1; if(mouseX<0.54f) {first_left-=1; if(first_left>1) {new_pad=0;}} else {first_right-=1; if(first_right>1) {new_pad=0;} } }
-		if ( ((new_pad & BUTTON_DOWN) && mouseY>=(0.614f+new_offset) && mouseY<=(0.614f+new_offset+0.026f))  ) { state_draw=1; if(mouseX<0.54f) {first_left+=1; if(first_left+18<max_dir_l){new_pad=0;} } else {first_right+=1; if(first_right+18<max_dir_r){new_pad=0;} }}
+		if ( ((new_pad & BUTTON_UP) && mouseY>=(0.12f+0.025f) && mouseY<=(0.12f+0.025f+0.026f)) ) { state_draw=1; if(mouseX<0.54f) {first_left-=1; if(first_left>1) {new_pad=0;}} else {first_right-=1; if(first_right>1) {new_pad=0;} } }
+		if ( ((new_pad & BUTTON_DOWN) && mouseY>=(0.614f+0.025f) && mouseY<=(0.614f+0.025f+0.026f))  ) { state_draw=1; if(mouseX<0.54f) {first_left+=1; if(first_left+18<max_dir_l){new_pad=0;} } else {first_right+=1; if(first_right+18<max_dir_r){new_pad=0;} }}
 
 		if ( (new_pad & BUTTON_UP	) && mouseY>=0.026f ) {mouseY-=0.026f;}
 		if ( (new_pad & BUTTON_DOWN ) && mouseY<=0.974f ) {mouseY+=0.026f;}
@@ -25151,7 +24966,7 @@ skip_to_FM:
 
 
 		fm_sel=0x0;
-		if(mouseX>=0.035f+new_offset && mouseX<=0.13f+new_offset && mouseY>=0.027f+new_offset && mouseY<=0.068f+new_offset) //games
+		if(mouseX>=0.035f+0.025f && mouseX<=0.13f+0.025f && mouseY>=0.027f+0.025f && mouseY<=0.068f+0.025f) //games
 		{	fm_sel=1;
 			if(((new_pad & BUTTON_CROSS) || (new_pad & BUTTON_CIRCLE)))
 			{	
@@ -25177,7 +24992,7 @@ skip_to_FM:
 		}
 
 
-		if(mouseX>=0.139f+new_offset && mouseX<=0.245f+new_offset && mouseY>=0.027f+new_offset && mouseY<=0.068f+new_offset) //update
+		if(mouseX>=0.139f+0.025f && mouseX<=0.245f+0.025f && mouseY>=0.027f+0.025f && mouseY<=0.068f+0.025f) //update
 		{
 			fm_sel=1<<1;
 			if ((new_pad & BUTTON_CROSS))
@@ -25189,11 +25004,9 @@ skip_to_FM:
 
 
 		//if(c_opacity2>0x00)
-		if(mouseX>=0.525f+new_offset && mouseX<=0.610f+new_offset && mouseY>=0.027f+new_offset && mouseY<=0.068f+new_offset) //themes
+		if(mouseX>=0.525f+0.025f && mouseX<=0.610f+0.025f && mouseY>=0.027f+0.025f && mouseY<=0.068f+0.025f) //themes
 		{
 			fm_sel=1<<4;
-
-//			draw_square((0.526f+new_offset-0.5f)*2.0f, (0.5f-0.029f-new_offset)*2.0f, 0.211f, 0.07f, -0.2f, 0x0080ff80);
 			if ((new_pad & BUTTON_CROSS))
 			{	
 				new_pad=0; old_pad=0;
@@ -25203,21 +25016,7 @@ skip_to_FM:
 		}
 
 
-
-
-/*		if(state_read!=0)
-		{
-			if(stat(current_left_pane, &s3)<0 && strstr(current_left_pane, "/pvd_usb")==NULL && strstr(current_left_pane, "/ps3_home")==NULL && strstr(current_left_pane, "/net_host")==NULL) {sprintf(current_left_pane,"%s", "/");state_read=1;}
-			if(stat(current_right_pane, &s3)<0 && strstr(current_right_pane, "/pvd_usb")==NULL && strstr(current_right_pane, "/ps3_home")==NULL && strstr(current_right_pane, "/net_host")==NULL) {sprintf(current_right_pane,"%s","/");state_read=1;}
-
-			if(state_read==1 || state_read==2)
-				read_dir(current_left_pane, pane_l, &max_dir_l); 
-			if(state_read==1 || state_read==3)
-				read_dir(current_right_pane, pane_r, &max_dir_r);
-//			state_read=0;
-		}*/
-
-		float pane_x_l=0.04f+new_offset;
+		float pane_x_l=0.04f+0.025f;
 		float pane_x_r=0.54f;
 
 		if(first_left>max_dir_l) first_left=0;
@@ -25226,30 +25025,15 @@ skip_to_FM:
 		if(first_right<0) first_right=0;
 
 		int help_open=0, about_open=0;
-		if(mouseX>=0.41f+new_offset && mouseX<=0.495f+new_offset && mouseY>=0.027f+new_offset && mouseY<=0.068f+new_offset) 
+		if(mouseX>=0.41f+0.025f && mouseX<=0.495f+0.025f && mouseY>=0.027f+0.025f && mouseY<=0.068f+0.025f) 
 		{
 			help_open=1; //help
 			fm_sel=1<<3;
-//			draw_square((0.411f+new_offset-0.5f)*2.0f, (0.5f-0.029f-new_offset)*2.0f, 0.17f, 0.07f, -0.2f, 0x0080ff80);
-/*			if ((new_pad & BUTTON_CROSS))
-			{	
-				if(stat(helpMME, &s3)>=0)
-				{
-					mouseY+=0.08;
-					unload_modules();
-					sys_game_process_exitspawn2((char*) helpMME, NULL, NULL, NULL, 0, 1001, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);	
-				}
-
-			}
-*/
 		}
 
-		if(mouseX>=0.275f+new_offset && mouseX<=0.38f+new_offset && mouseY>=0.027f+new_offset && mouseY<=0.068f+new_offset) about_open=1; //about
+		if(mouseX>=0.275f+0.025f && mouseX<=0.38f+0.025f && mouseY>=0.027f+0.025f && mouseY<=0.068f+0.025f) about_open=1; //about
 
 		if(c_opacity2==0x00) {help_open=0; about_open=0;}
-
-		//if(help_open) draw_square((0.411f+new_offset-0.5f)*2.0f, (0.5f-0.029f-new_offset)*2.0f, 0.17f, 0.07f, -0.2f, 0x0080ff80);
-		//if(about_open) draw_square((0.282f+new_offset-0.5f)*2.0f, (0.5f-0.029f-new_offset)*2.0f, 0.21f, 0.07f, -0.2f, 0x0080ff80);
 
 		if((help_open || about_open))
 			{
@@ -25266,28 +25050,6 @@ skip_to_FM:
 					cellDbgFontPrintf( 0.28f, 0.64f, 0.7f, 0xa0c0c0c0, 
 				   "                Copyleft (c) 2011");
 				}
-
-				/*if(help_open && stat(helpNAV, &s3)>=0 && stat(helpMME, &s3)<0) {
-					mouseY+=0.08;
-					load_texture(text_bmp, helpNAV, 1920);
-					int opaq=0x04, oinc=1;
-					while(1)
-					{
-						cellSysutilCheckCallback();
-						cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
-						set_texture( text_bmp, 1920, 1080);
-						display_img(0, 0, 1920, 1080, 1920, 1080, -0.15f, 1920, 1080);
-						cellDbgFontPrintf( 0.35f, 0.88f, 1.2f, (0x00909090|(opaq<<24)), "Press [O] to close");
-						opaq+=oinc; if (opaq>0xc0) oinc=-2; if (opaq<0x02) oinc=2;
-						setRenderColor();
-						cellDbgFontDrawGcm();
-						flip();
-
-						pad_read();
-						if ( (new_pad & BUTTON_CIRCLE) || (new_pad & BUTTON_TRIANGLE) ) { new_pad=0; old_pad=0; break;}
-					}
-					help_open=0;
-				} */
 
 				if(help_open)// && stat(helpNAV, &s3)<0 && stat(helpMME, &s3)<0)
 				{		
@@ -25325,7 +25087,7 @@ skip_to_FM:
 
 			//if(c_opacity2>0x20 && viewer_open==0)
 				{
-//reload:
+
 					if(state_read)
 					{
 						if(!exist(current_left_pane) && strstr(current_left_pane, "/pvd_usb")==NULL && strstr(current_left_pane, "/ps3_home")==NULL && strstr(current_left_pane, "/net_host")==NULL) {sprintf(current_left_pane,"%s", "/");state_read=1; state_draw=1;}
@@ -25342,8 +25104,8 @@ skip_to_FM:
 					{
 						state_read=0;					
 						max_ttf_label=0;
-						draw_dir_pane( pane_l, max_dir_l, first_left, 22-(int)((1080*new_offset)/18.0f+1), pane_x_l);
-						draw_dir_pane( pane_r, max_dir_r, first_right, 22-(int)((1080*new_offset)/18.0f+1), pane_x_r);
+						draw_dir_pane( pane_l, max_dir_l, first_left, 22-(int)((1080*0.025f)/18.0f+1), pane_x_l);
+						draw_dir_pane( pane_r, max_dir_r, first_right, 22-(int)((1080*0.025f)/18.0f+1), pane_x_r);
 						if(state_read==1 || state_read==2) read_dir(current_left_pane, pane_l, &max_dir_l); 
 						if(state_read==1 || state_read==3) read_dir(current_right_pane, pane_r, &max_dir_r);
 					}
@@ -25355,12 +25117,12 @@ skip_to_FM:
 						if(state_read)
 						{
 							max_ttf_label=0;
-							draw_dir_pane( pane_l, max_dir_l, first_left, 22-(int)((1080*new_offset)/18.0f+1), pane_x_l);
-							draw_dir_pane( pane_r, max_dir_r, first_right, 22-(int)((1080*new_offset)/18.0f+1), pane_x_r);
+							draw_dir_pane( pane_l, max_dir_l, first_left, 22-(int)((1080*0.025f)/18.0f+1), pane_x_l);
+							draw_dir_pane( pane_r, max_dir_r, first_right, 22-(int)((1080*0.025f)/18.0f+1), pane_x_r);
 						}
 
 
-						//memset(text_bmpUPSR, 0x00, V_WIDTH*V_HEIGHT*4);
+
 						for(int fsr=0; fsr<V_WIDTH*V_HEIGHT*4; fsr+=4) 
 							*(uint32_t*) ((uint8_t*)(text_bmpUPSR)+fsr)=0x32323280;
 
@@ -25368,10 +25130,10 @@ skip_to_FM:
 
 						max_ttf_label=0;
 						sprintf(string1,"[%s]", current_left_pane); string1[56]=0x2e; string1[57]=0x2e; string1[58]=0x5d; string1[59]=0;
-						print_label( 0.04f+new_offset, 0.085f+new_offset, 0.8f, 0xc0c0c0c0, string1, 1.04f, 0.0f, 17);
+						print_label( 0.04f+0.025f, 0.085f+0.025f, 0.8f, 0xc0c0c0c0, string1, 1.04f, 0.0f, 17);
 
 						sprintf(string1,"[%s]", current_right_pane); string1[56]=0x2e; string1[57]=0x2e; string1[58]=0x5d; string1[59]=0;
-						print_label( 0.54f, 0.085f+new_offset, 0.8f, 0xc0c0c0c0, string1, 1.04f, 0.0f, 17);
+						print_label( 0.54f, 0.085f+0.025f, 0.8f, 0xc0c0c0c0, string1, 1.04f, 0.0f, 17);
 
 						flush_ttf(text_bmpUPSR, V_WIDTH, V_HEIGHT);
 
@@ -25380,7 +25142,6 @@ skip_to_FM:
 					max_ttf_label=0;
 
 				}
-				//if(c_opacity2<0x21) { screen_saver(); state_draw=1; c_opacity=0xff; c_opacity2=0xff;}
 			    if ( (ss_timer>=(ss_timeout*60) && ss_timeout) ) screen_saver();
 			}
 
@@ -25401,16 +25162,6 @@ skip_to_FM:
 		time ( &rawtime );
 		timeinfo = localtime ( &rawtime );
 
-//  DPrintf("\nCurrent local time and date: %s", asctime (timeinfo) );
-//  DPrintf("%02d:%02d:%02d (%i) %02d/%02d/%04d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, timeinfo->tm_wday, timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900 );
-//  DPrintf("%02d:%02d:%02d (%i) %02d/%02d/%04d", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec, timeinfo->tm_wday, timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900 );
-
-//		cellDbgFontPrintf( 0.87f, 0.93f, ptsize ,0xc0202020, teststring);
-//		cellDbgFontPrintf( 0.05f, 0.025f, 1.3f ,0xc0202020, "File manager");
-
-//		cellDbgFontPrintf( 0.04f, 0.029f, 1.0f ,0xc0a0a0a0, "|  Games  |  Update  |  Help  |  About |");
-
-
 	float y = 0.83f-0.053f;
 	char str[256];
 
@@ -25426,7 +25177,6 @@ skip_to_FM:
 
 	for(n=0;n<17;n++)
 		{
-		//if(c_opacity2==0x00) break;
 		ok=0;
 		if(n==11 && hide_bd==1) continue;
 
@@ -25614,26 +25364,13 @@ skip_to_FM:
 
 			setRenderColor();
 
-//char stick_data[20]=" ";
-//sprintf(stick_data,"%i %i X=%f Y=%f", padRXstick, padRYstick, mouseX, mouseY);
-//sprintf(stick_data,"BDRC: %i", BDremote);
-//padLYstick, padLXstick
-//cellDbgFontPrintf( 0.5f, 0.03f, 0.7f,0x90909080,stick_data);
-
-			//if(c_opacity2>0x00) 
-//				cellDbgFontPrintf( 0.99f, 0.98f, 0.5f,0x60606080, payloadT); 
-
-//				if(www_running==1) 
-					//sprintf(www_info, "%i", ss_timer);
+				if(www_running==1) 
 					cellDbgFontPrintf( 0.01f, 0.98f, 0.5f,0x60606080, www_info); 
 
-			if(multiStreamStarted==1 && current_mp3!=0 && max_mp3!=0 && (c_opacity2>0x00)) {
+			if(multiStreamStarted==1 && current_mp3!=0 && max_mp3>1 && (c_opacity2>0x00)) {
 				sprintf(filename, "Playing: %i/%i (vol: %i)", current_mp3, max_mp3, (int) (mp3_volume*100)); // mp3_status,
 				cellDbgFontPrintf( 0.82f, 0.98f, 0.5f,0x60606060, filename); 
 			}
-
-//				cellDbgFontPrintf( 0.02f, 0.90f, 0.5f,0xc0c0c0c0, mouseInfo); 
-//				cellDbgFontPrintf( 0.02f, 0.98f, 0.5f,0xffffffff, mouseInfo2); 
 
 			if(patchmode==1	&& (c_opacity2>0x00)) 
 			{
@@ -25847,18 +25584,15 @@ static void download_thread_entry( uint64_t arg )
 				downloads[n].status=2;
 				if(!exist(downloads[n].local))
 				{
-					//sprintf(www_info, "%s", downloads[n].url); 
 					download_file_th(downloads[n].url, downloads[n].local, 0);
-					//www_info[0]=0;
 				}
 				sys_timer_usleep(1000*1000);
-				//cellSysutilCheckCallback();
+				
 			}
 			sys_timer_usleep(3336);
 		}
 		sys_ppu_thread_yield();
 		sys_timer_usleep(5000*1000);
-//		cellSysutilCheckCallback();
 	}
 	sys_ppu_thread_exit( 0 );
 }

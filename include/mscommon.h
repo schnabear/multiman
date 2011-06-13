@@ -35,22 +35,14 @@
 #include <cell/spurs/event_flag.h>
 #include <cell/sysmodule.h>
 
-
-
-#ifndef MS_THREADED_SAMPLE
-void InitSPURS(void);
-#endif
-
 extern CellAudioPortParam   audioParam;
 extern CellAudioPortConfig  portConfig;
 
 long InitialiseAudio( const long nStreams, const long nmaxSubs, int &_nPortNumber, CellAudioPortParam &_audioParam, CellAudioPortConfig &_portConfig);
-
-void LoadATRAC(const char *_filename, long &_sampleData, long &_sampleDataSize, int &_nSampleFormat, int &_nSampleChannels);
+int InitSPURS(void);
 int InitFile(const char *filename,long *addr, long *size);
 long StartMultiStreamUpdateThread( void _thread (uint64_t param));
 void ShutdownMultiStream();
 
 #define SUPPRESS_COMPILER_WARNING(x) (void)x
-
 #endif
