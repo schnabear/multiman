@@ -87,7 +87,7 @@
 #define MB(x) ((x)*1024*1024)	// 1 MB
 #define KB(x) ((x)*1024)		// 1 KB
 
-SYS_PROCESS_PARAM(1001, 0x100000)
+SYS_PROCESS_PARAM(1200, 0x100000)
 
 //colors (COLOR.INI)
 u32 COL_PS3DISC=0xff807000;
@@ -147,32 +147,38 @@ typedef struct {
 _meminfo meminfo;
 
 
-#define MP3_MEMORY_KB 256
+#define MP3_MEMORY_KB 384
 #define MP3_BUF (MP3_MEMORY_KB/2)
 
 	CellAudioPortParam audioParam;
 	CellAudioPortConfig portConfig;
+	int nChannel;
+
 	int sizeNeeded;
 	int *mp3Memory;
-	int _mp3_buffer=KB(MP3_MEMORY_KB);
+	u64 _mp3_buffer=KB(MP3_MEMORY_KB);
 
 	int mp3_freq=44100;
 	int mp3_durr=0;
+	float mp3_skip=0.f;
+	int mp3_packet=0;
+	float mp3_packet_time=0.001f;
 	char mp3_now_playing[512];
 	float mp3_volume=0.5f;
 	char *pData=NULL;
 	char *pDataB=NULL;
 	char my_mp3_file[512];
-	int mp3_status;
 
 	bool force_mp3;
 	int force_mp3_fd=-1;
 	char force_mp3_file[512];
 	u64 force_mp3_offset=0;
+	u64 force_mp3_size=0;
 	bool mm_audio=true; //goes to false if XMB BGM is playing
 	bool mm_is_playing=false;
 	bool is_theme_playing=false; 
 	bool audio_sub_proc=false;
+	bool mp3_force_position=false;
 
 int StartMultiStream();
 void stop_audio(float attn);
@@ -540,7 +546,7 @@ int dox_arrow_b_h=44;
 
 static int unload_modules();
 void draw_text_stroke(float x, float y, float size, u32 color, const char *str);
-int main_mp3_th( char *my_mp3);
+int main_mp3_th( char *my_mp3, float skip);
 void main_mp3( char *temp_mp3);
 
 int my_game_delete(char *path);
@@ -746,7 +752,6 @@ int no_real_progress=0;
 int payload=0;
 char payloadT[2];
 int socket_handle;
-int no_callback=1;
 
 int      portNum = -1;
 int	multiStreamStarted=0;
@@ -807,8 +812,6 @@ void DBPrintf( const char *string)
 	(void) string;
 #endif
 }
-
-static void _Multi_Stream_Update_Thread(uint64_t param);
 
 #define MAX_LIST_OPTIONS 128
 typedef struct
@@ -1885,8 +1888,6 @@ void wait_dialog()
 				{
 					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 					draw_coverflow_icons(xmb, xmb_icon, xmb_slide_y);
-					//set_texture( text_bmpUPSR, 1920, 1080);
-					//display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 					sys_timer_usleep(1668);
 					flip();
 				}
@@ -4214,7 +4215,48 @@ void sort_xmb_col(xmbmem *_xmb, u16 max, int _first)
 			}
 }
 
+void read_xmb_column(int c)
+{
+	char colfile[128];
+	char string1[9];
+	sprintf(colfile, "%s/XMBS.00%i", app_usrdir, c);
+	FILE *flist = fopen(colfile, "rb");
+	if(flist!=NULL)
+	{
+		fread((char*) &string1, 8, 1, flist);
+		if(strstr(string1, XMB_COL_VER)!=NULL)
+		{
+			fseek(flist, 0, SEEK_END);
+			int llist_size=ftell(flist)-8;
+			fseek(flist, 8, SEEK_SET);
+			fread((char*) &xmb[c], llist_size, 1, flist);
+			fclose(flist);
+		}
+		else
+		{
+			fclose(flist);
+			remove(colfile);
+			xmb[c].size=0;
+		}
+	}
+}
 
+void save_xmb_column(int c)
+{
+	char colfile[128];
+	sprintf(colfile, "%s/XMBS.00%i", app_usrdir, c);
+	remove(colfile);
+	if(xmb[c].size)
+	{
+		FILE *flist = fopen(colfile, "wb");
+		if(flist!=NULL)
+		{
+			fwrite((char*) XMB_COL_VER, 8, 1, flist);
+			fwrite((char*) &xmb[c], sizeof(xmbmem)*xmb[c].size, 1, flist);
+			fclose(flist);
+		}
+	}
+}
 
 static int unload_modules()
 {
@@ -4266,33 +4308,9 @@ static int unload_modules()
 	for(int c=3;c<9;c++)
 	{
 		if(c==5) c=8;
-		sprintf(list_file_state, "%s/XMBS.00%i", app_usrdir, c);
-		remove(list_file_state);
-		if(!xmb[c].size) continue;
-		flist = fopen(list_file_state, "wb");
-		if(flist!=NULL)
-		{
-			fwrite((char*) XMB_COL_VER, 8, 1, flist);
-			fwrite((char*) &xmb[c], sizeof(xmbmem)*xmb[c].size, 1, flist);
-			fclose(flist);
-		}
+		save_xmb_column(c);
 	}
 
-
-/*	if(xmb[8].size>1)
-	{
-		sprintf(list_file_state, "%s/XMBS.008", app_usrdir);
-		remove(list_file_state);
-		flist = fopen(list_file_state, "wb");
-		if(flist!=NULL)
-		{
-			fwrite((char*) XMB_COL_VER, 8, 1, flist);
-			fwrite((char*) &xmb[8], sizeof(xmb[8]), 1, flist);
-			fclose(flist);
-		}
-	}
-*/
-	
 
 	sprintf(list_file_state, "%s/LSTAT.BIN", app_usrdir);
 	remove(list_file_state);
@@ -4807,7 +4825,7 @@ int load_jpg_texture(u8 *data, char *name, uint16_t _DW)
 	is_decoding_jpg=1;
 	int ret, ok=-1;
 	png_w=0; png_h=0;
-	is_decoding_jpg=1;
+	
     CellJpgDecMainHandle     mHandle;
     CellJpgDecSubHandle      sHandle;
 
@@ -5641,29 +5659,40 @@ static void reset_mount_points()
 static void mp3_callback( int nCh, void *userData,	int callbackType,	void *readBuffer,	int readSize)
 {
 		
-		(void) nCh;//streamNumber; 
-		(void)userData; 
-		if(!mm_is_playing) return;
+		(void) nCh;
+		(void) userData; 
 		uint64_t nRead = 0;
-		uint64_t pos = 0;
 
-		//sprintf(www_info, "[%s]: %.f / %i", force_mp3_file, (double)force_mp3_offset, readSize);
+		//if(!mm_is_playing) return;
+		//if(mp3_force_position) {mp3_force_position=false; readSize=KB(MP3_BUF); callbackType=1;}
+		if(force_mp3_fd==-1) callbackType=CELL_MS_CALLBACK_FINISHSTREAM;
 
-		if(readSize && callbackType==1)// && exist(force_mp3_file))
+		if(readSize && callbackType==CELL_MS_CALLBACK_MOREDATA)
 		{
-
-			if(force_mp3_fd<1)
-				if(CELL_FS_SUCCEEDED!=cellFsOpen (force_mp3_file, CELL_FS_O_RDONLY, &force_mp3_fd, NULL, 0)) {force_mp3_fd=-1; goto try_next_mp3;}
-			if(CELL_FS_SUCCEEDED!=cellFsLseek(force_mp3_fd, force_mp3_offset, CELL_FS_SEEK_SET, &pos)) {cellFsClose(force_mp3_fd); force_mp3_fd=-1; goto try_next_mp3; }
-			cellFsRead(force_mp3_fd, (void*)readBuffer, KB(MP3_BUF), &nRead);
-			if(nRead>0) force_mp3_offset+=nRead; else {cellFsClose(force_mp3_fd); force_mp3_fd=-1; goto try_next_mp3;}
+			if(CELL_FS_SUCCEEDED==cellFsRead(force_mp3_fd, (void*)readBuffer,  KB(MP3_BUF), &nRead))
+			{
+				if(nRead>0) 
+				{
+					force_mp3_offset+=nRead; 
+				}
+				else
+				{
+					cellFsClose(force_mp3_fd); force_mp3_fd=-1; 
+					memset(readBuffer, 0, KB(MP3_BUF));
+				}
+			}
+			else 
+			{
+				cellFsClose(force_mp3_fd); force_mp3_fd=-1; 
+				goto try_next_mp3;
+			} //(int) (((float)KB(MP3_BUF)/(float)mp3_packet) * mp3_packet_time * 1000000.f)); goto try_next_mp3;}
 		}
 
-		if(callbackType==CELL_MS_CALLBACK_FINISHSTREAM)
+		if(callbackType==CELL_MS_CALLBACK_FINISHSTREAM || callbackType==CELL_MS_CALLBACK_CLOSESTREAM)
 		{
 try_next_mp3:
 			force_mp3_offset=0;
-			stop_audio(5);
+			stop_audio(10);
 			if(max_mp3!=0) {
 				current_mp3++;
 				if(current_mp3>max_mp3) current_mp3=1;
@@ -5671,6 +5700,7 @@ try_next_mp3:
 			}
 			if(!mm_audio) {stop_audio(0); current_mp3=0; max_mp3=0;}
 		}
+		//sprintf(www_info, "[%s]: %.f / %.f (req'd: %i, read: %i)", force_mp3_file, (double)force_mp3_offset, (double)force_mp3_size, readSize, nRead);
 }
 
 
@@ -5692,8 +5722,6 @@ static void unknown_mimetype_callback(const char* mimetype, const char* url, voi
 		sprintf(local_file_d, "%s/DOWNLOADS/%s", app_usrdir, (pathpos+1));
 	sprintf(www_info, "File download requested : (%s)", local_file_d);
 	download_file( url, (char *) local_file_d, 3);
-//	sprintf(local_file_d, "%s/DOWNLOADS/testfile.bin", app_usrdir);
-//	download_file( url, (char *) local_file_d, 3);
 }
 
 DECL_WEBBROWSER_SYSTEM_CALLBACK(system_callback, cb_type, userdata)
@@ -5713,7 +5741,6 @@ DECL_WEBBROWSER_SYSTEM_CALLBACK(system_callback, cb_type, userdata)
 		break;
 
 	case CELL_SYSUTIL_REQUEST_EXITGAME: 
-		no_callback=0;
 		unload_modules(); sys_process_exit(1); break;
 
 	default:
@@ -5730,7 +5757,6 @@ static void sysutil_callback( uint64_t status, uint64_t param, void * userdata )
 	{
 
 	case CELL_SYSUTIL_REQUEST_EXITGAME: 
-		no_callback=0;
 		unload_modules(); sys_process_exit(1); break;
 
 	case CELL_SYSUTIL_OSKDIALOG_LOADED:
@@ -5765,14 +5791,11 @@ static void sysutil_callback( uint64_t status, uint64_t param, void * userdata )
 		mm_audio=true;
 
 	case CELL_SYSUTIL_OSKDIALOG_INPUT_ENTERED:
-		/* Get entered string */
 		ret = cellOskDialogGetInputText( &OutputInfo );
 		break;
 
 	case CELL_SYSUTIL_OSKDIALOG_INPUT_DEVICE_CHANGED:
 		if(param == CELL_OSKDIALOG_INPUT_DEVICE_KEYBOARD ){
-		/* If the input device becomes the keyboard, */
-		/*  stop receiving input from the onscreen keyboard dialog */
 //			ret = cellOskDialogSetDeviceMask( CELL_OSKDIALOG_DEVICE_MASK_PAD );
 		}
 		break;
@@ -5898,12 +5921,11 @@ void put_texture_with_alpha( uint8_t *buffer_to, uint8_t *buffer_from, uint32_t 
 
 }
 
-void put_texture_with_alpha_gen( uint8_t *buffer_to, uint8_t *buffer_from, uint32_t _width, uint32_t _height, int from_width, u16 to_width, int x, int y) //, int border, uint32_t border_color
+void put_texture_with_alpha_gen( uint8_t *buffer_to, uint8_t *buffer_from, uint32_t _width, uint32_t _height, int from_width, u16 to_width, int x, int y)
 {
 	int row	 = from_width * 4;
 	int line = to_width * 4;
 	uint32_t pos_to = ( y * line) + (x * 4), cline=0;
-//	uint32_t pos_to_border = ( (y-border) * line) + ((x-border) * 4);
 	uint32_t pos_from = 0;
 	uint32_t lines=0;
 	uint32_t c_pixel_N_R, c_pixel_N_G, c_pixel_N_B;
@@ -5913,21 +5935,7 @@ void put_texture_with_alpha_gen( uint8_t *buffer_to, uint8_t *buffer_from, uint3
 	unsigned char* bt;
 	unsigned char* btF;
 	if( (x+width) > to_width) width=(to_width-x);
-//	if( (y+height) > 1080) height=(1080-y);
 
-/*	if(border)
-	{
-		for(lines=0; lines<(height+(border*2)); lines++)
-		{
-			for(cline=0; cline<((width+border*2)*4); cline+=4)
-			{
-				bt = (uint8_t*)(buffer_to) + pos_to_border + cline;
-				*(uint32_t*)bt = border_color;
-			}
-			pos_to_border+=line;
-		}
-	}
-*/
 	for(lines=0; lines<height; lines++)
 	{
 		for(cline=0; cline<((width)*4); cline+=4)
@@ -6696,14 +6704,11 @@ void draw_list_text( uint8_t *buffer, uint32_t width, uint32_t height, t_menu_li
 			}
 
 			b_color = (b_color & 0xffffff00) | (b_box_opaq-20);
-//			draw_square((0.08f+_overscan-0.5f)*2.0f-0.02f, (0.5f-y+0.01)*2.0f , len+0.04f, 0.1f, 0.3f, 0x0080ff80);
 			if(_cover_mode==2)
 			{
-//				draw_square((0.08f+_overscan-0.5f)*2.0f-0.02f, (0.5f-y+0.01)*2.0f , len+0.04f, 0.1f, -0.5f, 0x0080ff40);
 				draw_square((0.08f-0.5f)*2.0f-0.02f, (0.5f-y+0.01)*2.0f , len+0.04f, 0.006f, -0.5f, b_color);
 				b_color = (b_color & 0xffffff00) | b_box_opaq;
 				draw_square((0.08f-0.5f)*2.0f-0.02f, (0.5f-y-0.038)*2.0f , len+0.04f, 0.006f, -0.5f, b_color);
-				//draw_square(-0.9f+(overscan/2), 0.9f-(overscan/2), 2.0f-(0.70f-(overscan*2)), 2.0-0.50f-(2.0*overscan), -1.0f, 0x20202040);
 			}
 			else
 				draw_square((0.08f-0.5f)*2.0f-0.02f, (0.5f-y+0.01)*2.0f , len+0.04f, 0.1f, 0.0f, b_color);
@@ -6789,10 +6794,6 @@ void draw_list_text( uint8_t *buffer, uint32_t width, uint32_t height, t_menu_li
 			float step;
 			float lineH, baseY;
 
-//			char c_ver[64]; sprintf(c_ver, "ver. %s", current_version);// (%02d/%02d/%04d %02d:%02d), timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900, timeinfo->tm_hour, timeinfo->tm_min);
-//			uint8_t* c_entry;//"ver 01.10.12";
-//			float x=0.08f;
-
 			step  =  0.f;
 			scale = 24.f;
 
@@ -6820,7 +6821,6 @@ for(it=0;it<2;it++)
 		is_split[0]=0;
 		if(i<menu_size)
 			{
-//			utf8_to_ansi(menu[i].title, ansi, 128);
 			grey=0;
 			if(menu[i].title[0]=='_')
 				{ sprintf(ansi, "%s", menu[i].title+1); grey=1; sprintf(is_split, " (Split)");}
@@ -6910,13 +6910,9 @@ for(it=0;it<2;it++)
 
 		if((_cover_mode==0 || it==1) && strstr(menu[i].content, "PS3")!=NULL && strstr(menu[i].title_id, "NO_ID")==NULL)
 		{
-//			Fonts_RenderPropText( cf, surf, (int)((0.08f+_overscan)*1920), (int)((y-0.005f)*1080), (uint8_t*) str, scale*1.5f, scale*1.4f, slant, step, color2 );
 			sprintf(str, "%s/%s_80.RAW", cache_dir, menu[i].title_id);
 			if(load_raw_texture( (u8*)text_TEMP, str, 80))
-//				put_texture( buffer, (u8*)buf+1024*1024, 80, 45, 80, (int)((0.08f+_overscan)*1920)+1045, (int)((y-0.005f)*1080), 1, 0x0080ff80);
 				put_texture( buffer, (u8*)text_TEMP, 80, 45, 80, (int)((0.08f)*1920), (int)((y-0.005f)*1080), 1, 0x80808080);
-
-
 		}
 
 		len=1.18f;
@@ -6969,50 +6965,7 @@ for(it=0;it<2;it++)
 			}
 		}
 
-/*	if(_cover_mode==0)
-	{
-		float legend_font=0.9f;
-		if(overscan>0.05) legend_font=(float)(legend_font-(legend_font*overscan)); legend_font=(legend_font)*24.0f;
-		color= 0xff808080;
-		y=0.3825f;
-		x=0.65f;
-		Fonts_UnbindRenderer( cf );
-		ret = Fonts_SetFontEffectSlant( cf, 0.0f );
-		Fonts_BindRenderer( cf, renderer );
 
-		sprintf(str, "[X] - Load");		Fonts_RenderPropText( cf, surf, (int)((0.08f+x+(overscan/4.0f))*1920), (int)((y-_overscan)*1080), (uint8_t*) str, legend_font*1.2f, legend_font*1.3f, slant, step, color ); y+=0.035f;
-		sprintf(str, "[O] - Copy");		Fonts_RenderPropText( cf, surf, (int)((0.08f+x+(overscan/4.0f))*1920), (int)((y-_overscan)*1080), (uint8_t*) str, legend_font*1.2f, legend_font*1.3f, slant, step, color ); y+=0.035f;
-		sprintf(str, "[TR] - Exit");	Fonts_RenderPropText( cf, surf, (int)((0.08f+x+(overscan/4.0f))*1920), (int)((y-_overscan)*1080), (uint8_t*) str, legend_font*1.2f, legend_font*1.3f, slant, step, color ); y+=0.035f;
-		sprintf(str, "[SQ] - Erase");	Fonts_RenderPropText( cf, surf, (int)((0.08f+x+(overscan/4.0f))*1920), (int)((y-_overscan)*1080), (uint8_t*) str, legend_font*1.2f, legend_font*1.3f, slant, step, color ); y+=0.035f;
-		y+=0.035f;
-		sprintf(str, "[L1] - Display mode");	Fonts_RenderPropText( cf, surf, (int)((0.08f+x+(overscan/4.0f))*1920), (int)((y-_overscan)*1080), (uint8_t*) str, legend_font*1.2f, legend_font*1.3f, slant, step, color ); y+=0.035f;
-		sprintf(str, "[L2] - Show options");			Fonts_RenderPropText( cf, surf, (int)((0.08f+x+(overscan/4.0f))*1920), (int)((y-_overscan)*1080), (uint8_t*) str, legend_font*1.2f, legend_font*1.3f, slant, step, color ); y+=0.035f;
-		sprintf(str, "[L3] - Show paths");		Fonts_RenderPropText( cf, surf, (int)((0.08f+x+(overscan/4.0f))*1920), (int)((y-_overscan)*1080), (uint8_t*) str, legend_font*1.2f, legend_font*1.3f, slant, step, color ); y+=0.035f;
-		y+=0.035f;
-		if(c_firmware==3.41f)
-			{ sprintf(str, "[R1] - USB patch mode");	Fonts_RenderPropText( cf, surf, (int)((0.08f+x+(overscan/4.0f))*1920), (int)((y-_overscan)*1080), (uint8_t*) str, legend_font*1.2f, legend_font*1.3f, slant, step, color ); y+=0.035f; }
-
-		if(c_firmware==3.55f)
-			{ sprintf(str, "[R1] - Reset permissions");	Fonts_RenderPropText( cf, surf, (int)((0.08f+x+(overscan/4.0f))*1920), (int)((y-_overscan)*1080), (uint8_t*) str, legend_font*1.2f, legend_font*1.3f, slant, step, color ); y+=0.035f; }
-
-		sprintf(str, "[R2] - Test source");		Fonts_RenderPropText( cf, surf, (int)((0.08f+x+(overscan/4.0f))*1920), (int)((y-_overscan)*1080), (uint8_t*) str, legend_font*1.2f, legend_font*1.3f, slant, step, color ); y+=0.035f;
-		sprintf(str, "[R3] - Update");			Fonts_RenderPropText( cf, surf, (int)((0.08f+x+(overscan/4.0f))*1920), (int)((y-_overscan)*1080), (uint8_t*) str, legend_font*1.2f, legend_font*1.3f, slant, step, color ); y+=0.035f;
-
-//		ret = Fonts_SetFontEffectWeight( cf, 1.0f );
-//		ret = Fonts_SetFontScale( cf, 12.0f );
-
-//		sprintf(str, "ABCDEFGH IJKLMNOPQRSTUVWXYZ abcdef xyz 0123 798");			Fonts_RenderPropText( cf, surf, (int)((0.08f+x+(overscan/4.0f))*1920), (int)((y-_overscan)*1080), (uint8_t*) str, 12.0f, 12.0f, 0.0f, step, color ); y+=0.035f;
-//		ret = Fonts_SetFontScale( cf, 14.0f );
-//		sprintf(str, "ABCDEFGH IJKLMNOPQRSTUVWXYZ abcdef xyz 0123 798");			Fonts_RenderPropText( cf, surf, (int)((0.08f+x+(overscan/4.0f))*1920), (int)((y-_overscan)*1080), (uint8_t*) str, 14.0f, 14.0f, 0.0f, step, color ); y+=0.035f;
-//		ret = Fonts_SetFontScale( cf, 16.0f );
-//		sprintf(str, "ABCDEFGH IJKLMNOPQRSTUVWXYZ abcdef xyz 0123 798");			Fonts_RenderPropText( cf, surf, (int)((0.08f+x+(overscan/4.0f))*1920), (int)((y-_overscan)*1080), (uint8_t*) str, 16.0f, 16.0f, 0.0f, step, color ); y+=0.035f;
-	} */
-
-
-// 		draw_text_stroke( 0.08f+(overscan/4.0f), 0.81f-overscan,        legend_font, 0xc0c0c0c0, "X - Load    [] - Delete  [L3] - Paths   [R1] - Patch mode   [L1] - Cover\nO - Backup  /\\ - Exit    [R3] - Update  [R2] - Test source  [L2] - Setup");
-
-
-	
 			Fonts_UnbindRenderer( cf );
 			Fonts_DetachFont( cf );
 		}
@@ -7065,7 +7018,6 @@ void put_label(uint8_t *buffer, uint32_t width, uint32_t height, char *str1p, ch
 			float lineH, baseY;
 
 
-//			char c_ver[64]; //sprintf(c_ver, "ver. %s", current_version);// (%02d/%02d/%04d %02d:%02d), timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900, timeinfo->tm_hour, timeinfo->tm_min);
 			uint8_t* utf8Str0 = (uint8_t*) str1p;
 			uint8_t* utf8Str1 = (uint8_t*) str2p;
 			uint8_t* utf8Str2 = (uint8_t*) str3p;
@@ -7099,8 +7051,6 @@ void put_label(uint8_t *buffer, uint32_t width, uint32_t height, char *str1p, ch
 					w3 = Fonts_GetPropTextWidth( cf, utf8Str2, scale, scale, slant, step, NULL, NULL )*0.8f;
 					w = (( w1 > w2 )? w1:w2);
 
-//	draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
-//					textW-=1.0f;
 					if ( w > textW ) {
 						float ratio;
 
@@ -7153,7 +7103,6 @@ void put_label(uint8_t *buffer, uint32_t width, uint32_t height, char *str1p, ch
 
 }
 
-//cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string2);
 void print_label(float x, float y, float scale, uint32_t color, char *str1p, float weight, float slant, int ufont)
 {
 	if(max_ttf_label<512)
@@ -7433,10 +7382,6 @@ void draw_reqd_flags(u32 gflags, bool is_locked, int selected)
 		if(selected) put_texture_with_alpha( text_FONT, text_DOX+(dox_rb3s_x	*4 + dox_rb3s_y	* dox_width*4), dox_rb3s_w,	dox_rb3s_h, dox_width, 240, 695+((selected-1)*40), 0, 0);
 }
 
-//void print_label_ex(float x, float y, float scale, uint32_t color, char *str1p, 
-//					float weight, float slant, int font, 
-//					float hscale, float vscale, int centered);
-
 int open_submenu(uint8_t *buffer, int *_game_sel) 
 {
 	xmb_bg_show=0;
@@ -7590,10 +7535,6 @@ gs_cover:
 	sprintf(label, "Permissions");
 	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0);
 
-//	y+=120.0f;
-//	sprintf(label, "Add to favorites");
-//	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0);
-
 	u32 info_color=0xffa0a0a0;
 	u32 dev_color=0xffe0e0e0;
 	if(is_game)
@@ -7683,14 +7624,6 @@ gs_cover:
 	sprintf(label, "Re-apply file and folder access permissions."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
 	sprintf(label, "On rare occasions it may be required to perform resetting of"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
 	sprintf(label, "ownership and execution flags of game contents."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-
-//	y=top_o+(120.0f * 7.0f) + 32.0f;
-//	sprintf(label, "Add \x22%s\x22 to your list of", game_title); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-//	sprintf(label, "favorite games. Use the favorites menu to quickly select"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-//	sprintf(label, "the games you play most often."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-
-	//sprintf(label, "multiMAN %s", current_version); label[17]=0;
-	//print_label_ex( (960.f/1920.f), (980.f/1080.f), 1.0f, 0x70707070, label, 1.04f, 0.00f, 1, 0.6f, 0.6f, 1);
 
 	if((*_game_sel)) sprintf(label, "%s", "Prev Title"); else sprintf(label, "%s", "Last Title");
 	print_label_ex( ((750.f)/1920.f), (981.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, 15, 0.5f, 0.5f, 2);
@@ -7959,10 +7892,6 @@ gs_cover:
 
 		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 
-/*		mouseX+=mouseXD; mouseY+=mouseYD;
-		if(mouseX>0.995f) {mouseX=0.995f;mouseXD=0.0f;} if(mouseX<0.0f) {mouseX=0.0f;mouseXD=0.0f;}
-		if(mouseY>0.990f) {mouseY=0.990f;mouseYD=0.0f;} if(mouseY<0.0f) {mouseY=0.0f;mouseYD=0.0f;}
-*/
 		b_box_opaq+=b_box_step;
 		if(b_box_opaq>0xfe) b_box_step=-1;
 		if(b_box_opaq<0x20) b_box_step= 2;
@@ -7971,10 +7900,6 @@ gs_cover:
 		draw_square(((0.054f-0.5f)*2.0f)-0.005f, ((0.5f-(110.f+top_o)/1080.f)+0.005f)*2.0f , 0.675f, 0.68f, -0.4f, b_color);
 		cellDbgFontPrintf( 0.99f, 0.98f, 0.5f,0x60606040, payloadT); 
 		set_texture( text_FONT, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, -0.5f, 1920, 1080);
-
-		//setRenderColor();
-		//cellDbgFontDrawGcm();
-//		draw_mouse_pointer(0);
 		flip();
 
 	}
@@ -8336,12 +8261,9 @@ int open_mm_submenu(uint8_t *buffer) //, int *_game_sel
 	{
 		char string1[64];
 		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
-
 		set_texture( buffer, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, -0.5f, 1920, 1080);
-		//setRenderColor();
-		//cellDbgFontDrawGcm();
-//		draw_mouse_pointer(0);
 		flip();
+
 		sys_timer_usleep(250000);
 		time ( &rawtime );
 		timeinfo = localtime ( &rawtime );
@@ -12777,22 +12699,14 @@ void video_export( char *filename_v, char *album, int to_unregister )
 
 
 //MP3
-int nChannel;
-int nDSPHandle;
-int SUBNUM = 1;
-int PLAYSUB = SUBNUM | CELL_MS_BUS_FLAG;
-CellMSFXReverbParams rparam;
-
-long TriggerStream(const long nFrequency);
-
-void set_channel_vol(int Channel, float vol)
+void set_channel_vol(int Channel, float vol, float vol2)
 {
 		cellMSCoreSetVolume1(Channel, CELL_MS_DRY, CELL_MS_SPEAKER_FL, CELL_MS_CHANNEL_0, vol);
 		cellMSCoreSetVolume1(Channel, CELL_MS_DRY, CELL_MS_SPEAKER_FR, CELL_MS_CHANNEL_1, vol);
 		cellMSCoreSetVolume1(Channel, CELL_MS_DRY, CELL_MS_SPEAKER_FC,  CELL_MS_CHANNEL_0, vol);
-		cellMSCoreSetVolume1(Channel, CELL_MS_DRY, CELL_MS_SPEAKER_RL,  CELL_MS_CHANNEL_0, vol);
-		cellMSCoreSetVolume1(Channel, CELL_MS_DRY, CELL_MS_SPEAKER_RR,  CELL_MS_CHANNEL_1, vol);
-		cellMSCoreSetVolume1(Channel, CELL_MS_DRY, CELL_MS_SPEAKER_LFE, CELL_MS_CHANNEL_1, vol);
+		cellMSCoreSetVolume1(Channel, CELL_MS_DRY, CELL_MS_SPEAKER_RL,  CELL_MS_CHANNEL_0, vol-vol2);
+		cellMSCoreSetVolume1(Channel, CELL_MS_DRY, CELL_MS_SPEAKER_RR,  CELL_MS_CHANNEL_1, vol-vol2);
+		cellMSCoreSetVolume1(Channel, CELL_MS_DRY, CELL_MS_SPEAKER_LFE, CELL_MS_CHANNEL_1, vol2);
 }
 
 void stop_audio(float attn)
@@ -12805,9 +12719,8 @@ void stop_audio(float attn)
 		{
 			for(float vstep=0; vstep<(attn*30); vstep++)
 			{
-				set_channel_vol(nChannel, mp3_volume-(mp3_volume/(attn*30))*vstep);
+				set_channel_vol(nChannel, mp3_volume-(mp3_volume/(attn*30))*vstep, 0);
 				sys_timer_usleep(3336);
-				//if(!cellMSSystemSignalSPU()) break;
 			}
 		}
 		cellMSStreamClose(nChannel);
@@ -12815,6 +12728,21 @@ void stop_audio(float attn)
 	}
 	mm_is_playing=false;
 	audio_sub_proc=false;
+}
+
+static void _Multi_Stream_Update_Thread(uint64_t param)
+{
+	(void)param;
+
+	while(!mm_shutdown)
+	{
+		sys_timer_usleep(50);
+		if(mm_is_playing)
+			cellMSSystemSignalSPU();
+		cellMSSystemGenerateCallbacks();
+	}
+	cellAudioPortStop(portNum);
+    sys_ppu_thread_exit(0);
 }
 
 int StartMultiStream()
@@ -12838,7 +12766,7 @@ int StartMultiStream()
 	if(mp3Memory==NULL) return -1;
 	if((cellMSMP3Init(2, (void*)mp3Memory)) != 0 ) return -1;
 
-	cellMSCoreSetVolume64(PLAYSUB, CELL_MS_WET, fBusVols);
+	cellMSCoreSetVolume64(CELL_MS_BUS_FLAG | 1, CELL_MS_WET, fBusVols);
 	cellMSCoreSetVolume64(CELL_MS_MASTER_BUS, CELL_MS_DRY, fBusVols);
 
     cellMSSystemConfigureLibAudio(&audioParam, &portConfig);
@@ -12848,218 +12776,11 @@ int StartMultiStream()
 	return 1;
 }
 
-int LoadMP3(const char *mp3filename, int *_mp3_freq)
-{
-
-unsigned int tSize=0;	// total size
-float tTime=0;			// total time
-int ret;
-CellMSMP3FrameHeader Hdr;
-unsigned int offset=0;
-
-
-	pData=pDataB;
-    int nFileHandle=-1;
-    if(0!=cellFsOpen (mp3filename, CELL_FS_O_RDONLY, &nFileHandle, NULL, 0)) return -1;
-	if(0!=cellFsRead(nFileHandle, pData, _mp3_buffer, NULL))
-	{
-		cellFsClose (nFileHandle);
-		return -1;
-	}
-	cellFsClose (nFileHandle);
-	pData=pDataB;	
-
-	//force_mp3_offset=(*size);
-
-	while(1)
-	{
-		ret=cellMSMP3GetFrameInfo(pData,&Hdr);
-		if (ret==-1)
-		{
-			return (-1);	// Invalid MP3 header
-		}
-
-		tSize+=Hdr.PacketSize;	// Update total file size
-		if ((Hdr.ID3==0)&&(Hdr.Tag==0))
-			tTime+=Hdr.PacketTime;	// Update total playing time (in seconds)
-
-		pData+=Hdr.PacketSize;	// Move forward to next packet
-		offset+=Hdr.PacketSize;
-
-// ** Display packet information **
-// Using the packet size and packet time information, it is possible to build "Seek Tables".
-// Then, by knowing approximately what time (in seconds) you require to playback from,
-// you can start playback from the closest data packet by searching for the closest record in the table.
-
-
-/*		if (Hdr.ID3!=0)
-		{
-			printf("Found ID3 Info\n");
-			printf("Version: %x.%x\n",Hdr.ID3>>8, Hdr.ID3&255);
-		}
-		else if (Hdr.Tag!=0)
-		{
-			printf("Found Tag info\n");
-		}
-		else
-		{
-			printf("Sync: 0x%x\n",Hdr.Sync);
-			printf("ID: 0x%x\n",Hdr.ID);
-			printf("Layer: 0x%x\n",Hdr.Layer);
-			printf("ProtBit: 0x%x\n",Hdr.ProtBit);
-			printf("BitRate: %d\n",Hdr.BitRate);
-			printf("Frequency: %d\n",Hdr.Frequency);
-			printf("PadBit: 0x%x\n",Hdr.PadBit);
-			printf("PrivBit: 0x%x\n",Hdr.PrivBit);
-			printf("Mode: 0x%x\n",Hdr.Mode);
-			printf("Copy: 0x%x\n",Hdr.Copy);
-			printf("Home: 0x%x\n",Hdr.Home);
-			printf("Emphasis: 0x%x\n",Hdr.Emphesis);
-			printf("Packet Time (secs): %f\n",Hdr.PacketTime);
-		} */
-//		printf("Packet Size (bytes): 0x%x\n",Hdr.PacketSize);
-
-		if (tSize>=(unsigned int)_mp3_buffer)
-		{
-//			printf("MP3 File is valid.\n");
-			*_mp3_freq=Hdr.Frequency;
-			mp3_durr=(int)tTime;
-			//sprintf(mp3_now_playing,"%d Hz, (%imin %2.2isec) [%s]", Hdr.Frequency, ((int) tTime / 60), ((int) tTime % 60), mp3filename);
-//			printf("Total Playback Time at %d Hz = (secs): %f\n",Hdr.Frequency,tTime);
-			return 1;//(nFileHandle);
-		}
-
-//		else if (tSize>(unsigned int)*size)
-//		{
-//			printf("ERROR: PASSED END OF FILE!\n");
-//			printf("%x,%x\n",tSize,(int)*size);
-//			return -1;
-//		}
-		
-	} 
-}
-
-void main_mp3( char *temp_mp3)
-{
-	if(force_mp3_fd!=-1) cellFsClose (force_mp3_fd);
-	force_mp3_fd=-1;
-	sprintf(force_mp3_file, "%s", temp_mp3);
-	force_mp3=true;
-	is_theme_playing=false;
-	if(strstr(temp_mp3, "SOUND.BIN")!=NULL)
-	{
-		is_theme_playing=true;
-		max_mp3=1;
-		current_mp3=1;
-		sprintf(mp3_playlist[max_mp3].path, "%s", temp_mp3);
-	}
-}
-
-int main_mp3_th( char *temp_mp3)
-{
-
-	char my_mp3[1024];
-	sprintf (my_mp3, "%s", temp_mp3);
-	if(strstr(my_mp3, "/pvd_usb")!=NULL)
-	{
-		sprintf(my_mp3, "%s/TEMP/MUSIC.TMP", app_usrdir);
-		file_copy(temp_mp3, my_mp3, 0);
-	}
-
-
-	mp3_freq=44100;
-
-	stop_audio(5);
-
-	//if(1 == LoadMP3((char*) my_mp3, &pSampleData, &nSizeSampleData, &mp3_freq))
-	//memset((void*)(long)pSampleData, 0, _mp3_buffer);
-	if(1 == LoadMP3((char*) my_mp3, &mp3_freq))
-	{
-
-		force_mp3_offset=_mp3_buffer;
-		nChannel = TriggerStream(mp3_freq);
-		mm_is_playing=true;
-		float attn=5.0f;
-		for(float vstep=(attn*20); vstep>0; vstep--)
-		{
-			set_channel_vol(nChannel, mp3_volume-(mp3_volume/(attn*20))*vstep);
-			sys_timer_usleep(3336);
-			//cellMSSystemSignalSPU();
-		}
-
-
-		float vol=mp3_volume;
-		//if(!mm_audio) vol=0.0f;
-		cellMSCoreSetVolume1(nChannel, CELL_MS_DRY, CELL_MS_SPEAKER_FL, CELL_MS_CHANNEL_0, vol);
-		cellMSCoreSetVolume1(nChannel, CELL_MS_DRY, CELL_MS_SPEAKER_FR, CELL_MS_CHANNEL_1, vol);
-		cellMSCoreSetVolume1(nChannel, CELL_MS_DRY, CELL_MS_SPEAKER_FC,  CELL_MS_CHANNEL_0, vol);
-		cellMSCoreSetVolume1(nChannel, CELL_MS_DRY, CELL_MS_SPEAKER_RL,  CELL_MS_CHANNEL_0, vol-0.1);
-		cellMSCoreSetVolume1(nChannel, CELL_MS_DRY, CELL_MS_SPEAKER_RR,  CELL_MS_CHANNEL_1, vol-0.1);
-		cellMSCoreSetVolume1(nChannel, CELL_MS_DRY, CELL_MS_SPEAKER_LFE, CELL_MS_CHANNEL_1, 0.1f);
-
-
-						//(nSizeSampleData>=KB(MP3_BUF) ? KB(MP3_BUF) : nSizeSampleData),		// size of data (1st buff)
-						//(nSizeSampleData>=KB(MP3_BUF) ? (nSizeSampleData-KB(MP3_BUF)) : 0), // size of data (2nd buff)
-						//mp3_freq, SAMPLE_CHANNELS);
-	}
-
-//	else
-//		mm_is_playing=false;
-
-// ----- Main Loop -----
-
-/*
-    while(!s_receivedExitGameRequest)
-    {
-//		flip();
-		pad_read();
-		if(new_pad & BUTTON_TRIANGLE) break;
-
-		i=cellMSStreamGetStatus(nChannel);
-		if (i==CELL_MS_STREAM_OFF)
-		{
-			sys_timer_usleep(fps60*60*1);	// Wait a sec..
-
-			cellMSCoreInit(nChannel);
-			nChannel = TriggerStream(	nChannel,
-								pSampleData,		// 1st buffer
-								0,					// 2nd buffer
-								nSizeSampleData, 	// size of data (in bytes)
-								0, 					// size of data (in bytes)
-						        SAMPLE_FREQUENCY,
-						        SAMPLE_CHANNELS);
-			if(nChannel == -1){printf("Trigger Stream Error: \n"); return -1;}
-		}
-
-		sys_timer_usleep(fps60);	// Update at 60 Frames Per Second
-
-		int ret = cellSysutilCheckCallback();
-		if (ret != CELL_OK) {
-			printf("error: cellSysutilCheckCallback() = 0x%x\n", ret);
-			return ret;
-		}
-	}
-cellMSStreamClose(nChannel);
-cellMSCoreStop(nChannel, 0);
-//	ShutdownMultiStream();
-}*/
-    return 0;
-}
-
 
 /**********************************************************************************
-TriggerStream
 	Starts the streaming of the passed sample data as a one shot sfx.
-
-	Requires:		pSampleData1 		Address of PCM sample data (first buffer)
-					pSampleData2		Address of PCM sample data (second buffer)
-					nSize				Size (in bytes) of sample data (first buffer)
-					nSize2				Size (in bytes) of sample data (second buffer)
 					nFrequency			Required playback frequency (in Hz)
-					nSampleChannels		Number of channels within sample data (1=mono, 2 = stereo..)
-
 	Returns:		nChannel			Stream channel number
-					-1					Failed (no free channels or invalid sample data address)
 **********************************************************************************/
 long TriggerStream(const long nFrequency)
 {
@@ -13089,23 +12810,142 @@ CellMSInfo  MS_Info;
     return nCh;
 }
 
-
-static void _Multi_Stream_Update_Thread(uint64_t param)
+int LoadMP3(const char *mp3filename, int *_mp3_freq, float skip)
 {
-	(void)param;
+unsigned int tSize=0;	// total size
+float tTime=0;			// total time
+(void) skip;
+CellMSMP3FrameHeader Hdr;
 
-	while(!mm_shutdown)
+	pData=pDataB;
+	if(force_mp3_fd!=-1) cellFsClose(force_mp3_fd);
+    if(CELL_FS_SUCCEEDED!=cellFsOpen (mp3filename, CELL_FS_O_RDONLY, &force_mp3_fd, NULL, 0)) return -1;
+
+	cellFsLseek(force_mp3_fd, 0, CELL_FS_SEEK_END, &force_mp3_size);
+	cellFsLseek(force_mp3_fd, 0, CELL_FS_SEEK_SET, &force_mp3_offset);
+
+	if(CELL_FS_SUCCEEDED!=cellFsRead(force_mp3_fd, pDataB, (force_mp3_size<_mp3_buffer?force_mp3_size:_mp3_buffer), &force_mp3_offset))
 	{
-		sys_timer_usleep(50);
-		if(mm_is_playing)
-		{
-			cellMSSystemSignalSPU();
-		}
-		cellMSSystemGenerateCallbacks();
+		force_mp3_offset=0;
+		force_mp3_size=0;
+		cellFsClose (force_mp3_fd);
+		force_mp3_fd=-1;
+		return -1;
 	}
-	cellAudioPortStop(portNum);
-    sys_ppu_thread_exit(0);
+
+	if(!force_mp3_offset)
+		force_mp3_offset=_mp3_buffer;
+
+	pData=pDataB;	
+
+
+	while(1)
+	{
+		if(-1==cellMSMP3GetFrameInfo(pData,&Hdr)) return (-1);	// Invalid MP3 header
+
+		tSize+=Hdr.PacketSize;	// Update total file size
+		if ((Hdr.ID3==0)&&(Hdr.Tag==0))
+			tTime+=Hdr.PacketTime;	// Update total playing time (in seconds)
+
+		pData+=Hdr.PacketSize;	// Move forward to next packet
+
+		if (tSize>=_mp3_buffer || tSize>=force_mp3_size)
+		{
+			*_mp3_freq=Hdr.Frequency;
+			mp3_durr=(int)tTime;
+			mp3_packet=Hdr.PacketSize;
+			mp3_packet_time=Hdr.PacketTime+0.001f;
+			return 1;
+		}
+	} 
 }
+
+//sprintf(mp3_now_playing,"%d Hz, (%imin %2.2isec) [%s]", Hdr.Frequency, ((int) tTime / 60), ((int) tTime % 60), mp3filename);
+// ** Display packet information **
+// Using the packet size and packet time information, it is possible to build "Seek Tables".
+// Then, by knowing approximately what time (in seconds) you require to playback from,
+// you can start playback from the closest data packet by searching for the closest record in the table.
+/*		if (Hdr.ID3!=0)
+		{
+			printf("Found ID3 Info\n");
+			printf("Version: %x.%x\n",Hdr.ID3>>8, Hdr.ID3&255);
+		}
+		else if (Hdr.Tag!=0)
+		{
+			printf("Found Tag info\n");
+		}
+		else
+		{
+			printf("Sync: 0x%x\n",Hdr.Sync);
+			printf("ID: 0x%x\n",Hdr.ID);
+			printf("Layer: 0x%x\n",Hdr.Layer);
+			printf("ProtBit: 0x%x\n",Hdr.ProtBit);
+			printf("BitRate: %d\n",Hdr.BitRate);
+			printf("Frequency: %d\n",Hdr.Frequency);
+			printf("PadBit: 0x%x\n",Hdr.PadBit);
+			printf("PrivBit: 0x%x\n",Hdr.PrivBit);
+			printf("Mode: 0x%x\n",Hdr.Mode);
+			printf("Copy: 0x%x\n",Hdr.Copy);
+			printf("Home: 0x%x\n",Hdr.Home);
+			printf("Emphasis: 0x%x\n",Hdr.Emphesis);
+			printf("Packet Time (secs): %f\n",Hdr.PacketTime);
+		} */
+		//printf("Packet Size (bytes): 0x%x\n",Hdr.PacketSize);
+
+
+void main_mp3( char *temp_mp3)
+{
+	if(force_mp3_fd!=-1) cellFsClose (force_mp3_fd);
+	force_mp3_fd=-1;
+	sprintf(force_mp3_file, "%s", temp_mp3);
+	force_mp3=true;
+	is_theme_playing=false;
+	if(strstr(temp_mp3, "SOUND.BIN")!=NULL)
+	{
+		is_theme_playing=true;
+		max_mp3=1;
+		current_mp3=1;
+		sprintf(mp3_playlist[max_mp3].path, "%s", temp_mp3);
+	}
+}
+
+int main_mp3_th( char *temp_mp3, float skip)
+{
+
+	char my_mp3[1024];
+	sprintf (my_mp3, "%s", temp_mp3);
+	if(strstr(my_mp3, "/pvd_usb")!=NULL)
+	{
+		sprintf(my_mp3, "%s/TEMP/MUSIC.TMP", app_usrdir);
+		file_copy(temp_mp3, my_mp3, 0);
+	}
+
+
+	mp3_freq=44100;
+
+	stop_audio(5);
+	memset(pDataB, 0, _mp3_buffer);
+	if(1 == LoadMP3((char*) my_mp3, &mp3_freq, skip))
+	{
+
+		nChannel = TriggerStream(mp3_freq);
+		mm_is_playing=true;
+		float attn=5.0f;
+		for(float vstep=(attn*20); vstep>0; vstep--)
+		{
+			set_channel_vol(nChannel, mp3_volume-(mp3_volume/(attn*20))*vstep, 0);
+			sys_timer_usleep(3336);
+		}
+
+		set_channel_vol(nChannel, mp3_volume, 0.1f);
+		return 1;
+	}
+	else mp3_skip=0.0f;
+
+	//if(cellMSStreamGetStatus(nChannel)==CELL_MS_STREAM_OFF);
+    return 0;
+}
+
 
 int readmem(unsigned char *_x, uint64_t _fsiz, uint64_t _chunk) //read lv2 memory chunk
 {
@@ -16966,11 +16806,11 @@ void apply_theme (const char *theme_file, const char *theme_path)
 		load_texture(text_CFC_3, iconCFC, 320);
 		load_texture(text_SDC_4, iconSDC, 320);
 		load_texture(text_MSC_5, iconMSC, 320);
-	parse_color_ini();
+		parse_color_ini();
 
-				cellMsgDialogAbort();
-				state_read=1;
-				state_draw=1;
+		cellMsgDialogAbort();
+		state_read=1;
+		state_draw=1;
 }
 
 void draw_xmb_title(u8 *buffer, xmbmem *member, int cn, u32 col1, u32 col2, u8 _xmb_col)
@@ -17056,10 +16896,10 @@ void add_xmb_member(xmbmem *_member, u16 *_size, char *_name, char *_subname,
 	_member[size].game_user_flags =_u_flags;
 	_member[size].game_split	  =_split;
 
-	_member[size].name[128]=0;
 	sprintf(_member[size].name, "%s", _name);
-	_member[size].subname[96]=0;
+	_member[size].name[128]=0;
 	sprintf(_member[size].subname, "%s", _subname);
+	_member[size].subname[96]=0;
 
 	_member[size].option_size=0;
 	_member[size].option_selected=0;
@@ -18462,7 +18302,6 @@ static void add_photo_column_thread_entry( uint64_t arg )
 	sys_ppu_thread_exit(0);
 }
 
-
 static void add_music_column_thread_entry( uint64_t arg )
 {
 	(void)arg;
@@ -18477,7 +18316,6 @@ static void add_music_column_thread_entry( uint64_t arg )
 		xmb[4].size=0;
 		xmb[4].init=1;
 		u8 skip_first=0;
-
 
 		ps3_home_scan_bare((char*)"/dev_hdd0/music", pane, &max_dir); 
 		ps3_home_scan_bare((char*)"/dev_hdd0/MUSIC", pane, &max_dir); 
@@ -18521,6 +18359,7 @@ static void add_music_column_thread_entry( uint64_t arg )
 	}
 	is_music_loading=0;
 	if(xmb_icon_last==4 && (xmb_icon_last_first<xmb[4].size)) { xmb[4].first=xmb_icon_last_first; xmb_icon_last_first=0;xmb_icon_last=0; }
+	save_xmb_column(4);
 	sys_ppu_thread_exit(0);
 }
 
@@ -19830,7 +19669,7 @@ void launch_web_browser(char *start_page)
 	{
 err_web:
 		www_running = 0;
-		sprintf(www_info, "%s", "Game mode");
+		www_info[0]=0;
 //		sprintf(string1, "Browser disabled during Remote Play!\n\nNot enough memory to launch web browser!\n\nRequired memory: %.2f MB (allocated %.2f MB)", (double) mc_size/1024/1024, (double) MEMORY_CONTAINER_SIZE_ACTIVE/1024/1024);dialog_ret=0;		cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 		dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, "Not enough memory to launch web browser!\n\nPlease restart multiMAN and try again.", dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 	}
@@ -20312,6 +20151,9 @@ int main(int argc, char **argv)
 		FILE *fpA;	
 		fpA = fopen ( string1x, "w" );	fputs ( "multiMAN was reloaded",  fpA );fputs ( string1x,  fpA );
 		fclose( fpA);
+		sprintf(string1, "%s/PARAM.SFO", app_homedir);
+		change_param_sfo_version(string1);
+		change_param_sfo_field( string1, (char*)"TITLE", (char*) "multiMAN");
 	}
 
 	sprintf(current_version_NULL, "%s", current_version);
@@ -20546,25 +20388,7 @@ int main(int argc, char **argv)
 		for(int c=3;c<9;c++)
 		{
 			if(c==5) c=8;
-			sprintf(list_file_state, "%s/XMBS.00%i", app_usrdir, c);
-			FILE *flist = fopen(list_file_state, "rb");
-			if(flist!=NULL)
-			{
-				fread((char*) &string1, 8, 1, flist);
-				if(strstr(string1, XMB_COL_VER)!=NULL)
-				{
-					fseek(flist, 0, SEEK_END);
-					int llist_size=ftell(flist)-8;
-					fseek(flist, 8, SEEK_SET);
-					fread((char*) &xmb[c], llist_size, 1, flist);
-					fclose(flist);
-				}
-				else
-				{
-					fclose(flist);
-					remove(list_file_state);
-				}
-			}
+			read_xmb_column(c);
 		}
 		free_all_buffers();
 		for(int n=0; n<MAX_XMB_TEXTS; n++)
@@ -21034,7 +20858,7 @@ int main(int argc, char **argv)
 		if(exist(bootmusic))
 		{
 			main_mp3((char*)bootmusic);
-			main_mp3_th(bootmusic);
+			main_mp3_th(bootmusic, 0);
 			force_mp3=false;
 		}
 	}
@@ -21053,7 +20877,7 @@ int main(int argc, char **argv)
 
 
 	sys_ppu_thread_create( &download_thr_id, download_thread_entry,
-						   NULL, 2048, app_stack_size,
+						   NULL, 3000, app_stack_size,
 						   0, "multiMAN_downqueue" );
 
 	sys_ppu_thread_create( &misc_thr_id, misc_thread_entry,
@@ -22338,14 +22162,19 @@ switch_ntfs:
 		if((new_pad & BUTTON_UP)) mp3_volume+=0.05f; else mp3_volume-=0.05f;
 		if(mp3_volume<0.0f) mp3_volume=0.0f;
 		new_pad=0; old_pad=0;
-		cellMSCoreSetVolume1(nChannel, CELL_MS_DRY, CELL_MS_SPEAKER_FL, CELL_MS_CHANNEL_0, mp3_volume);
-		cellMSCoreSetVolume1(nChannel, CELL_MS_DRY, CELL_MS_SPEAKER_FR, CELL_MS_CHANNEL_1, mp3_volume);
-		cellMSCoreSetVolume1(nChannel, CELL_MS_DRY, CELL_MS_SPEAKER_FC,  CELL_MS_CHANNEL_0, mp3_volume);
-		cellMSCoreSetVolume1(nChannel, CELL_MS_DRY, CELL_MS_SPEAKER_RL,  CELL_MS_CHANNEL_0, mp3_volume-0.1f);
-		cellMSCoreSetVolume1(nChannel, CELL_MS_DRY, CELL_MS_SPEAKER_RR,  CELL_MS_CHANNEL_1, mp3_volume-0.1f);
-		cellMSCoreSetVolume1(nChannel, CELL_MS_DRY, CELL_MS_SPEAKER_LFE, CELL_MS_CHANNEL_1, 0.1f);
+		set_channel_vol(nChannel, mp3_volume, 0.1f);
 	 }
 
+	/*if ((old_pad & BUTTON_START) &&  ( (new_pad & BUTTON_L1) || (new_pad & BUTTON_R1))) 
+	{
+		if((new_pad & BUTTON_L1)) 
+			mp3_skip-=1.0f; if(mp3_skip<0) mp3_skip=0.f;
+		else
+			mp3_skip+=1.f;
+
+		main_mp3_th(force_mp3_file, mp3_skip);
+		new_pad=0;
+	 }*/ 
 
 
 	 if (((old_pad & BUTTON_SELECT) &&  (new_pad & BUTTON_CIRCLE)) && cover_mode!=5 && (cover_mode!=8 || (cover_mode==8 && (xmb_icon==6 || xmb_icon==7))) )
@@ -25430,11 +25259,11 @@ skip_to_FM:
 
 			setRenderColor();
 
-				if(www_running==1) 
+//				if(www_running==1) 
 					cellDbgFontPrintf( 0.01f, 0.98f, 0.5f,0x60606080, www_info); 
 
 			if(multiStreamStarted==1 && current_mp3!=0 && max_mp3>1 && (c_opacity2>0x00)) {
-				sprintf(filename, "Playing: %i/%i (vol: %i)", current_mp3, max_mp3, (int) (mp3_volume*100)); // mp3_status,
+				sprintf(filename, "Playing: %i/%i (vol: %i)", current_mp3, max_mp3, (int) (mp3_volume*100)); 
 				cellDbgFontPrintf( 0.82f, 0.98f, 0.5f,0x60606060, filename); 
 			}
 
@@ -25619,12 +25448,11 @@ static void jpg_thread_entry( uint64_t arg )
 void load_jpg_threaded(int _xmb_icon, int cn)
 {
 	if(is_decoding_jpg) return;
-//	while(is_decoding_jpg);
 	is_decoding_jpg=1;
 	sys_ppu_thread_create( &jpgdec_thr_id, jpg_thread_entry,
 						   (_xmb_icon | (cn<<8) ), 
-						   70, app_stack_size,
-						   0, "multiMAN_jpeg" );//SYS_PPU_THREAD_CREATE_JOINABLE
+						   misc_thr_prio-100, app_stack_size,
+						   0, "multiMAN_jpeg" );
 }
 
 void load_png_threaded(int _xmb_icon, int cn)
@@ -25633,8 +25461,8 @@ void load_png_threaded(int _xmb_icon, int cn)
 	is_decoding_png=1;
 	sys_ppu_thread_create( &pngdec_thr_id, png_thread_entry,
 						   (_xmb_icon | (cn<<8) ), 
-						   80, app_stack_size,//misc_thr_prio
-						   0, "multiMAN_png" );//SYS_PPU_THREAD_CREATE_JOINABLE
+						   misc_thr_prio-100, app_stack_size,//misc_thr_prio
+						   0, "multiMAN_png" );
 }
 
 
@@ -25689,7 +25517,7 @@ static void misc_thread_entry( uint64_t arg )
 		cellConsolePoll();
 		if(force_mp3)
 		{
-			main_mp3_th(force_mp3_file);
+			main_mp3_th(force_mp3_file, 0);
 			force_mp3=false;
 		}
 		sys_timer_usleep(3336);
