@@ -1326,6 +1326,12 @@ void get_free_memory()
 	system_call_1(352, (uint64_t) &meminfo);
 }
 
+void ClearSurface()
+{
+	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+}
+
+
 u32 new_pad=0, old_pad=0;
 uint8_t old_status=0;
 uint8_t old_status_k=0;
@@ -1713,7 +1719,7 @@ void screen_saver()
 			ss_timer=0;
 			ss_timer_last=time(NULL);
 
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 			for(int n=0; n<MAX_STARS; n++)
 			{
 				draw_square(((float)stars[n].x/1920.0f-0.5f)*2.0f, (0.5f-(float)stars[n].y/1080.0f)*2.0f, (stars[n].size/1920.f), (stars[n].size/1080.f), 0.0f, (0xffffff00 | stars[n].bri));
@@ -1757,7 +1763,7 @@ void slide_screen_left(uint8_t *buffer)
 		int slide; char string1[64];
 		for(slide=0;slide>-2048;slide-=128) {
 
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 			set_texture( buffer, 1920, 1080); 
 			display_img((int)slide, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 			setRenderColor();
@@ -1768,7 +1774,7 @@ void slide_screen_left(uint8_t *buffer)
 			sprintf(string1, "%s", "Please wait...");
 			print_label_ex( 0.5f, 0.50f, 1.0f, 0xffffffff, string1, 1.04f, 0.0f, 15, 1.0f, 1.0f, 1);
 			flush_ttf(buffer, 1920, 1080);
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 			set_texture( buffer, 1920, 1080); 
 			display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 			setRenderColor();
@@ -1780,7 +1786,7 @@ void slide_screen_right(uint8_t *buffer)
 		int slide; char string1[64];
 		for(slide=0;slide<2048;slide+=128) {
 
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 			set_texture( buffer, 1920, 1080); 
 			display_img((int)slide, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 			setRenderColor();
@@ -1794,7 +1800,7 @@ void slide_screen_right(uint8_t *buffer)
 			sprintf(string1, "%s", "Please wait...");
 			print_label_ex( 0.5f, 0.50f, 1.0f, 0xffffffff, string1, 1.04f, 0.0f, 15, 1.0f, 1.0f, 1);
 			flush_ttf(buffer, 1920, 1080);
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 			set_texture( buffer, 1920, 1080); 
 			display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 			setRenderColor();
@@ -1875,10 +1881,10 @@ void wait_dialog()
 		if(init_finished)
 		{
 			if(cover_mode==8) draw_whole_xmb(xmb_icon);//draw_xmb_bare(xmb_icon, 1, 0, 0);
-			else if(cover_mode==5) { cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A); draw_fileman();  flip();sys_timer_usleep(1668);}
+			else if(cover_mode==5) { ClearSurface(); draw_fileman();  flip();sys_timer_usleep(1668);}
 			else if(cover_mode>=0 && cover_mode<3 || cover_mode==6 || cover_mode==7)
 				{
-					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+					ClearSurface();
 					set_texture( text_bmp, 1920, 1080);
 					display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 					sys_timer_usleep(1668);
@@ -1886,7 +1892,7 @@ void wait_dialog()
 				}
 			else if(cover_mode==4)
 				{
-					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+					ClearSurface();
 					draw_coverflow_icons(xmb, xmb_icon, xmb_slide_y);
 					sys_timer_usleep(1668);
 					flip();
@@ -2404,7 +2410,7 @@ void net_folder_copy(char *path, char *path_new, char *path_name)
 	{
 		sprintf(string1n, "Copying network folder (%i files in %i folders) from [%s], please wait!", t_files, t_folders, host_list[chost].host); //, (double) (copy_global_bytes/1024.0f/1024.0f) 
 //		dialog_ret=0;cellMsgDialogOpen2( type_dialog_yes_no, string1n, dialog_fun1, (void*)0x0000aaaa, NULL );	wait_dialog();
-//		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A); cellDbgFontPrintf( 0.20f, 0.45f, 0.8f, 0xc0c0c0c0, string1); cellDbgFontDrawGcm();
+//		ClearSurface(); cellDbgFontPrintf( 0.20f, 0.45f, 0.8f, 0xc0c0c0c0, string1); cellDbgFontDrawGcm();
 		dialog_ret=0;
 		cellMsgDialogOpen2(CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL	|CELL_MSGDIALOG_TYPE_BUTTON_TYPE_NONE|CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF	|CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_NONE	|CELL_MSGDIALOG_TYPE_PROGRESSBAR_SINGLE, string1n,	NULL,	NULL,	NULL);
 		flip();
@@ -2516,7 +2522,7 @@ void net_folder_copy(char *path, char *path_new, char *path_name)
 		{
 		if(lastINC3>3 || (time(NULL)-seconds2)>0 || global_device_bytes==0) 
 		{
-//			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+//			ClearSurface();
 //			draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x101010ff);
 /*
 			sprintf(string1,"Transferred %1.2f of %1.2f KB\n\nRemaining  : %imin %2.2isec\nElapsed    : %imin %2.2isec",((double) global_device_bytes)/(1024.0),((double) copy_global_bytes)/(1024.0), (eta/60), eta % 60, (seconds/60), seconds % 60);
@@ -2666,7 +2672,7 @@ termination2X:
 
 			sprintf(tr, "%s", entry->d_name);
 			cellDbgFontDrawGcm(); 
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 			set_texture( text_FMS, 1920, 48); display_img(0, 47, 1920, 60, 1920, 48, -0.15f, 1920, 48);	display_img(0, 952, 1920, 76, 1920, 48, -0.15f, 1920, 48);time ( &rawtime );	timeinfo = localtime ( &rawtime );	cellDbgFontPrintf( 0.83f, 0.89f, 0.7f ,0xc0a0a0a0, "%02d/%02d/%04d\n %s:%02d:%02d ", timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900, tmhour(timeinfo->tm_hour), timeinfo->tm_min, timeinfo->tm_sec);
 			set_texture( text_bmpIC, 320, 320);  display_img(800, 200, 320, 176, 320, 176, 0.0f, 320, 320);
 			if(	strstr(path_new, "/ps3_home/video")!=NULL ) {
@@ -2729,7 +2735,7 @@ int network_put(char *command, char *server_name, int server_port, char *net_fil
 	if(show_progress==1) 
 	{	
 		sprintf(string1, "Establishing server connection, please wait!\n\nContacting %s...", server_name);
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 		cellDbgFontPrintf( 0.28f, 0.45f, 0.8f, 0xc0c0c0c0, string1);
 		cellDbgFontDrawGcm();
 		flip();
@@ -2832,7 +2838,7 @@ int network_put(char *command, char *server_name, int server_port, char *net_fil
 	if(show_progress!=0 && copy_global_bytes>1048576){
 		if(lastINC3>3 || (time(NULL)-seconds2)>0 || global_device_bytes==0) 
 		{
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 			draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x101010ff);
 
 			sprintf(string1,"Transferred %.2f of %.2f MB. Remaining: %imin %2.2isec",((double) global_device_bytes)/(1024.0)/(1024.0),((double) copy_global_bytes)/(1024.0)/(1024.0), (eta/60), eta % 60);
@@ -3030,7 +3036,7 @@ int network_com(char *command, char *server_name, int server_port, char *net_fil
 			sprintf(string1, "Refreshing network directory structure, please wait!\n\nContacting %s...", server_name);
 		else
 			sprintf(string1, "Establishing server connection, please wait!\n\nContacting %s...", server_name);
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 		cellDbgFontPrintf( 0.28f, 0.45f, 0.8f, 0xc0c0c0c0, string1);
 		cellDbgFontDrawGcm();
 		flip();
@@ -3106,7 +3112,7 @@ int network_com(char *command, char *server_name, int server_port, char *net_fil
 
 	if(show_progress!=0 && copy_global_bytes>1048576){
 		sprintf(string1, "Copying network file from [%s], please wait!", server_name); //, (double) (copy_global_bytes/1024.0f/1024.0f) 
-//		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A); cellDbgFontPrintf( 0.20f, 0.45f, 0.8f, 0xc0c0c0c0, string1); cellDbgFontDrawGcm();
+//		ClearSurface(); cellDbgFontPrintf( 0.20f, 0.45f, 0.8f, 0xc0c0c0c0, string1); cellDbgFontDrawGcm();
 
 		cellMsgDialogOpen2(CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL	|CELL_MSGDIALOG_TYPE_BUTTON_TYPE_NONE|CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF	|CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_NONE	|CELL_MSGDIALOG_TYPE_PROGRESSBAR_SINGLE, string1,	NULL,	NULL,	NULL);
 
@@ -3139,7 +3145,7 @@ int network_com(char *command, char *server_name, int server_port, char *net_fil
 	if(show_progress!=0 && copy_global_bytes>1048576){
 		if(lastINC3>3 || (time(NULL)-seconds2)>0 || global_device_bytes==0) 
 		{
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 			draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x101010ff);
 /*
 			sprintf(string1,"Transferred %1.2f of %1.2f KB\n\nRemaining  : %imin %2.2isec\nElapsed    : %imin %2.2isec",((double) global_device_bytes)/(1024.0),((double) copy_global_bytes)/(1024.0), (eta/60), eta % 60, (seconds/60), seconds % 60);
@@ -3330,7 +3336,7 @@ void net_folder_copy_put(char *path, char *path_new, char *path_name)
 	{
 		if(lastINC3>3 || (time(NULL)-seconds2)>0 || global_device_bytes==0) 
 		{
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 			draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x101010ff);
 
 			sprintf(string1,"Transferred %.2f of %.2f MB. Remaining: %imin %2.2isec",((double) global_device_bytes)/(1024.0)/(1024.0),((double) copy_global_bytes)/(1024.0)/(1024.0), (eta/60), eta % 60);
@@ -3409,7 +3415,7 @@ int download_file(const char *http_file, const char *save_path, int show_progres
 	if(show_progress==3) sprintf(string1, "Downloading file, please wait!");
 	if(show_progress==4) sprintf(string1, "Downloading theme, please wait!");
 	if(show_progress!=0){
-	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+	ClearSurface();
 	cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string1);
 	cellDbgFontDrawGcm();
 	}
@@ -3521,7 +3527,7 @@ if( ( ((int)(global_device_bytes*100ULL/copy_global_bytes)) - lastINC2)>0)
 	if(show_progress!=0){
 
 if(lastINC3>3 || (time(NULL)-seconds2)>1 || (show_progress==3 && www_running)) 
-{	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+{	ClearSurface();
 	if(show_progress==3 && www_running)
 	{
 		if(cover_mode==8)
@@ -4266,20 +4272,20 @@ static int unload_modules()
 	if(text_bmp!=NULL)
 	{
 		u8 *buffer=text_bmp;
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 		flip();
 		max_ttf_label=0; memset(buffer, 0, 1920*1080*4);
 		print_label_ex( 0.5f, 0.50f, 1.0f, 0xffffffff, (char*)"Boo!", 1.04f, 0.0f, 15, 1.0f, 1.0f, 1);
 		flush_ttf(buffer, 1920, 1080);
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 		set_texture( buffer, 1920, 1080); 
 		display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 		setRenderColor();
 		flip();
 	}*/
 
-	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);flip();
-	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);flip();
+	ClearSurface();flip();
+	ClearSurface();flip();
 		
 
 	save_options();
@@ -4475,7 +4481,7 @@ int32_t pngDispCb( CellPngDecDispInfo *dispInfo, CellPngDecDispParam *dispParam,
 {
 	(void) cbCtrlDispArg;
 	dispParam->nextOutputImage=(u8*)(dispInfo->outputImage) + (dispInfo->outputWidthByte * dispInfo->outputHeight);
-//	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+//	ClearSurface();
 //	set_texture( text_bmp, 1920, 1080); //PIC1.PNG
 //	display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 //	flip();
@@ -6942,7 +6948,7 @@ for(it=0;it<2;it++)
 //			blur_texture(buffer, 1920, 1080, (int)((0.05f+_overscan)*1920)+it, (int) ((_overscan+0.1f-0.025f)*1080)+it, 1250-(it*2), (int)((0.05f*max_entries+0.025f)*1080)-(it*2),   1, 0, 1);
 	}
 /*
-					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+					ClearSurface();
 					set_texture( buffer, 1920, 1080); //PIC1.PNG
 					display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 					flip();
@@ -7414,7 +7420,7 @@ reload_submenu:
 
 	/*for(m=100; m<200; m+=10)
 	{
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 		set_texture( buffer, 1920, 1080);  display_img((1920-1920*m/100)/2, (1080-1080*m/100)/2, 1920*m/100, 1080*m/100, 1920, 1080, -0.5f, 1920, 1080);
 		setRenderColor();
 		flip();
@@ -7674,7 +7680,7 @@ gs_cover:
 
 	for(m=200; m>100; m-=10)
 	{
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 		set_texture( text_FONT, 1920, 1080);  display_img((1920-1920*m/100)/2, (1080-1080*m/100)/2, 1920*m/100, 1080*m/100, 1920, 1080, -0.5f, 1920, 1080);
 		setRenderColor();
 		flip();
@@ -7890,7 +7896,7 @@ gs_cover:
 
 
 
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 
 		b_box_opaq+=b_box_step;
 		if(b_box_opaq>0xfe) b_box_step=-1;
@@ -7938,7 +7944,7 @@ int open_mm_submenu(uint8_t *buffer) //, int *_game_sel
 
 		for(m=100; m<200; m+=10)
 		{
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 			set_texture( buffer, 1920, 1080);  display_img((1920-1920*m/100)/2, (1080-1080*m/100)/2, 1920*m/100, 1080*m/100, 1920, 1080, -0.5f, 1920, 1080);
 			setRenderColor();
 			flip();
@@ -8134,7 +8140,7 @@ int open_mm_submenu(uint8_t *buffer) //, int *_game_sel
 
 	for(m=200; m>100; m-=10)
 	{
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 		set_texture( text_FONT, 1920, 1080);  display_img((1920-1920*m/100)/2, (1080-1080*m/100)/2, 1920*m/100, 1080*m/100, 1920, 1080, -0.5f, 1920, 1080);
 		setRenderColor();
 		flip();
@@ -8233,7 +8239,7 @@ int open_mm_submenu(uint8_t *buffer) //, int *_game_sel
 
 
 
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 
 /*		mouseX+=mouseXD; mouseY+=mouseYD;
 		if(mouseX>0.995f) {mouseX=0.995f;mouseXD=0.0f;} if(mouseX<0.0f) {mouseX=0.0f;mouseXD=0.0f;}
@@ -8260,7 +8266,7 @@ int open_mm_submenu(uint8_t *buffer) //, int *_game_sel
 	if(result==4) //take screenshot
 	{
 		char string1[64];
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 		set_texture( buffer, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, -0.5f, 1920, 1080);
 		flip();
 
@@ -9502,7 +9508,7 @@ void fill_entries_from_device_pfs(char *path, t_menu_list *list, int *max, u32 f
 		if(skip_entry==0 && cover_mode!=8) 
 		{
 			sprintf(string2, "Scanning, please wait!\n\n[%s/%s]",path, entry.FileName);
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 
 			set_texture( text_FMS, 1920, 48); display_img(0, 47, 1920, 60, 1920, 48, -0.15f, 1920, 48);	display_img(0, 952, 1920, 76, 1920, 48, -0.15f, 1920, 48);time ( &rawtime );	timeinfo = localtime ( &rawtime );	cellDbgFontPrintf( 0.83f, 0.89f, 0.7f ,0xc0a0a0a0, "%02d/%02d/%04d\n %s:%02d:%02d ", timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900, tmhour(timeinfo->tm_hour), timeinfo->tm_min, timeinfo->tm_sec);
 			set_texture( text_bmpIC, 320, 320);  display_img(800, 200, 320, 176, 320, 176, 0.0f, 320, 320);
@@ -9641,7 +9647,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 		pb_step-=10; if(pb_step<0) pb_step=429;
 		if(first_launch)
 		{
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 			put_texture( text_BOOT, text_FMS+(pb_step*4), 429, 20, 858, 745, 840, 0, 0);
 			set_texture( text_BOOT, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 			flip();
@@ -9656,7 +9662,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 		{
 			if(cover_mode!=8)
 			{
-				cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+				ClearSurface();
 				sprintf(string2, "Scanning for AVCHD content, please wait!\n\n[%s/%s]",avchd_path, entry->d_name);
 				set_texture( text_FMS, 1920, 48); display_img(0, 47, 1920, 60, 1920, 48, -0.15f, 1920, 48);	display_img(0, 952, 1920, 76, 1920, 48, -0.15f, 1920, 48);time ( &rawtime );	timeinfo = localtime ( &rawtime );	cellDbgFontPrintf( 0.83f, 0.895f, 0.7f ,0xc0a0a0a0, "%02d/%02d/%04d\n %s:%02d:%02d ", timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900, tmhour(timeinfo->tm_hour), timeinfo->tm_min, timeinfo->tm_sec);
 				set_texture( text_bmpIC, 320, 320);  display_img(800, 200, 320, 176, 320, 176, 0.0f, 320, 320);
@@ -9760,7 +9766,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 		pb_step-=10; if(pb_step<0) pb_step=429;
 		if(first_launch)
 		{
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 			put_texture( text_BOOT, text_FMS+(pb_step*4), 429, 20, 858, 745, 840, 0, 0);
 			set_texture( text_BOOT, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 			flip();
@@ -9779,7 +9785,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 
 /*		if(skip_entry==0 || first_launch) 
 		{
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 			if(first_launch)
 			{
 				put_texture( text_bmpUBG, text_FMS+(pb_step*4), 429, 20, 858, 745, 840, 0, 0);
@@ -9805,7 +9811,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 			//else
 			{
 				sprintf(string2, "Scanning, please wait!\n\n[%s/%s]", path, entry->d_name);
-				cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+				ClearSurface();
 				set_texture( text_FMS, 1920, 48); display_img(0, 47, 1920, 60, 1920, 48, -0.15f, 1920, 48);	display_img(0, 952, 1920, 76, 1920, 48, -0.15f, 1920, 48);time ( &rawtime );	timeinfo = localtime ( &rawtime );	cellDbgFontPrintf( 0.83f, 0.895f, 0.7f ,0xc0a0a0a0, "%02d/%02d/%04d\n %s:%02d:%02d ", timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900, tmhour(timeinfo->tm_hour), timeinfo->tm_min, timeinfo->tm_sec);
 				set_texture( text_bmpIC, 320, 320);  display_img(800, 200, 320, 176, 320, 176, 0.0f, 320, 320);
 
@@ -10611,13 +10617,8 @@ int fast_copy_process()
 		{
 			lastINC2=(int) (global_device_bytes*100ULL / copy_global_bytes);
 			if(lastINC<lastINC2) {lastINC3=lastINC2-lastINC; lastINC=lastINC2;}
-//			if(lastINC3>0) cellMsgDialogProgressBarInc(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE,lastINC3);
 		}
 	}
-
-//if(lastINC2>98) cellMsgDialogAbort();
-
-//sprintf(string1,"%1.3f of %1.3f GB copied (elapsed: %2.2i:%2.2i:%2.2i)",((double) global_device_bytes)/(1024.0*1024.*1024.0),((double) copy_global_bytes)/(1024.0*1024.*1024.0), seconds/3600, (seconds/60) % 60, seconds % 60);
 
 if(lastINC3>0 || (time(NULL)-seconds2)!=0 || use_symlinks==1) 
 {
@@ -10642,7 +10643,7 @@ if(lastINC3>0 || (time(NULL)-seconds2)!=0 || use_symlinks==1)
 				sprintf(string1,"Copied %.0f / %.0f MB (%i/%i) Remaining: %i:%2.2i min", ((double) global_device_bytes)/(1024.0*1024.0),((double) copy_global_bytes)/(1024.0*1024.0), file_counter+1, copy_file_counter, (eta/60), eta % 60);
 		}
 	}
-	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+	ClearSurface();
 	draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x101010ff);
 	cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
 	cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xc0c0c0c0, "Press /\\ to abort");
@@ -10667,8 +10668,7 @@ if(lastINC3>0 || (time(NULL)-seconds2)!=0 || use_symlinks==1)
 	if(error && error!=-666)
 		{
 		DPrintf("Error!\nFiles Opened %i\n Waiting 2 seconds to display fatal error\n", files_opened);
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
-//		draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
+		ClearSurface();
 		cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xffffffff, string1);
 		cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xffffffff, "Press /\\ to abort");
 		cellDbgFontDrawGcm();
@@ -10731,8 +10731,8 @@ void file_copy(char *path, char *path2, int progress)
 		if((strstr(path, "/pvd_usb")!=NULL && !pfs_enabled) || (strstr(path2, "/pvd_usb")!=NULL)) return;
 
 		if(progress){
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A); flip();
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A); flip();
+			ClearSurface(); flip();
+			ClearSurface(); flip();
 		}
 		dialog_ret=0;
 		char rdr[255];
@@ -11327,7 +11327,8 @@ static int _my_game_copy_pfsm(char *path, char *path2)
 			file_counter++;
 			DPrintf("Copying %s\n\n", f1);
 
-			while (write_end < write_size) {
+			while (write_end < write_size) 
+			{
 				if (PfsFileRead(fdr, buf2, BUF_SIZE2, &size) != 0) {
 					DPrintf("Error Read:\n%s\n\n", f1);
 					abort_copy = 1;
@@ -11358,65 +11359,50 @@ static int _my_game_copy_pfsm(char *path, char *path2)
 				int seconds = (int) (time(NULL) - time_start);
 
 
-	int eta=(copy_global_bytes-global_device_bytes)/(global_device_bytes/seconds);
-	lastINC3=0;
+				int eta=(copy_global_bytes-global_device_bytes)/(global_device_bytes/seconds);
+				lastINC3=0;
 
-	if(no_real_progress==1)
-	{
-		eta=(copy_file_counter-file_counter)/(file_counter/seconds);
-		if( ( ((int)(file_counter*100ULL/copy_file_counter)) - lastINC2)>0)
-		{
-			lastINC2=(int) (file_counter*100ULL / copy_file_counter);
-			if(lastINC<lastINC2) {lastINC3=lastINC2-lastINC; lastINC=lastINC2;}
-//			if(lastINC3>0) cellMsgDialogProgressBarInc(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE,lastINC3);
-		}
-	}
-	else
-	{
+				if(no_real_progress==1)
+				{
+					eta=(copy_file_counter-file_counter)/(file_counter/seconds);
+					if( ( ((int)(file_counter*100ULL/copy_file_counter)) - lastINC2)>0)
+					{
+						lastINC2=(int) (file_counter*100ULL / copy_file_counter);
+						if(lastINC<lastINC2) {lastINC3=lastINC2-lastINC; lastINC=lastINC2;}
+					}
+				}
+				else
+				{
 
-		if( ( ((int)(global_device_bytes*100ULL/copy_global_bytes)) - lastINC2)>0)
-		{
-			lastINC2=(int) (global_device_bytes*100ULL / copy_global_bytes);
-			if(lastINC<lastINC2) {lastINC3=lastINC2-lastINC; lastINC=lastINC2;}
+					if( ( ((int)(global_device_bytes*100ULL/copy_global_bytes)) - lastINC2)>0)
+					{
+						lastINC2=(int) (global_device_bytes*100ULL / copy_global_bytes);
+						if(lastINC<lastINC2) {lastINC3=lastINC2-lastINC; lastINC=lastINC2;}
 
-		}
-	}
-		if(lastINC3>0) cellMsgDialogProgressBarInc(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE,lastINC3);
+					}
+				}
 
-if(lastINC3>0 || (time(NULL)-seconds2)!=0 ) 
-{	
-	if(no_real_progress==1)
-		//sprintf(string1,"Copied %1.2f MB (file %i). Elapsed: %i %2.2i min",((double) global_device_bytes)/(1024.0*1024.0), file_counter, (seconds/60), seconds % 60);
-		sprintf(string1,"Copied %.0f MB (%i of %i files). Elapsed: %i:%2.2i min",((double) global_device_bytes)/(1024.0*1024.0), file_counter, copy_file_counter, (seconds/60), seconds % 60);
-	else
-		sprintf(string1,"Copied %1.2f of %1.2f MB. Remaining: %i:%2.2i min",((double) global_device_bytes)/(1024.0*1024.0),((double) copy_global_bytes)/(1024.0*1024.0), (eta/60), eta % 60);
+				if(lastINC3>0) cellMsgDialogProgressBarInc(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE,lastINC3);
 
-	cellMsgDialogProgressBarSetMsg(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE, string1);	
+				if(lastINC3>0 || (time(NULL)-seconds2)!=0 ) 
+				{	
+					if(no_real_progress==1)
+						//sprintf(string1,"Copied %1.2f MB (file %i). Elapsed: %i %2.2i min",((double) global_device_bytes)/(1024.0*1024.0), file_counter, (seconds/60), seconds % 60);
+						sprintf(string1,"Copied %.0f MB (%i of %i files). Elapsed: %i:%2.2i min",((double) global_device_bytes)/(1024.0*1024.0), file_counter, copy_file_counter, (seconds/60), seconds % 60);
+					else
+						sprintf(string1,"Copied %1.2f of %1.2f MB. Remaining: %i:%2.2i min",((double) global_device_bytes)/(1024.0*1024.0),((double) copy_global_bytes)/(1024.0*1024.0), (eta/60), eta % 60);
 
-	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
-	draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x101010ff);
-	cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
-	cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xc0c0c0c0, "Press /\\ to abort");
-	cellDbgFontDrawGcm();
-	seconds2= (int) (time(NULL));
-	flip(); 
-}
+					cellMsgDialogProgressBarSetMsg(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE, string1);	
 
+					ClearSurface();
+					draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x101010ff);
+					cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
+					cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xc0c0c0c0, "Press /\\ to abort");
+					cellDbgFontDrawGcm();
+					seconds2= (int) (time(NULL));
+					flip(); 
+				}
 
-
-
-
-
-/*				sprintf(string1, "Copying. File: %i Time: %2.2i:%2.2i:%2.2i %2.2i/100 Vol: %1.2f GB\n", file_counter,
-						seconds / 3600, (seconds / 60) % 60, seconds % 60, (int) (write_end * 100ULL / write_size),
-						((double) global_device_bytes) / (1024.0 * 1024. * 1024.0));
-
-				cellGcmSetClearSurface(gCellGcmCurrentContext, CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B |	CELL_GCM_CLEAR_A);
-				draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
-				cellDbgFontPrintf(0.07f, 0.07f, 1.2f, 0xffffffff, string1);
-				cellDbgFontPrintf(0.5f - 0.15f, 1.0f - 0.07 * 2.0f, 1.2f, 0xffffffff, "Hold /\\ to Abort");
-				cellDbgFontDrawGcm();
-				flip(); */
 			}
 
 			cellFsClose(fdw);
@@ -11678,7 +11664,7 @@ int my_game_copy(char *path, char *path2)
 	else
 	{
 		for(flipF = 0; flipF<60; flipF++) {
-		sprintf(string1, "Preparing, please wait!");cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);	cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string1);	cellDbgFontDrawGcm(); flip();
+		sprintf(string1, "Preparing, please wait!");ClearSurface();	cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string1);	cellDbgFontDrawGcm(); flip();
 		}
 	}
 
@@ -11850,7 +11836,7 @@ int my_game_delete(char *path)
 		
 		if(file_counter % 32==0) {
 			sprintf(string1,"Deleting files: %i  [Elapsed: %2.2i:%2.2i:%2.2i]\n", file_counter, seconds/3600, (seconds/60) % 60, seconds % 60);
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 //			draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
 			cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
 			cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xc0c0c0c0, "Hold /\\ to Abort");
@@ -11982,7 +11968,7 @@ if(lastINC3>0 || (time(NULL)-seconds2)!=0 )
 
 	cellMsgDialogProgressBarSetMsg(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE, string1);	
 
-	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+	ClearSurface();
 	draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x101010ff);
 	cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
 	cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xc0c0c0c0, "Press /\\ to abort");
@@ -12032,7 +12018,7 @@ int copy_nr(char *path, char *path_new, char *path_name) // recursive to single 
 		sprintf(path2, "%s", path_new);
 
 	sprintf(string1, "Preparing, please wait!");
-	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+	ClearSurface();
 	cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string1);
 	cellDbgFontDrawGcm();	flip();
 		file_counter=0;	global_device_bytes=0;abort_copy=0;
@@ -12092,7 +12078,7 @@ ret3=cellMsgDialogOpen2(
 
 			sprintf(tr, "%s", entry->d_name);
 			cellDbgFontDrawGcm(); 
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A); 
+			ClearSurface(); 
 			set_texture( text_FMS, 1920, 48); display_img(0, 47, 1920, 60, 1920, 48, -0.15f, 1920, 48);	display_img(0, 952, 1920, 76, 1920, 48, -0.15f, 1920, 48);time ( &rawtime );	timeinfo = localtime ( &rawtime );	cellDbgFontPrintf( 0.83f, 0.895f, 0.7f ,0xc0a0a0a0, "%02d/%02d/%04d\n %s:%02d:%02d ", timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900, tmhour(timeinfo->tm_hour), timeinfo->tm_min, timeinfo->tm_sec);
 			set_texture( text_bmpIC, 320, 320);  display_img(800, 200, 320, 176, 320, 176, 0.0f, 320, 320);
 			if((strstr(tr, ".avi")!=NULL || strstr(tr, ".AVI")!=NULL || strstr(tr, ".m2ts")!=NULL || strstr(tr, ".M2TS")!=NULL || strstr(tr, ".mts")!=NULL || strstr(tr, ".MTS")!=NULL || strstr(tr, ".m2t")!=NULL || strstr(tr, ".M2T")!=NULL || strstr(tr, ".divx")!=NULL || strstr(tr, ".DIVX")!=NULL || strstr(tr, ".mpg")!=NULL || strstr(tr, ".MPG")!=NULL || strstr(tr, ".mpeg")!=NULL || strstr(tr, ".MPEG")!=NULL || strstr(tr, ".mp4")!=NULL || strstr(tr, ".MP4")!=NULL || strstr(tr, ".vob")!=NULL || strstr(tr, ".VOB")!=NULL || strstr(tr, ".wmv")!=NULL || strstr(tr, ".WMV")!=NULL || strstr(tr, ".ts")!=NULL || strstr(tr, ".TS")!=NULL || strstr(tr, ".mov")!=NULL || strstr(tr, ".MOV")!=NULL) )
@@ -12756,15 +12742,15 @@ int StartMultiStream()
 					0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
 					0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
-	pData = (char*) memalign(16, _mp3_buffer); //allocate 2 buffers for mp3 playback (64KB)
+	pData = (char*) memalign(16, _mp3_buffer); //allocate 2 buffers for mp3 playback
 	pDataB = pData;
 
 	InitialiseAudio(MAX_STREAMS, MAX_SUBS, portNum, audioParam, portConfig);
 
-	sizeNeeded=cellMSMP3GetNeededMemorySize(2);	// Maximum 256 mono MP3's playing at one time
+	sizeNeeded=cellMSMP3GetNeededMemorySize(4);	// Maximum 256 mono MP3's playing at one time
 	mp3Memory=(int*)malloc(sizeNeeded);
 	if(mp3Memory==NULL) return -1;
-	if((cellMSMP3Init(2, (void*)mp3Memory)) != 0 ) return -1;
+	if((cellMSMP3Init(4, (void*)mp3Memory)) != 0 ) return -1;
 
 	cellMSCoreSetVolume64(CELL_MS_BUS_FLAG | 1, CELL_MS_WET, fBusVols);
 	cellMSCoreSetVolume64(CELL_MS_MASTER_BUS, CELL_MS_DRY, fBusVols);
@@ -13286,7 +13272,7 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 
 				sprintf(string1,"Checking, please wait...\n\n%s", my_txt_file);
 
-				cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+				ClearSurface();
 				draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
 				cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
 				cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xc0c0c0c0, "Hold /\\ to Abort");
@@ -13310,7 +13296,7 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 						sprintf(string1,"Files tested: %i Time: %2.2i:%2.2i:%2.2i Size: %1.2f GB\nActual size : %.f bytes", file_counter, seconds/3600, (seconds/60) % 60, seconds % 60, ((double) global_device_bytes)/(1024.0*1024.*1024.0),(double) global_device_bytes);
 					
 
-					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+					ClearSurface();
 					draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
 					cellDbgFontPrintf( 0.07f, 0.07f, 1.2f,0xc0c0c0c0,string1);
 					
@@ -13446,71 +13432,71 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 
 				if (view_mode==1)  //view mem
 				{
-					if ((old_pad & BUTTON_L1)) 
+					if ((new_pad & BUTTON_L1)) 
 					{
-						old_pad=0;
+						new_pad=0;
 						fsiz=0;
 						readb=readmem((unsigned char *) x, fsiz, chunk);
 						if(readb<1)	goto close_viewer;
 
 					}
 
-					if ((old_pad & BUTTON_R1) && msiz>=512) 
+					if ((new_pad & BUTTON_R1) && msiz>=512) 
 					{
-						old_pad=0;
+						new_pad=0;
 						fsiz=msiz-512;
 						readb=readmem((unsigned char *) x, fsiz, chunk);
 						if(readb<1)	goto close_viewer;
 					}
 
 
-					if ((old_pad & BUTTON_L2) && fsiz>=16) 
+					if ((new_pad & BUTTON_L2) && fsiz>=16) 
 					{
-						old_pad=0;
+						//old_pad=0;
 						fsiz-=16;
 						readb=readmem((unsigned char *) x, fsiz, chunk);
 						if(readb<1)	goto close_viewer;
 
 					}
 
-					if ((old_pad & BUTTON_R2) && ((fsiz+16)<msiz) )
+					if ((new_pad & BUTTON_R2) && ((fsiz+16)<msiz) )
 					{
-						old_pad=0;
+						//old_pad=0;
 						fsiz+=16;
 						readb=readmem((unsigned char *) x, fsiz, chunk);
 						if(readb<1)	goto close_viewer;
 					}
 
 
-					if ((old_pad & BUTTON_UP)) 
+					if ((new_pad & BUTTON_UP)) 
 					{
-						old_pad=0;
+						//old_pad=0;
 						if(fsiz>=512) fsiz-=512; else fsiz=0;
 						readb=readmem((unsigned char *) x, fsiz, chunk);
 						if(readb<1)	goto close_viewer;
 
 					}
 
-					if ((old_pad & BUTTON_DOWN) && ((fsiz+512)<msiz) )
+					if ((new_pad & BUTTON_DOWN) && ((fsiz+512)<msiz) )
 					{
-						old_pad=0;
+						//old_pad=0;
 						fsiz+=512;
 						readb=readmem((unsigned char *) x, fsiz, chunk);
 						if(readb<1)	goto close_viewer;
 					}
 
-					if ((old_pad & BUTTON_LEFT)) 
+					if ((new_pad & BUTTON_LEFT)) 
 					{
-						old_pad=0;
+						//old_pad=0;
 						if(fsiz>=8192) fsiz-=8192; else fsiz=0;
 						readb=readmem((unsigned char *) x, fsiz, chunk);
 						if(readb<1)	goto close_viewer;
 
 					}
 
-					if ((old_pad & BUTTON_RIGHT) && ( (fsiz+8192)<msiz) )
+					if ((new_pad & BUTTON_RIGHT) && ( (fsiz+8192)<msiz) )
 					{
-						old_pad=0;
+						//old_pad=0;
 						fsiz+=8192;
 						readb=readmem((unsigned char *) x, fsiz, chunk);
 						if(readb<1)	goto close_viewer;
@@ -13522,9 +13508,9 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 
 				if (view_mode==0) //view file
 				{
-					if ((old_pad & BUTTON_L1)) 
+					if ((new_pad & BUTTON_L1)) 
 					{
-						old_pad=0;
+						//old_pad=0;
 						fsiz=0;
 						fseek(fp, fsiz, SEEK_SET);
 						readb=fread((void *) x, 1, chunk, fp);
@@ -13532,9 +13518,9 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 
 					}
 
-					if ((old_pad & BUTTON_R1) && msiz>=512) 
+					if ((new_pad & BUTTON_R1) && msiz>=512) 
 					{
-						old_pad=0;
+						//old_pad=0;
 						fsiz=msiz-512;
 						fseek(fp, fsiz, SEEK_SET);
 						readb=fread((void *) x, 1, chunk, fp);
@@ -13542,9 +13528,9 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 					}
 
 
-					if ((old_pad & BUTTON_L2) && fsiz>=16) 
+					if ((new_pad & BUTTON_L2) && fsiz>=16) 
 					{
-						old_pad=0;
+						//old_pad=0;
 						fsiz-=16;
 						fseek(fp, fsiz, SEEK_SET);
 						readb=fread((void *) x, 1, chunk, fp);
@@ -13552,9 +13538,9 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 
 					}
 
-					if ((old_pad & BUTTON_R2) && ((fsiz+16)<msiz) )
+					if ((new_pad & BUTTON_R2) && ((fsiz+16)<msiz) )
 					{
-						old_pad=0;
+						//old_pad=0;
 						fsiz+=16;
 						fseek(fp, fsiz, SEEK_SET);
 						readb=fread((void *) x, 1, chunk, fp);
@@ -13562,9 +13548,9 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 					}
 
 
-					if ((old_pad & BUTTON_UP)) 
+					if ((new_pad & BUTTON_UP)) 
 					{
-						old_pad=0;
+						//old_pad=0;
 						if(fsiz>=512) fsiz-=512; else fsiz=0;
 						fseek(fp, fsiz, SEEK_SET);
 						readb=fread((void *) x, 1, chunk, fp);
@@ -13572,18 +13558,18 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 
 					}
 
-					if ((old_pad & BUTTON_DOWN) && ((fsiz+512)<msiz) )
+					if ((new_pad & BUTTON_DOWN) && ((fsiz+512)<msiz) )
 					{
-						old_pad=0;
+						//old_pad=0;
 						fsiz+=512;
 						fseek(fp, fsiz, SEEK_SET);
 						readb=fread((void *) x, 1, chunk, fp);
 						if(readb<1)	goto close_viewer;
 					}
 
-					if ((old_pad & BUTTON_LEFT)) 
+					if ((new_pad & BUTTON_LEFT)) 
 					{
-						old_pad=0;
+						//old_pad=0;
 						if(fsiz>=8192) fsiz-=8192; else fsiz=0;
 						fseek(fp, fsiz, SEEK_SET);
 						readb=fread((void *) x, 1, chunk, fp);
@@ -13591,9 +13577,9 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 
 					}
 
-					if ((old_pad & BUTTON_RIGHT) && ( (fsiz+8192)<msiz) )
+					if ((new_pad & BUTTON_RIGHT) && ( (fsiz+8192)<msiz) )
 					{
-						old_pad=0;
+						//old_pad=0;
 						fsiz+=8192;
 						fseek(fp, fsiz, SEEK_SET);
 						readb=fread((void *) x, 1, chunk, fp);
@@ -13602,7 +13588,7 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 
 				}
 
-				cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+				ClearSurface();
 				mouseX+=mouseXD; mouseY+=mouseYD;
 				if(mouseX>0.995f) {mouseX=0.995f;mouseXD=0.0f;} if(mouseX<0.0f) {mouseX=0.0f;mouseXD=0.0f;}
 				if(mouseY>0.990f) {mouseY=0.990f;mouseYD=0.0f;} if(mouseY<0.0f) {mouseY=0.0f;mouseYD=0.0f;}
@@ -13898,7 +13884,7 @@ quit_viewer:
 
 				while(1){ 
 					sprintf(string1, "::: %s :::\n\n\nSelected game is restricted with parental level %i.\n\nPlease enter four alphanumeric parental password code:", just_title, plevel);
-					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+					ClearSurface();
 					draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.9f, 0xd0000080);
 					cellDbgFontPrintf( 0.10f, 0.10f, 1.0f, 0xffffffff, string1);
 					setRenderColor();
@@ -13907,8 +13893,8 @@ quit_viewer:
 					
 					if(osk_dialog==1 || osk_dialog==-1) break;
 					}
-				cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
-				flip(); cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+				ClearSurface();
+				flip(); ClearSurface();
 				flipc(60);
 				osk_open=0;
 				if(osk_dialog!=0)
@@ -14312,7 +14298,7 @@ skip_BD:
 				sprintf(my_mp3_file, "%s", list[current_image].path);
 				if(strstr(my_mp3_file, ".jpg")!=NULL || strstr(my_mp3_file, ".JPG")!=NULL || strstr(my_mp3_file, ".jpeg")!=NULL || strstr(my_mp3_file, ".JPEG")!=NULL)
 				{
-						//cellDbgFontDrawGcm(); cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+						//cellDbgFontDrawGcm(); ClearSurface();
 
 						if(pic_reload!=0){
 							cellDbgFontDrawGcm();
@@ -14362,21 +14348,21 @@ skip_BD:
 							if(slide_dir==0)
 								for(int slide_in=1920; slide_in>=0; slide_in-=128)
 								{	flip();
-									cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+									ClearSurface();
 									set_texture( text_FONT, 1920, 1080); 
 									display_img((int)((1920-png_w2)/2)+pic_posX+slide_in, (int)((1080-png_h2)/2)+pic_posY, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
 								}
 							else
 								for(int slide_in=-1920; slide_in<=0; slide_in+=128)
 								{	flip();
-									cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+									ClearSurface();
 									set_texture( text_FONT, 1920, 1080); 
 									display_img((int)((1920-png_w2)/2)+pic_posX+slide_in, (int)((1080-png_h2)/2)+pic_posY, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
 								}
 						}
 						else
 							{
-								cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+								ClearSurface();
 								set_texture( text_FONT, 1920, 1080); 
 								display_img((int)((1920-png_w2)/2)+pic_posX, (int)((1080-png_h2)/2)+pic_posY, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
 							}
@@ -14436,21 +14422,21 @@ skip_BD:
 							if(slide_dir==0)
 								for(int slide_in=1920; slide_in>=0; slide_in-=128)
 								{	flip();
-									cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+									ClearSurface();
 									set_texture( text_FONT, 1920, 1080); 
 									display_img((int)((1920-png_w2)/2)+pic_posX+slide_in, (int)((1080-png_h2)/2)+pic_posY, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
 								}
 							else
 								for(int slide_in=-1920; slide_in<=0; slide_in+=128)
 								{	flip();
-									cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+									ClearSurface();
 									set_texture( text_FONT, 1920, 1080); 
 									display_img((int)((1920-png_w2)/2)+pic_posX+slide_in, (int)((1080-png_h2)/2)+pic_posY, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
 								}
 						}
 						else
 							{
-								cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+								ClearSurface();
 								set_texture( text_FONT, 1920, 1080); 
 								display_img(pic_X, pic_Y, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
 							}
@@ -14464,7 +14450,7 @@ skip_BD:
 
 					while(1){
 						pad_read();
-						cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+						ClearSurface();
 						set_texture( text_FONT, 1920, 1080); 
 						if(strstr(my_mp3_file, ".png")!=NULL || strstr(my_mp3_file, ".PNG")!=NULL)
 							display_img(pic_X, pic_Y, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
@@ -15132,7 +15118,7 @@ overwrite_cancel_3:
 						else
 							sprintf(string1, "Copying, please wait!");
 
-						cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+						ClearSurface();
 						cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string1);
 						cellDbgFontDrawGcm();
 						if(do_move==1)
@@ -16327,7 +16313,7 @@ void slide_xmb_left(int _xmb_icon)
 	for(int n=0; n<14; n++)
 	{
 		xmb_slide+=xmb_slide_step;
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 		if(xmb_sparks!=0) draw_stars();
 
 		set_texture( text_bmp, 1920, 1080);
@@ -16353,7 +16339,7 @@ void slide_xmb_right()
 		for(int n=0; n<14; n++)
 		{
 			xmb_slide+=xmb_slide_step;
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 			if(xmb_sparks!=0) draw_stars();
 
 			set_texture( text_bmp, 1920, 1080);
@@ -17056,27 +17042,9 @@ int find_free_buffer(const int _col)
 		free_all_buffers();
 
 	return 0;
-
-/*
-	int b;
-	for(b=_cn+12; b<xmb[_col].size; b++) {
-		if(b>=xmb[_col].size) break;
-		if(xmb[_col].member[b].icon_buf>=0) {
-			xmb[_col].member[b].status=0; return xmb[_col].member[b].icon_buf;
-		}
-	}
-	for(b=_cn-12; b>0; b--) {
-		if(b<0) break;
-		if(xmb[_col].member[b].icon_buf>=0) 
-		{
-			xmb[_col].member[b].status=0; return xmb[_col].member[b].icon_buf;
-		}
-	}
-*/
-//	sprintf(string1, "Buffer: %i, Title: %i", xmb[_col].member[b].icon_buf, b);dialog_ret=0;		cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
-//	return -1;
 }
 
+// Draws the cross MM bar (XMMB)
 void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int _xmb_y_offset, const bool _recursive, int sub_level)
 {
 	int _xmb_icon = _xmb_icon_;
@@ -17110,7 +17078,7 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 		if(_xmb[_xmb_icon].first>=_xmb[_xmb_icon].size) _xmb[_xmb_icon].first=0;
 		if(n==_xmb_icon_)
 		{
-			if(egg)
+			if(egg) // :)
 				display_img_angle(xpos-(36-mo_of)/2, 230-(36-mo_of), 164-mo_of, 164-mo_of, 128, 128, 0.8f, 128, 128, angle);
 			else
 				display_img(xpos-(36-mo_of)/2, 230-(36-mo_of), 164-mo_of, 164-mo_of, 128, 128, 0.8f, 128, 128);
@@ -17162,8 +17130,8 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 						if(cn<0) continue;
 						if(sub_level && cn3!=2) continue;
 
-						if(!_xmb[_xmb_icon].member[cn].is_checked)
-						{
+						if(!_xmb[_xmb_icon].member[cn].is_checked && !key_repeat)
+						{	// check for missing/orphan entries in photo/music/video/retro columns
 							if( ( (_xmb_icon>2 && _xmb_icon<6) || _xmb_icon==8) 
 								&& (_xmb[_xmb_icon].member[cn].type>7 || (_xmb[_xmb_icon].member[cn].type>1 && _xmb[_xmb_icon].member[cn].type<6) )
 								&& (!exist(_xmb[_xmb_icon].member[cn].file_path))
@@ -17426,7 +17394,7 @@ void load_coverflow_legend()
 void draw_xmb_bare(u8 _xmb_icon, u8 _all_icons, bool recursive, int _sub_level)
 {
 
-	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+	ClearSurface();
 	if(xmb_sparks!=0) draw_stars();
 	set_texture( text_bmp, 1920, 1080);
 	display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
@@ -17436,7 +17404,6 @@ void draw_xmb_bare(u8 _xmb_icon, u8 _all_icons, bool recursive, int _sub_level)
 	else if(_all_icons==2) draw_xmb_icons(xmb, _xmb_icon, xmb_slide, xmb_slide_y, recursive, -1);
 	flip();
 }
-
 
 
 void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offset)
@@ -17714,7 +17681,7 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 		if((xmb_icon==6 || xmb_icon==8) && xmb[xmb_icon].member[xmb[xmb_icon].first].game_id!=-1) game_sel=xmb[xmb_icon].member[xmb[xmb_icon].first].game_id;
 	}
 
-	if(xmb_slide_step_y!=0) //sliding horizontally
+	if(xmb_slide_step_y!=0) //sliding horizontally (inverted XMMB)
 	{
 		xmb_slide_y+=xmb_slide_step_y;
 			 if(xmb_slide_y == 10) xmb_slide_step_y = 5;
@@ -17829,7 +17796,7 @@ int open_theme_menu(char *_caption, int _width, theme_def *list, int _max, int _
 			last_sel=sel;
 		}
 
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 		if(xmb_sparks!=0) draw_stars();
 
 		set_texture( text_bmp, 1920, 1080);
@@ -17955,7 +17922,7 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 			last_sel=sel;
 		}
 
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 
 		set_texture( buffer, 1920, 1080);
 		display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
@@ -18048,7 +18015,7 @@ int open_list_menu(char *_caption, int _width, t_opt_list *list, int _max, int _
 			last_sel=sel;
 		}
 
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 		if(xmb_sparks!=0) draw_stars();
 
 		set_texture( text_bmp, 1920, 1080);
@@ -18142,7 +18109,7 @@ int open_dd_menu(char *_caption, int _width, t_opt_list *list, int _max, int _x,
 			last_sel=sel;
 		}
 
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 
 //		setRenderColor();
 		draw_fileman();
@@ -19877,7 +19844,7 @@ void draw_whole_xmb(u8 mode)
 	{
 		pad_read();
 		read_pad_info();
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 	}
 
 	if((xmb_icon>1 && xmb_icon<6) || xmb_icon==8) xmb_bg_counter--;
@@ -20230,7 +20197,7 @@ int main(int argc, char **argv)
 	text_TEMP  = text_bmpS + buf_align2 * 10; //+11
 
 
-//	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x000000ff);
+//	ClearSurface(); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x000000ff);
 //	cellDbgFontPrintf( 0.30f, 0.85f, 1.0f, 0x90909090, "multiMAN is preparing environment...");
 //	cellDbgFontDrawGcm(); setRenderColor();	
 //	flip();
@@ -20244,7 +20211,7 @@ int main(int argc, char **argv)
 		put_texture_with_alpha( text_BOOT, text_bmpUPSR, 1920, 1080, 1920, 0, 0, 0, 0);
 	}
 
-	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+	ClearSurface();
 	set_texture( text_BOOT, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 	flip();
 
@@ -20327,7 +20294,7 @@ int main(int argc, char **argv)
 	if(is_reloaded || exist(list_file))
 	{
 
-//		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
+//		ClearSurface(); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
 //		cellDbgFontPrintf( 0.28f, 0.85f, 1.0f, 0x90909090, "multiMAN is parsing last state data...");
 //		cellDbgFontDrawGcm(); setRenderColor();	flip();
 		//is_reloaded=0;
@@ -20454,7 +20421,7 @@ int main(int argc, char **argv)
 	parse_ini(options_ini,0);
 
 
-//	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
+//	ClearSurface(); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
 //	cellDbgFontPrintf( 0.32f, 0.85f, 1.0f, 0x90909090, "multiMAN is allocating memory...");
 //	cellDbgFontDrawGcm(); setRenderColor();	flip();
 
@@ -20464,10 +20431,10 @@ int main(int argc, char **argv)
 
 
 //reboot:
-//	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
+//	ClearSurface(); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
 //	cellDbgFontPrintf( 0.30f, 0.85f, 1.0f, 0x90909090, "multiMAN is loading user options...");
 //	cellDbgFontDrawGcm(); setRenderColor();	flip();
-//	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
+//	ClearSurface(); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
 //	cellDbgFontPrintf( 0.31f, 0.85f, 1.0f, 0x90909090, "multiMAN is loading textures...");
 //	cellDbgFontDrawGcm(); setRenderColor();	flip();
 
@@ -20557,7 +20524,7 @@ int main(int argc, char **argv)
 		ret = cellMsgDialogOpen2( type_dialog_ok, "WARNING:\n\nYour installation of multiMAN is incomplete!\nPlease install BASE or FULL version or you may experience graphics display problems!", dialog_fun2, (void*)0x0000aaab, NULL );					
 		wait_dialog();
 	}
-	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+	ClearSurface();
 	set_texture( text_BOOT, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 	flip();
 
@@ -20597,7 +20564,7 @@ int main(int argc, char **argv)
 
 
 
-//	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A); //draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
+//	ClearSurface(); //draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
 //	set_texture( text_bmpUBG, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 //	cellDbgFontPrintf( 0.27f, 0.85f, 1.0f, 0x90909090, "multiMAN is checking system configuration...");
 //	cellDbgFontDrawGcm(); setRenderColor();	flip();
@@ -20670,7 +20637,7 @@ int main(int argc, char **argv)
 //		fread((void *) bdemu355, 576, 1, fpV);
 //		fclose(fpV);
 
-//		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A); //draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
+//		ClearSurface(); //draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
 //		set_texture( text_bmpUBG, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 //		cellDbgFontPrintf( 0.27f, 0.85f, 1.0f, 0x90909090, "multiMAN is enabling BD-ROM emulator...");
 //		cellDbgFontDrawGcm(); setRenderColor();	flip();
@@ -20768,7 +20735,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-//	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A); //draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
+//	ClearSurface(); //draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
 //	set_texture( text_bmpUBG, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 //	cellDbgFontPrintf( 0.29f, 0.85f, 1.0f, 0x90909090, "multiMAN initialization completed.");
 //	cellDbgFontDrawGcm(); setRenderColor();	
@@ -21372,7 +21339,7 @@ fixed_cover_dm0:
 					sprintf(auraBG, "%s/AUR%i.JPG", app_usrdir, rnd);
 					load_texture(text_bmp, auraBG, 1920);
 
-//					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+//					ClearSurface();
 //					set_texture( text_bmp, 1920, 1080); //PIC1.PNG
 //					display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 //					flip();
@@ -21511,7 +21478,7 @@ fixed_cover:
 							if(glo_box==1) put_texture_with_alpha( text_bmp, text_FONT+1024*1024*2, 260, 300, 260, c_x+30, c_y, 0, 0);
 						}
 
-//					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+//					ClearSurface();
 //					set_texture( text_bmp, 1920, 1080); //PIC1.PNG
 //					display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 //					flip();
@@ -21618,7 +21585,7 @@ fixed_cover:
 DM2_load_textB:
 					load_texture(text_bmp, filename, 1920);
 /*
-					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+					ClearSurface();
 					set_texture( text_bmp, 1920, 1080); //PIC1.PNG
 					display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 					flip(); */
@@ -21897,7 +21864,7 @@ fixed_cover6:
 					sprintf(auraBG, "%s/AUR5.JPG", app_usrdir);
 					load_texture(text_bmp, auraBG, 1920);
 
-					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+					ClearSurface();
 					set_texture( text_bmp, 1920, 1080); //PIC1.PNG
 					display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 					flip();
@@ -22055,7 +22022,7 @@ fixed_cover_7:
 							if(glo_box==1) put_texture_with_alpha( text_bmp, text_FONT+1024*1024*7, 130, 150, 130, c_x+15, c_y, 0, 0);
 						}
 
-//					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+//					ClearSurface();
 //					set_texture( text_bmp, 1920, 1080); //PIC1.PNG
 //					display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 //					flip();
@@ -22207,7 +22174,7 @@ rename_title:
 
 			while(1){ 
 				{
-					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+					ClearSurface();
 					if(cover_mode!=8)
 						{set_texture( text_FONT, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080); }
 					else
@@ -22600,7 +22567,7 @@ test_title:
 
 				sprintf(string1,"Checking, please wait...\n\n%s",menu_list[game_sel].path);
 
-				cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+				ClearSurface();
 				draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
 				cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
 				cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xc0c0c0c0, "Hold /\\ to Abort");
@@ -22627,7 +22594,7 @@ test_title:
 				sprintf(string1,"Files tested: %i Time: %2.2i:%2.2i:%2.2i Size: %1.2f GB\nActual size : %.f bytes", file_counter, seconds/3600, (seconds/60) % 60, seconds % 60, ((double) global_device_bytes)/(1024.0*1024.*1024.0),(double) global_device_bytes);
 			
 
-			cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+			ClearSurface();
 			draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
 			cellDbgFontPrintf( 0.07f, 0.07f, 1.2f,0xc0c0c0c0,string1);
 			
@@ -22712,7 +22679,7 @@ delete_title:
 					else
 					{sprintf(string1,"Done!  Files Deleted: %i Time: %2.2i:%2.2i:%2.2i\n", file_counter, seconds/3600, (seconds/60) % 60, seconds % 60); break;}
 
-					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+					ClearSurface();
 
 //					draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
 					cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
@@ -22899,7 +22866,7 @@ copy_title:
 				num_directories= file_counter= num_files_big= num_files_split= 0;
 				my_game_copy((char *) menu_list[game_sel].path, (char *) name); //ret=cellMsgDialogAbort();sys_timer_usleep(100000);
 
-				cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+				ClearSurface();
 
 				int seconds= (int) (time(NULL)-time_start);
 				int vflip=0;
@@ -22938,7 +22905,7 @@ copy_title:
 						}
 
 				
-					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+					ClearSurface();
 //					draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
 
 					cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
@@ -23131,7 +23098,7 @@ copy_from_bluray:
 							sprintf(string1,"Done! Files Copied: %i Time: %2.2i:%2.2i:%2.2i Vol: %1.2f GB\n", file_counter, seconds/3600, (seconds/60) % 60, seconds % 60, ((double) global_device_bytes)/(1024.0*1024.*1024.0));
 						}
 
-						cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+						ClearSurface();
 
 //						draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
 
@@ -23323,8 +23290,8 @@ cancel_theme_exit:
 							draw_whole_xmb(xmb_icon);
 							if(osk_dialog==1 || osk_dialog==-1) break;
 							}
-						cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
-						flip(); cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+						ClearSurface();
+						flip(); ClearSurface();
 						flipc(30);
 						is_any_xmb_column=0;
 						osk_open=0;
@@ -23366,8 +23333,8 @@ xmb_pin_ok:
 							draw_xmb_bare(2, 1, 0, 0);
 							if(osk_dialog==1 || osk_dialog==-1) break;
 							}
-						cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
-						flip(); cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+						ClearSurface();
+						flip(); ClearSurface();
 						flipc(60);
 						osk_open=0;
 						parental_pin_entered=0;
@@ -23616,7 +23583,7 @@ retry_showtime_xmb:
 				sprintf(image_file, "%s", xmb[xmb_icon].member[current_image].file_path);
 				if(strstr(image_file, ".jpg")!=NULL || strstr(image_file, ".JPG")!=NULL || strstr(image_file, ".jpeg")!=NULL || strstr(image_file, ".JPEG")!=NULL)
 				{
-						//cellDbgFontDrawGcm(); cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+						//cellDbgFontDrawGcm(); ClearSurface();
 
 						if(pic_reload!=0){
 							cellDbgFontDrawGcm();
@@ -23653,7 +23620,7 @@ retry_showtime_xmb:
 								for(int slide_in=1920; slide_in>=0; slide_in-=128)
 								{	flip();
 									if(key_repeat && abs(slide_in)>640) break;
-									cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+									ClearSurface();
 									set_texture( text_bmp, 1920, 1080); 
 									display_img((int)((1920-png_w2)/2)+pic_posX+slide_in, (int)((1080-png_h2)/2)+pic_posY, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
 								}
@@ -23661,14 +23628,14 @@ retry_showtime_xmb:
 								for(int slide_in=-1920; slide_in<=0; slide_in+=128)
 								{	flip();
 									if(key_repeat && abs(slide_in)>640) break;
-									cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+									ClearSurface();
 									set_texture( text_bmp, 1920, 1080); 
 									display_img((int)((1920-png_w2)/2)+pic_posX+slide_in, (int)((1080-png_h2)/2)+pic_posY, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
 								}
 						}
 						else
 							{
-								cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+								ClearSurface();
 								set_texture( text_bmp, 1920, 1080); 
 								display_img((int)((1920-png_w2)/2)+pic_posX, (int)((1080-png_h2)/2)+pic_posY, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
 							}
@@ -23716,7 +23683,7 @@ retry_showtime_xmb:
 								for(int slide_in=1920; slide_in>=0; slide_in-=128)
 								{	flip();
 									if(key_repeat && abs(slide_in)>640) break;
-									cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+									ClearSurface();
 									set_texture( text_bmp, 1920, 1080); 
 									display_img((int)((1920-png_w2)/2)+pic_posX+slide_in, (int)((1080-png_h2)/2)+pic_posY, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
 								}
@@ -23724,14 +23691,14 @@ retry_showtime_xmb:
 								for(int slide_in=-1920; slide_in<=0; slide_in+=128)
 								{	flip();
 									if(key_repeat && abs(slide_in)>640) break;
-									cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+									ClearSurface();
 									set_texture( text_bmp, 1920, 1080); 
 									display_img((int)((1920-png_w2)/2)+pic_posX+slide_in, (int)((1080-png_h2)/2)+pic_posY, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
 								}
 						}
 						else
 							{
-								cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+								ClearSurface();
 								set_texture( text_bmp, 1920, 1080); 
 								display_img(pic_X, pic_Y, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
 							}
@@ -23746,7 +23713,7 @@ retry_showtime_xmb:
 					while(1){
 						
 						pad_read();
-						cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+						ClearSurface();
 						set_texture( text_bmp, 1920, 1080); 
 						if(strstr(image_file, ".png")!=NULL || strstr(image_file, ".PNG")!=NULL)
 							display_img(pic_X, pic_Y, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
@@ -23947,7 +23914,7 @@ start_title:
 
 				while(1){ 
 					sprintf(string1, "::: %s :::\n\n\nSelected game is restricted with parental level %i.\n\nPlease enter four alphanumeric parental password code:", menu_list[game_sel].title, menu_list[game_sel].plevel);
-					cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+					ClearSurface();
 					draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.9f, 0xd0000080);
 					cellDbgFontPrintf( 0.10f, 0.10f, 1.0f, 0xffffffff, string1);
 					setRenderColor();
@@ -23956,8 +23923,8 @@ start_title:
 					
 					if(osk_dialog==1 || osk_dialog==-1) break;
 					}
-				cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
-				flip(); cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+				ClearSurface();
+				flip(); ClearSurface();
 				flipc(60);
 				osk_open=0;
 				if(osk_dialog!=0)
@@ -24697,8 +24664,8 @@ skip_1:
 skip_to_FM:
 	if((new_pad & BUTTON_SQUARE) && cover_mode==8) egg=1-egg;
 
-	if ( ( ((old_pad & BUTTON_SQUARE) && cover_mode!=5 && cover_mode!=8) || ((old_pad & BUTTON_TRIANGLE) && cover_mode==8)) && game_sel<max_menu_list && max_menu_list>0 && (cover_mode!=8 || (cover_mode==8 && ( (xmb_icon==6 && xmb[xmb_icon].member[xmb[xmb_icon].first].type==1 && xmb[xmb_icon].size>1) || (xmb_icon==5 && xmb[xmb_icon].member[xmb[xmb_icon].first].type==2) || (xmb_icon==7 && xmb[xmb_icon].size)))) ) {
-		//old_pad=0;
+	if ( ( ((new_pad & BUTTON_SQUARE) && cover_mode!=5 && cover_mode!=8) || ((new_pad & BUTTON_TRIANGLE) && cover_mode==8)) && game_sel<max_menu_list && max_menu_list>0 && (cover_mode!=8 || (cover_mode==8 && ( (xmb_icon==6 && xmb[xmb_icon].member[xmb[xmb_icon].first].type==1 && xmb[xmb_icon].size>1) || (xmb_icon==5 && xmb[xmb_icon].member[xmb[xmb_icon].first].type==2) || (xmb_icon==7 && xmb[xmb_icon].size)))) ) {
+		new_pad=0;
 		if(cover_mode==4) {	sprintf(auraBG, "%s/AUR5.JPG", app_usrdir); load_texture(text_bmp, auraBG, 1920);}
 		int ret_f=open_submenu(text_bmp, &game_sel);
 		old_fi=-1;
@@ -24748,7 +24715,7 @@ skip_to_FM:
 		}
 	}
 
-		cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G | CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+		ClearSurface();
 		c_opacity2=c_opacity;
 		if(c_opacity2>0xc0) c_opacity2=0xc0;
 		if(c_opacity2<0x21) c_opacity2=0x00;
@@ -25259,7 +25226,7 @@ skip_to_FM:
 
 			setRenderColor();
 
-//				if(www_running==1) 
+				if(www_running==1) 
 					cellDbgFontPrintf( 0.01f, 0.98f, 0.5f,0x60606080, www_info); 
 
 			if(multiStreamStarted==1 && current_mp3!=0 && max_mp3>1 && (c_opacity2>0x00)) {
@@ -25500,6 +25467,22 @@ static void misc_thread_entry( uint64_t arg )
 	while(init_finished)
 	{
 
+		if(force_mp3)
+		{
+			if(main_mp3_th(force_mp3_file, 0))
+				force_mp3=false;
+			else
+			{
+				if(max_mp3!=0) {
+					current_mp3++;
+					if(current_mp3>max_mp3) current_mp3=1;
+					sprintf(force_mp3_file, "%s", mp3_playlist[current_mp3].path);
+					force_mp3=true;
+				}
+			}
+		}
+		sys_timer_usleep(3336);
+
 		if(cover_mode==8 && is_game_loading && !drawing_xmb && !first_launch)
 		{	
 			drawing_xmb=1;
@@ -25508,19 +25491,9 @@ static void misc_thread_entry( uint64_t arg )
 			draw_whole_xmb(xmb_icon);
 			sys_ppu_thread_yield();
 		}
-		else
-			sys_timer_usleep(500*1000);
-
-		sys_ppu_thread_yield();
-
 
 		cellConsolePoll();
-		if(force_mp3)
-		{
-			main_mp3_th(force_mp3_file, 0);
-			force_mp3=false;
-		}
-		sys_timer_usleep(3336);
+		sys_ppu_thread_yield();
 
 	}
 	sys_ppu_thread_exit( 0 );
