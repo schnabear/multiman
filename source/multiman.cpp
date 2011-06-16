@@ -4201,35 +4201,54 @@ void sort_entries(t_menu_list *list, int *max)
 		}
 }
 
-void delete_xmb_member(xmbmem *list, u16 *max, int n)
+void delete_xmb_member(xmbmem *_xmb, u16 *max, int n)
 {
 		if((*max) >1)
 		{
-			list[n]=list[(*max) -1];
+			_xmb[n]=_xmb[(*max) -1];
 			(*max) --;
 		}
 		else  {if((*max) == 1)(*max) --;}
 }
 
-
 void sort_xmb_col(xmbmem *_xmb, u16 max, int _first)
 {
-	if((max)<2) return;
+	if((max)<3) return;
 	int n,m,o1=0,o2=0;
 	u16 fi= (max);
 	
 	for(n=_first; n< (fi -1);n++)
 		for(m=n+1; m< fi ;m++)
-			{
+		{
 			if(_xmb[n].name[0]=='_') o1=1; else o1=0;
 			if(_xmb[m].name[0]=='_') o2=1; else o2=0;
 			
-			if(strcasecmp(_xmb[n].name+o1, _xmb[m].name+o2)>0)// && strstr(_xmb[n].name+o1, _xmb[m].name+o2)==NULL)
-				{
+			if(strcasecmp(_xmb[n].name+o1, _xmb[m].name+o2)>0)
+			{
 				xmbmem swap;
-					swap=_xmb[n];_xmb[n]=_xmb[m];_xmb[m]=swap;
-				}
+				swap=_xmb[n];_xmb[n]=_xmb[m];_xmb[m]=swap;
 			}
+			else 
+				//remove duplicate entries (by name) in music/photo/video columns (excl. AVCHD/Blu-ray)
+				//preference goes to hdd entries usually (null entries removed by delete_xmb_dubs
+				if(!strcasecmp(_xmb[n].name+o1, _xmb[m].name+o2) && (_xmb[n].type>=3 || _xmb[n].type<=5)) _xmb[n].name[0]=0; 
+		}
+}
+
+void delete_xmb_dubs(xmbmem *_xmb, u16 *max)
+{
+	if((*max)<2) return;
+	int n;
+	for(n=0; n< ((*max) -1);n++)
+		if(_xmb[n].name[0]==0) 
+		{
+			if((*max) >1)
+			{
+				_xmb[n]=_xmb[(*max) -1];
+				(*max) --;
+			}
+			else  {if((*max) == 1)(*max) --;}
+		}
 }
 
 void read_xmb_column(int c)
@@ -18247,6 +18266,8 @@ thumb_ok:
 				//if(xmb[5].size<9)	draw_xmb_bare(5, 1, 0, 0);
 				if(xmb[5].size>=MAX_XMB_MEMBERS) break;
 				sort_xmb_col(xmb[5].member, xmb[5].size, 2);
+				delete_xmb_dubs(xmb[5].member, &xmb[5].size);
+				sort_xmb_col(xmb[5].member, xmb[5].size, 2);
 				sys_timer_usleep(1668); //let other threads run, too
 			}
 		free_all_buffers();
@@ -18305,6 +18326,8 @@ static void add_photo_column_thread_entry( uint64_t arg )
 		}
 
 		sort_xmb_col(xmb[3].member, xmb[3].size, 0);	
+		delete_xmb_dubs(xmb[3].member, &xmb[3].size);
+		sort_xmb_col(xmb[3].member, xmb[3].size, 0);	
 		free_all_buffers();
 		free(pane);
 	}
@@ -18362,6 +18385,8 @@ static void add_music_column_thread_entry( uint64_t arg )
 				/*type*/4, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_note, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
 				//if(xmb[4].size<9)	draw_xmb_bare(4, 1, 0, 0);
 				if(xmb[4].size>=MAX_XMB_MEMBERS) break;
+				sort_xmb_col(xmb[4].member, xmb[4].size, 0);
+				delete_xmb_dubs(xmb[4].member, &xmb[4].size);
 				sort_xmb_col(xmb[4].member, xmb[4].size, 0);
 				sys_timer_usleep(1668); //let other threads run, too
 			}
