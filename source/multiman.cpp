@@ -13865,7 +13865,7 @@ quit_viewer:
 					state_read=2;
 				}
 
-				new_pad=0; old_pad=0; 
+				new_pad=0;
 				
 			}
 
