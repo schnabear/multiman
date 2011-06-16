@@ -562,9 +562,9 @@ int my_game_copy_pfsm(char *path, char *path2);
 #define	GAME_INI_VER	"MMGI0100" //PS3GAME.INI	game flags (submenu)
 #define	GAME_STATE_VER	"MMLS0102" //LSTAT.BIN		multiMAN last state data
 #define	GAME_LIST_VER	"MMGL0103" //LLIST.BIN		cache for game list
-#define	XMB_COL_VER		"MMXC0105" //XMBS.00x		xmb[?] structure (1 XMMB column)
+#define	XMB_COL_VER		"MMXC0106" //XMBS.00x		xmb[?] structure (1 XMMB column)
 
-char current_version[9]="02.00.04";
+char current_version[9]="02.00.05";
 char current_version_NULL[10];
 char versionUP[64];
 
@@ -5680,8 +5680,6 @@ static void mp3_callback( int nCh, void *userData,	int callbackType,	void *readB
 		(void) userData; 
 		uint64_t nRead = 0;
 
-		//if(!mm_is_playing) return;
-		//if(mp3_force_position) {mp3_force_position=false; readSize=KB(MP3_BUF); callbackType=1;}
 		if(force_mp3_fd==-1) callbackType=CELL_MS_CALLBACK_FINISHSTREAM;
 
 		if(readSize && callbackType==CELL_MS_CALLBACK_MOREDATA)
@@ -5708,9 +5706,8 @@ static void mp3_callback( int nCh, void *userData,	int callbackType,	void *readB
 		if(callbackType==CELL_MS_CALLBACK_FINISHSTREAM || callbackType==CELL_MS_CALLBACK_CLOSESTREAM)
 		{
 try_next_mp3:
+
 			update_ms=false;
-			stop_audio(0);
-			update_ms=true;
 			force_mp3_offset=0;
 			if(max_mp3!=0) {
 				current_mp3++;
@@ -5802,12 +5799,13 @@ static void sysutil_callback( uint64_t status, uint64_t param, void * userdata )
 		break;
 
 	case CELL_SYSUTIL_BGMPLAYBACK_PLAY:
+		update_ms=false;
 		mm_audio=false;
-		stop_audio(0); current_mp3=0; max_mp3=0;
 		break;
 
 	case CELL_SYSUTIL_BGMPLAYBACK_STOP:
 		mm_audio=true;
+		update_ms=true;
 
 	case CELL_SYSUTIL_OSKDIALOG_INPUT_ENTERED:
 		ret = cellOskDialogGetInputText( &OutputInfo );
@@ -12945,8 +12943,8 @@ int main_mp3_th( char *temp_mp3, float skip)
 
 	mp3_freq=44100;
 
-	update_ms=true;
 	stop_audio(5);
+	update_ms=false;
 	memset(pDataB, 0, _mp3_buffer);
 
 	if(1 == LoadMP3((char*) my_mp3, &mp3_freq, skip))
@@ -12954,6 +12952,7 @@ int main_mp3_th( char *temp_mp3, float skip)
 
 		nChannel = TriggerStream(mp3_freq);
 		mm_is_playing=true;
+		update_ms=true;
 		float attn=5.0f;
 		for(float vstep=(attn*20); vstep>0; vstep--)
 		{
@@ -17163,6 +17162,12 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 
 					for(cn=first_xmb_mem; (cn<_xmb[_xmb_icon].size && cn3<cnmax); cn++)
 					{
+						/*if(egg && cn>=0)
+						{
+							if(_xmb[_xmb_icon].member[cn].name[0]!='L') continue;
+							else if(cn3==2) _xmb[_xmb_icon].first=cn;
+						}*/
+							
 
 						cn3++;
 						if(cn<0) continue;
@@ -17300,7 +17305,6 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 
 						if(_xmb[_xmb_icon].member[cn].status==2)
 						{
-							//if(cn3!=2) {tw/=2; th/=2;}
 							icon_x=xpos+64-tw/2;
 							icon_y=ypos;
 
@@ -17327,10 +17331,10 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 									if(update_ms || (!update_ms && (time(NULL)&1)))
 									{
 										set_texture(_xmb[4].data, 128, 128); //icon
-										display_img(icon_x+tw+16, icon_y-16, 32, 32, 128, 128, 0.45f, 128, 128);
+										display_img(icon_x-48, icon_y-16, 32, 32, 128, 128, 0.45f, 128, 128);
 									}
 									set_texture(_xmb[0].data, 128, 128); //icon
-									display_img_angle(icon_x+tw, icon_y-32, 64, 64, 128, 128, 0.4f, 128, 128, angle);
+									display_img_angle(icon_x-64, icon_y-32, 64, 64, 128, 128, 0.4f, 128, 128, angle);
 								}
 							}
 
@@ -23488,7 +23492,7 @@ xmb_cancel_option:
 
 				}
 
-				for(ci2=1; ci2<(xmb[xmb_icon].first-1); ci2++)
+				for(ci2=0; ci2<(xmb[xmb_icon].first); ci2++)
 				{
 					sprintf(aufile, "%s", xmb[xmb_icon].member[ci2].file_path);
 					if(strstr(aufile, ".mp3")!=NULL || strstr(aufile, ".MP3")!=NULL)
