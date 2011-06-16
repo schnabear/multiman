@@ -169,6 +169,7 @@ _meminfo meminfo;
 	char *pDataB=NULL;
 	char my_mp3_file[512];
 
+	bool update_ms=true;
 	bool force_mp3;
 	int force_mp3_fd=-1;
 	char force_mp3_file[512];
@@ -182,6 +183,9 @@ _meminfo meminfo;
 
 int StartMultiStream();
 void stop_audio(float attn);
+void stop_mp3(float _attn);
+void prev_mp3();
+void next_mp3();
 
 void *color_base_addr;
 u32 frame_index = 0;
@@ -664,6 +668,8 @@ u8 hide_bd=0;
 #define	_BUTTON_CIRCLE		(1<<13)
 #define	_BUTTON_CROSS		(1<<14)
 #define	BUTTON_SQUARE		(1<<15)
+
+#define	BUTTON_PAUSE		(1<<16)
 
 u16 BUTTON_CROSS =	_BUTTON_CROSS;
 u16 BUTTON_CIRCLE=	_BUTTON_CIRCLE;
@@ -1343,6 +1349,7 @@ static int pad_read( void )
 
 	int ret;
 	u32 padd;
+	u32 dev_type=0;
 
 	static u32 old_info = 0;
 	cmd_pad= 0;
@@ -1389,14 +1396,6 @@ uint32_t old_info_k = 0;
 		if(kdata.keycode[0]>0x8039 && kdata.keycode[0]<0x8040 && cover_mode!=5) //F1-F6 switch cover mode
 		{
 			cover_mode=kdata.keycode[0]-0x803a; old_fi=0; 
-			if(cover_mode!=4) {
-					load_texture(text_BLU_1, iconBLU, 320);
-					load_texture(text_NET_6, iconNET, 320);
-					load_texture(text_OFF_2, iconOFF, 320);
-					load_texture(text_CFC_3, iconCFC, 320);
-					load_texture(text_SDC_4, iconSDC, 320);
-					load_texture(text_MSC_5, iconMSC, 320);
-			}
 			old_fi=-1;
 			counter_png=0;
 			goto pad_out;
@@ -1585,8 +1584,7 @@ pad_ok:
 
 #endif
 
-
-	ret = cellPadGetData( pad_num, &databuf );
+	ret = cellPadGetDataExtra( pad_num, &dev_type, &databuf );
 
 	if (ret != CELL_PAD_OK) 
 		{
@@ -1605,8 +1603,17 @@ pad_ok:
 
 //	cellPadSetPortSetting( pad_num, CELL_PAD_SETTING_PRESS_ON | CELL_PAD_SETTING_SENSOR_ON);
 //	sprintf(www_info, "%i %i %i %i %i %i %i %i %i %i ", databuf.button[2], databuf.button[3], databuf.button[24], databuf.button[25], databuf.button[14], databuf.len, databuf.button[20], databuf.button[21], databuf.button[22], databuf.button[23]);
-//	sprintf(www_info, "%i %i %i %i %i %i %i %i %i ", databuf.button[0], databuf.button[1], databuf.button[2], databuf.button[3], databuf.button[4], databuf.button[5], databuf.button[6], databuf.button[7], databuf.button[8]);
-//	if(databuf.button[25]==0x0b) padd|=(1 << 14); //map BD remote [enter] to [X]
+//	sprintf(www_info, "--- %i ", databuf.len);
+
+	if(dev_type==CELL_PAD_DEV_TYPE_BD_REMOCON)
+	{
+		if(databuf.button[25]==0x0b || databuf.button[25]==0x32) padd|=(1 << 14); //map BD remote [enter] and [play] to [X]
+		else if(databuf.button[25]==0x38) padd|=BUTTON_START | BUTTON_SQUARE;//stop_mp3(5);
+		else if(databuf.button[25]==0x30) padd|=BUTTON_START | BUTTON_LEFT;//prev_mp3();
+		else if(databuf.button[25]==0x31) padd|=BUTTON_START | BUTTON_RIGHT;//next_mp3();
+		else if(databuf.button[25]==0x39) padd|=BUTTON_PAUSE;
+			
+	}
 
 	padLYstick = databuf.button[7]; 
 	padLXstick = databuf.button[6]; 
@@ -1667,11 +1674,15 @@ pad_ok:
 pad_out:
 
 
+	new_pad=padd & (~old_pad);
+	old_pad= padd;
+
+	if(new_pad==0 && old_pad==0) goto pad_repeat;
+
 	c_opacity_delta=16;	dimc=0; dim=1;
 	b_box_opaq= 0xfe;
 	b_box_step= -4;
-	new_pad=padd & (~old_pad);
-	old_pad= padd;
+
 	ss_timer=(time(NULL)-ss_timer_last);
 	ss_timer_last=time(NULL);
 
@@ -4424,7 +4435,7 @@ static int png_free(void *ptr, void * a)
 	return 0;
 }
 
-int png_out_mapmem(u8 *buffer, size_t buf_size)
+int map_rsx_memory(u8 *buffer, size_t buf_size)
 {
 	int ret;
 	u32 offset;
@@ -5697,8 +5708,10 @@ static void mp3_callback( int nCh, void *userData,	int callbackType,	void *readB
 		if(callbackType==CELL_MS_CALLBACK_FINISHSTREAM || callbackType==CELL_MS_CALLBACK_CLOSESTREAM)
 		{
 try_next_mp3:
+			update_ms=false;
+			stop_audio(0);
+			update_ms=true;
 			force_mp3_offset=0;
-			stop_audio(10);
 			if(max_mp3!=0) {
 				current_mp3++;
 				if(current_mp3>max_mp3) current_mp3=1;
@@ -12716,16 +12729,42 @@ void stop_audio(float attn)
 	audio_sub_proc=false;
 }
 
-static void _Multi_Stream_Update_Thread(uint64_t param)
+void stop_mp3(float _attn)
+{
+	stop_audio(_attn);
+	current_mp3=0; max_mp3=0;
+}
+
+void prev_mp3()
+{
+	if(max_mp3!=0){
+		current_mp3--;
+		if(current_mp3==0) current_mp3=max_mp3;
+		main_mp3((char*) mp3_playlist[current_mp3].path);
+	}
+}
+
+void next_mp3()
+{
+	if(max_mp3!=0){
+		current_mp3++;
+		if(current_mp3>max_mp3 || current_mp3>=MAX_MP3) current_mp3=1;
+		main_mp3((char*) mp3_playlist[current_mp3].path);
+	}
+}
+
+sys_ppu_thread_t ms_thread;
+static void MS_update_thread(uint64_t param)
 {
 	(void)param;
 
 	while(!mm_shutdown)
 	{
 		sys_timer_usleep(50);
-		if(mm_is_playing)
+		if(mm_is_playing && update_ms)
 			cellMSSystemSignalSPU();
 		cellMSSystemGenerateCallbacks();
+		//sprintf(www_info, "%i", (int)time(NULL));
 	}
 	cellAudioPortStop(portNum);
     sys_ppu_thread_exit(0);
@@ -12742,9 +12781,6 @@ int StartMultiStream()
 					0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
 					0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
-	pData = (char*) memalign(16, _mp3_buffer); //allocate 2 buffers for mp3 playback
-	pDataB = pData;
-
 	InitialiseAudio(MAX_STREAMS, MAX_SUBS, portNum, audioParam, portConfig);
 
 	sizeNeeded=cellMSMP3GetNeededMemorySize(4);	// Maximum 256 mono MP3's playing at one time
@@ -12757,7 +12793,7 @@ int StartMultiStream()
 
     cellMSSystemConfigureLibAudio(&audioParam, &portConfig);
     cellAudioPortStart(portNum);
-	StartMultiStreamUpdateThread(_Multi_Stream_Update_Thread); 
+	sys_ppu_thread_create(&ms_thread, MS_update_thread, NULL, 50, 0x4000, 0, "MultiStream PU Thread");
 	(void) cellMSSystemSetGlobalCallbackFunc(mp3_callback); 
 	return 1;
 }
@@ -12909,8 +12945,10 @@ int main_mp3_th( char *temp_mp3, float skip)
 
 	mp3_freq=44100;
 
+	update_ms=true;
 	stop_audio(5);
 	memset(pDataB, 0, _mp3_buffer);
+
 	if(1 == LoadMP3((char*) my_mp3, &mp3_freq, skip))
 	{
 
@@ -17286,8 +17324,11 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 								display_img(icon_x, icon_y,	tw,	th,	tw,	th,	0.5f, tw,	th);
 								if( (_xmb_icon==4 && current_mp3 && current_mp3<MAX_MP3 && !is_theme_playing && !strcmp(mp3_playlist[current_mp3].path, _xmb[_xmb_icon].member[cn].file_path) ) )
 								{
-									set_texture(_xmb[4].data, 128, 128); //icon
-									display_img(icon_x+tw+16, icon_y-16, 32, 32, 128, 128, 0.45f, 128, 128);
+									if(update_ms || (!update_ms && (time(NULL)&1)))
+									{
+										set_texture(_xmb[4].data, 128, 128); //icon
+										display_img(icon_x+tw+16, icon_y-16, 32, 32, 128, 128, 0.45f, 128, 128);
+									}
 									set_texture(_xmb[0].data, 128, 128); //icon
 									display_img_angle(icon_x+tw, icon_y-32, 64, 64, 128, 128, 0.4f, 128, 128, angle);
 								}
@@ -20042,8 +20083,9 @@ int main(int argc, char **argv)
 	if (ret != CELL_OK) sys_process_exit(1);
 	else unload_mod|=8;
 
-	host_addr = memalign(0x100000, 0x200000);
-	if(cellGcmInit(0x10000, 0x200000, host_addr) != CELL_OK) sys_process_exit(1);
+	host_addr = memalign(MB(1), MB(1));
+	//cellGcmInitSystemMode(CELL_GCM_SYSTEM_MODE_IOMAP_512MB);
+	if(cellGcmInit(KB(128), MB(1), host_addr) != CELL_OK) sys_process_exit(1);
 	if(initDisplay()!=0) sys_process_exit(1);
 	initShader();
 	setDrawEnv();
@@ -20129,13 +20171,14 @@ int main(int argc, char **argv)
 	if(ret!=CELL_OK && ret!=0) sys_process_exit(1);
 	cellSysutilEnableBgmPlayback();
 
-	// allocate buffers for images (one big buffer ~76MB)
+	// allocate buffers for images (one big buffer = 76MB)
+	// XMMB mode uses 7 frame buffers (56MB)
 	u32 buf_align= FB(1);
 	u32 frame_buf_size = (buf_align * 9)+4976640;// for text_bmpS 320x320x12 -> 1920*648 * 4
 	frame_buf_size = ( frame_buf_size + 0xfffff ) & ( ~0xfffff );
 
 	text_bmp = (u8 *) memalign(0x100000, frame_buf_size);
-	if(png_out_mapmem( text_bmp, frame_buf_size)) exit(-1);
+	if(map_rsx_memory( text_bmp, frame_buf_size)) sys_process_exit(1);
 
 	text_bmpUBG	= text_bmp + buf_align * 1; //4 x 1920x1080
 	text_bmpUPSR= text_bmp + buf_align * 5; //2 x 1920x1080
@@ -20237,6 +20280,9 @@ int main(int argc, char **argv)
 	// use 32MB virtual memory pool (with vm_real_size) real memory
 	//sys_vm_memory_map(MB(32), MB(vm_real_size), SYS_MEMORY_CONTAINER_ID_INVALID, SYS_MEMORY_PAGE_SIZE_64K, SYS_VM_POLICY_AUTO_RECOMMENDED, &vm);
 	//sys_vm_touch(vm, MB(vm_real_size));
+
+	pData = (char*) memalign(16, _mp3_buffer); //allocate 2 buffers for mp3 playback
+	pDataB = pData;
 
 	multiStreamStarted = StartMultiStream();
 
@@ -22101,29 +22147,24 @@ switch_ntfs:
 	}
 
 	if ((old_pad & BUTTON_START) && (new_pad & BUTTON_SQUARE)){
-		new_pad=0; old_pad=0;
-		max_mp3=0; current_mp3=0;
-		//load_texture(text_bmpUPSR, playBGR, 1920);
-		stop_audio(5);
+		new_pad=0;
+		stop_mp3(5);
 	}
 
 	 if ((old_pad & BUTTON_START) &&  (new_pad & BUTTON_RIGHT)){ //next song
-		new_pad=0; old_pad=0;
-		if(max_mp3!=0){
-			current_mp3++;
-			if(current_mp3>max_mp3 || current_mp3>=MAX_MP3) current_mp3=1;
-			main_mp3((char*) mp3_playlist[current_mp3].path);
-		}
+		new_pad=0;
+		next_mp3();
 	 }
 
 	 if ((old_pad & BUTTON_START) &&  (new_pad & BUTTON_LEFT)){ //prev song
-		new_pad=0; old_pad=0;
-		if(max_mp3!=0){
-			current_mp3--;
-			if(current_mp3==0) current_mp3=max_mp3;
-			main_mp3((char*) mp3_playlist[current_mp3].path);
-		}
+		new_pad=0; 
+		prev_mp3();
 	 }
+
+	 if ((new_pad & BUTTON_PAUSE))
+		 update_ms=!update_ms;
+
+
 
 	 if ((old_pad & BUTTON_START) &&  ( (new_pad & BUTTON_DOWN) || (new_pad & BUTTON_UP)) && multiStreamStarted==1) { //mp3 volume
 		if((new_pad & BUTTON_UP)) mp3_volume+=0.05f; else mp3_volume-=0.05f;
@@ -25226,7 +25267,7 @@ skip_to_FM:
 
 			setRenderColor();
 
-				if(www_running==1) 
+//				if(www_running==1) 
 					cellDbgFontPrintf( 0.01f, 0.98f, 0.5f,0x60606080, www_info); 
 
 			if(multiStreamStarted==1 && current_mp3!=0 && max_mp3>1 && (c_opacity2>0x00)) {

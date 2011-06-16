@@ -13,9 +13,7 @@ void *               s_pMultiStreamMemory    = NULL;
 #define   CHANNEL   CELL_AUDIO_PORT_8CH
 #define   BLOCK     CELL_AUDIO_BLOCK_8
 
-#define STACK_SIZE              (0x4000) // 16 kb
 #define EXIT_CODE               (0xbee)
-#define SERVER_PRIO             (50)
 
 
 /**********************************************************************************
@@ -136,15 +134,5 @@ void ShutdownMultiStream()
 
 	s_pMultiStreamMemory = NULL;
 	pMemory = NULL;
-}
-
-
-long StartMultiStreamUpdateThread(void _thread (uint64_t param))
-{
-   
-	// create the MultiStream / libaudio update thread
-	int nRet = sys_ppu_thread_create(&s_MultiStreamPuThread, _thread, NULL, SERVER_PRIO, STACK_SIZE, 0, "MultiStream PU Thread"); //SYS_PPU_THREAD_CREATE_JOINABLE
-	if(nRet) return -1;
-    return 0;
 }
 

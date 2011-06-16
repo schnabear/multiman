@@ -403,23 +403,19 @@ void setDrawEnv(void)
 	cellGcmSetViewport(gCellGcmCurrentContext, x, y, w, h, min, max, scale, offset);
 	cellGcmSetClearColor(gCellGcmCurrentContext, 0xff000000);
 
-//	if(use_depth){
-		cellGcmSetDepthTestEnable(gCellGcmCurrentContext, CELL_GCM_TRUE);
-		cellGcmSetDepthFunc(gCellGcmCurrentContext, CELL_GCM_LESS);
-//	}
+	cellGcmSetDepthTestEnable(gCellGcmCurrentContext, CELL_GCM_TRUE);
+	cellGcmSetDepthFunc(gCellGcmCurrentContext, CELL_GCM_LESS);
 
-	// alpha enable (by jurai)
 	cellGcmSetBlendFunc(gCellGcmCurrentContext,CELL_GCM_SRC_ALPHA, CELL_GCM_ONE_MINUS_SRC_ALPHA,CELL_GCM_SRC_ALPHA, CELL_GCM_ONE_MINUS_SRC_ALPHA);
 	cellGcmSetBlendEquation(gCellGcmCurrentContext,CELL_GCM_FUNC_ADD, CELL_GCM_FUNC_ADD);
 	cellGcmSetBlendEnable(gCellGcmCurrentContext,CELL_GCM_TRUE);
 
-//		cellGcmSetBlendEnable(gCellGcmCurrentContext, CELL_GCM_FALSE);
-//		cellGcmSetDepthTestEnable(CELL_GCM_TRUE);
-//		cellGcmSetDepthFunc(CELL_GCM_LESS);
-		cellGcmSetShadeMode(gCellGcmCurrentContext, CELL_GCM_SMOOTH);
-//		cellGcmSetAlphaFunc(gCellGcmCurrentContext, CELL_GCM_LESS, 0x80);
-//		cellGcmSetAlphaFunc(gCellGcmCurrentContext, CELL_GCM_ALWAYS, 0x80);
-		cellGcmSetAlphaFunc(gCellGcmCurrentContext, CELL_GCM_GREATER, 0x01);
+	cellGcmSetShadeMode(gCellGcmCurrentContext, CELL_GCM_SMOOTH);
+
+	cellGcmSetAlphaFunc(gCellGcmCurrentContext, CELL_GCM_GREATER, 0x01);
+
+	//cellGcmSetAntiAliasingControl(gCellGcmCurrentContext, CELL_GCM_TRUE, CELL_GCM_FALSE, CELL_GCM_FALSE, 0x41ff);
+
 }
 
 void setRenderColor(void)
@@ -435,7 +431,7 @@ void setRenderColor(void)
 int setRenderObject(void)
 {
 
-	vertex_color = (vtx_color*) localAllocAlign(131072/*128*1024*/, 1536*sizeof(vtx_color));
+	vertex_color = (vtx_color*) localAllocAlign(131072/*128*1024*/, 1536*sizeof(vtx_color)); // 384 quad polygons/textures (384x4 vertices)
 
 	CGparameter position = cellGcmCgGetNamedParameter(vertex_program, "position");
 	CGparameter color = cellGcmCgGetNamedParameter(vertex_program, "color");
