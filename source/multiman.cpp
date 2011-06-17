@@ -1008,6 +1008,8 @@ Trivia
 3D
 Other*/
 
+static const char retro_groups[][8] = { "SNES", "FCEU", "VBA", "GEN+", "FBANext" };
+
 static const char genre[][16] = { 
 "Other",
 "Action",
@@ -1136,7 +1138,7 @@ typedef struct
 	u16		first;
 	u8		*data;
 	char	name[32];
-	u8		group; //0-no grouping
+	u8		group; //0-no grouping / for retro: 0-5 for all five emulator types
 
 	xmbmem	member[MAX_XMB_MEMBERS];
 }
@@ -1740,7 +1742,7 @@ void screen_saver()
 			new_pad=0; old_pad=0;
 			pad_read();
 			if (( (new_pad || old_pad) && initial_skip>150) || www_running!=www_running_old) {// || c_opacity_delta==16
-				new_pad=0; old_pad=0; break;
+				new_pad=0;  break;
 				}
 		}
 		state_draw=1; c_opacity=0xff; c_opacity2=0xff;
@@ -4254,8 +4256,52 @@ void read_xmb_column(int c)
 	}
 }
 
+void read_xmb_column_type(int c, u8 type)
+{
+	char colfile[128];
+	char string1[9];
+	int backup_group=xmb[c].group;
+	sprintf(colfile, "%s/XMBS.00%i", app_usrdir, c);
+	FILE *flist = fopen(colfile, "rb");
+	if(flist!=NULL)
+	{
+		fread((char*) &string1, 8, 1, flist);
+		if(strstr(string1, XMB_COL_VER)!=NULL)
+		{
+			fseek(flist, 0, SEEK_END);
+			int llist_size=ftell(flist)-8;
+			fseek(flist, 8, SEEK_SET);
+			fread((char*) &xmb[c], llist_size, 1, flist);
+			fclose(flist);
+		}
+		else
+		{
+			fclose(flist);
+			remove(colfile);
+			xmb[c].size=0;
+		}
+		for(int n=0; n<xmb[c].size; n++)
+		{
+			if(xmb[c].member[n].type!=type && xmb[c].member[n].type!=6 && xmb[c].member[n].type!=7) 
+			{
+				delete_xmb_member(xmb[c].member, &xmb[c].size, n);
+				if(n>=xmb[c].size) break;
+				n--;
+			}
+		}
+		xmb[c].group=backup_group;
+		free_all_buffers();
+		for(int n=0; n<MAX_XMB_TEXTS; n++)
+		{
+			xmb_txt_buf[n].used=0;
+			xmb_txt_buf[n].data=text_bmpUPSR+(n*XMB_TEXT_WIDTH*XMB_TEXT_HEIGHT*4);
+		}
+	}
+}
+
 void save_xmb_column(int c)
 {
+	if(xmb[c].group) return;
 	char colfile[128];
 	sprintf(colfile, "%s/XMBS.00%i", app_usrdir, c);
 	remove(colfile);
@@ -7917,7 +7963,7 @@ gs_cover:
 
 	}
 	old_fi=-1; game_last_page=-1;
-	new_pad=0; old_pad=0;
+	new_pad=0; 
 	//sub_menu_open=0;
 	return result;
 }
@@ -8266,7 +8312,7 @@ int open_mm_submenu(uint8_t *buffer) //, int *_game_sel
 		flip();
 	}
 	old_fi=-1; game_last_page=-1;
-	new_pad=0; old_pad=0;
+	new_pad=0; 
 	counter_png=0;
 	//sub_menu_open=0;
 
@@ -13726,7 +13772,7 @@ close_viewer:
 				fclose(fp);
 quit_viewer:
 				viewer_open=0;
-				new_pad=0; old_pad=0;
+				new_pad=0; 
 				state_draw=1;
 				state_read=1;
 
@@ -14576,7 +14622,7 @@ check_from_start:
 								pic_zoom=1.0f;
 							pic_reload=0;
 							pic_posX=pic_posY=0;
-							new_pad=0; old_pad=0;
+							new_pad=0;
 							break;
 						}
 
@@ -14588,7 +14634,7 @@ check_from_start:
 								pic_zoom=1.0f;
 							pic_reload=0;
 							pic_posX=pic_posY=0;
-							new_pad=0; old_pad=0;
+							new_pad=0;
 							break;
 						}
 
@@ -18396,6 +18442,8 @@ static void add_retro_column_thread_entry( uint64_t arg )
 		add_xmb_member(xmb[8].member, &xmb[8].size, (char*)"Refresh", (char*)"Scan all emulator folders for newly added game ROMs.",
 				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb[0].data, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
 		xmb[8].init=1;
+		xmb[8].group=0;
+
 		char linkfile[512];
 		char imgfile[512];
 		char imgfile2[512];
@@ -18690,6 +18738,8 @@ thumb_ok_fba:
 
 	is_retro_loading=0;
 	if(xmb_icon_last==8 && (xmb_icon_last_first<xmb[8].size)) { xmb[8].first=xmb_icon_last_first; xmb_icon_last_first=0;xmb_icon_last=0; }
+	xmb[8].group=0;
+	save_xmb_column(8);
 	sys_ppu_thread_exit(0);
 }
 
@@ -18731,6 +18781,9 @@ void add_emulator_column()
 {
 	if(is_retro_loading || xmb[8].init) return;
 	is_retro_loading=1;
+
+	sprintf(xmb[8].name, "%s", (char*)"Retro"); 
+	draw_xmb_icon_text(8);
 
 	if(is_retro_loading)
 	{
@@ -19490,6 +19543,8 @@ void init_xmb_icons(t_menu_list *list, int max, int sel)
 				xmb[7].size=0;
 			}
 
+			sprintf(xmb[8].name, "%s", "Retro");
+
 			draw_xmb_icon_text(xmb_icon);
 		}
 		add_game_column(list, max, sel, (cover_mode!=8));
@@ -19598,11 +19653,18 @@ void draw_xmb_legend(const int _xmb_icon)
 			put_texture_with_alpha_gen( text_MSG, text_DOX+(dox_cross_x	*4 + dox_cross_y	* dox_width*4), dox_cross_w,	dox_cross_h,	dox_width, 300, 8, 5);
 		}
 
-		put_texture_with_alpha_gen( text_MSG, text_DOX+(dox_l1_x*4 + dox_l1_y	* dox_width*4), dox_l1_w,	dox_l1_h, dox_width, 300, 8, 42);
-		put_texture_with_alpha_gen( text_MSG, text_DOX+(dox_r1_x*4 + dox_r1_y	* dox_width*4), dox_r1_w,	dox_r1_h, dox_width, 300, 8+dox_l1_w+5, 42);
-
+		if(_xmb_icon>=6 && _xmb_icon<=8)
+		{
+			print_label_ex( 0.17f, 0.55f, 0.6f, 0xffd0d0d0, (char*)": Group Content", 1.00f, 0.0f, 2, 6.40f, 18.0f, 0);
+			put_texture_with_alpha_gen( text_MSG, text_DOX+(dox_square_x	*4 + dox_square_y	* dox_width*4), dox_square_w,	dox_square_h,	dox_width, 300, 8, 36);
+		}
+		else
+		{
+			put_texture_with_alpha_gen( text_MSG, text_DOX+(dox_l1_x*4 + dox_l1_y	* dox_width*4), dox_l1_w,	dox_l1_h, dox_width, 300, 8, 42);
+			put_texture_with_alpha_gen( text_MSG, text_DOX+(dox_r1_x*4 + dox_r1_y	* dox_width*4), dox_r1_w,	dox_r1_h, dox_width, 300, 8+dox_l1_w+5, 42);
+			print_label_ex( 0.475f, 0.55f, 0.6f, 0xffd0d0d0, (char*) ": Switch Display", 1.00f, 0.0f, 2, 6.40f, 18.0f, 0);
+		}
 		print_label_ex( 0.17f, 0.10f, 0.6f, 0xffd0d0d0, xmb_text, 1.00f, 0.0f, 2, 6.40f, 18.0f, 0);
-		print_label_ex( 0.475f, 0.55f, 0.6f, 0xffd0d0d0, (char*) ": Switch Display", 1.00f, 0.0f, 2, 6.40f, 18.0f, 0);
 		flush_ttf(text_MSG, 300, 70);
 	}
 	set_texture(text_MSG, 300, 70);
@@ -20223,7 +20285,7 @@ int main(int argc, char **argv)
 	text_bmpS	= text_bmp + buf_align * 9;
 
 	text_legend = text_bmpUPSR + buf_align;
-	text_BOOT	= text_FONT;
+	text_BOOT	= text_bmpUBG  + buf_align;
 	//pData = (long)text_bmp + buf_align * 8;//(long)memalign(128, _mp3_buffer*1024*1024);
 
 	xmb_icon_globe	=	text_FMS+( 9*65536);
@@ -22122,7 +22184,7 @@ fixed_cover_7:
 
 	if ((old_pad & BUTTON_START) && (new_pad & BUTTON_TRIANGLE)){
 switch_ntfs:
-		new_pad=0; old_pad=0;
+		new_pad=0; 
 		if(!pfs_enabled)
 		{
 			dialog_ret=0;
@@ -22151,7 +22213,7 @@ switch_ntfs:
 
 
 	if ( ((old_pad & BUTTON_START) && (new_pad & BUTTON_R2)) || take_screenshot) {
-		new_pad=0; old_pad=0;
+		new_pad=0; 
 		take_screenshot=0;
 		time ( &rawtime );
 		timeinfo = localtime ( &rawtime );
@@ -22324,7 +22386,7 @@ rename_title:
 	}
 
 	if ((old_pad & BUTTON_SELECT) && (new_pad & BUTTON_R1)){
-		new_pad=0; old_pad=0;
+		new_pad=0; 
 		c_opacity_delta=16;	dimc=0; dim=1;
 		display_mode++;
 		if(display_mode>2) display_mode=0;
@@ -22389,7 +22451,6 @@ open_file_manager:
 				state_read=1;
 				state_draw=1;
 				memset(text_bmpUPSR, 0, 8294400);
-				//new_pad=0;// old_pad=0;
 				set_fm_stripes();
 				old_fi=-1;
 				goto skip_to_FM;
@@ -22435,7 +22496,7 @@ from_fm:
 		state_read=1;
 		state_draw=1;
 
-		new_pad=0; old_pad=0;
+		new_pad=0; 
 		c_opacity=0xff; c_opacity2=0xff;
 
 		if(cover_mode<0) {cover_mode=8;}
@@ -22620,7 +22681,7 @@ setperm_title:
 			sprintf(filename, "%s", menu_list[game_sel].path);
 			abort_rec=0;
 			fix_perm_recursive(filename);
-			new_pad=0; old_pad=0;
+			new_pad=0; 
 			cellMsgDialogAbort(); flip();
 		}
 
@@ -23327,7 +23388,7 @@ cancel_theme_exit:
 			{
 				if(delete_game_cache()!=-1)
 				{
-					pad_read(); new_pad=0; old_pad=0;
+					pad_read(); new_pad=0; 
 					dialog_ret=0; cellMsgDialogOpen2( type_dialog_back, "Game Cache Data cleared!", dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 					wait_dialog();
 				}
@@ -23339,7 +23400,7 @@ cancel_theme_exit:
 				parse_ini(options_ini,1);
 				show_sysinfo();
 				is_any_xmb_column=0; 
-				pad_read(); new_pad=0; old_pad=0;
+				pad_read(); new_pad=0; 
 				goto xmb_cancel_option;
 			}
 
@@ -23879,7 +23940,7 @@ check_from_start2:
 								pic_zoom=1.0f;
 							pic_reload=0;
 							pic_posX=pic_posY=0;
-							new_pad=0; old_pad=0;
+							new_pad=0;
 							break;
 						}
 
@@ -23891,7 +23952,7 @@ check_from_start2:
 								pic_zoom=1.0f;
 							pic_reload=0;
 							pic_posX=pic_posY=0;
-							new_pad=0; old_pad=0;
+							new_pad=0;
 							break;
 						}
 
@@ -24734,6 +24795,38 @@ cancel_exit_2:
 skip_1:
 
 skip_to_FM:
+
+	if(cover_mode==8 && xmb_icon==8 && (new_pad & BUTTON_SQUARE) && !is_retro_loading)
+	{
+		xmb[8].group++;
+		//sprintf(www_info, "%i", xmb[8].group);
+		if(xmb[8].group>5) xmb[8].group=0;
+		if(xmb[8].group)
+		{
+			read_xmb_column_type(8, xmb[8].group+7);
+			sprintf(xmb[8].name, "Retro (%s)", retro_groups[xmb[8].group-1]); 
+		}
+		else
+		{
+			read_xmb_column(8);
+			sprintf(xmb[8].name, "Retro"); 
+		}
+		redraw_column_texts(8);
+		draw_xmb_icon_text(8);
+		xmb[8].member[0].data=-1;
+		xmb[8].member[0].status=2;
+		xmb[8].member[0].icon=xmb[0].data;
+		sort_xmb_col(xmb[8].member, xmb[8].size, 1);
+		for(int n=0; n<MAX_XMB_TEXTS; n++)
+		{
+			xmb_txt_buf[n].used=0;
+			xmb_txt_buf[n].data=text_bmpUPSR+(n*XMB_TEXT_WIDTH*XMB_TEXT_HEIGHT*4);
+		}
+		xmb_txt_buf_max=0;
+		if(xmb[8].size) xmb[8].first=1;
+		new_pad=0;
+	}
+
 	if((new_pad & BUTTON_SQUARE) && cover_mode==8) {egg=1-egg; use_drops=(egg==1);}
 
 	if ( ( ((new_pad & BUTTON_SQUARE) && cover_mode!=5 && cover_mode!=8) || ((new_pad & BUTTON_TRIANGLE) && cover_mode==8)) && game_sel<max_menu_list && max_menu_list>0 && (cover_mode!=8 || (cover_mode==8 && ( (xmb_icon==6 && xmb[xmb_icon].member[xmb[xmb_icon].first].type==1 && xmb[xmb_icon].size>1) || (xmb_icon==5 && xmb[xmb_icon].member[xmb[xmb_icon].first].type==2) || (xmb_icon==7 && xmb[xmb_icon].size)))) ) {
@@ -24758,7 +24851,7 @@ skip_to_FM:
 
 	if ( new_pad & BUTTON_CIRCLE && cover_mode!=5 && cover_mode!=8 && net_used_ignore()) 
 	{
-		new_pad=0; old_pad=0;
+		new_pad=0; 
 		c_opacity_delta=16;	dimc=0; dim=1;
 		dialog_ret=0;
 		ret = cellMsgDialogOpen2( type_dialog_yes_no, "Quit to XMB\xE2\x84\xA2 screen?", dialog_fun1, (void*)0x0000aaaa, NULL );
@@ -24931,7 +25024,7 @@ skip_to_FM:
 			fm_sel=1<<1;
 			if ((new_pad & BUTTON_CROSS))
 			{	
-				new_pad=0; old_pad=0;
+				new_pad=0; 
 				force_update_check=1;
 			}
 		}
@@ -24943,7 +25036,7 @@ skip_to_FM:
 			fm_sel=1<<4;
 			if ((new_pad & BUTTON_CROSS))
 			{	
-				new_pad=0; old_pad=0;
+				new_pad=0; 
 				sprintf(current_right_pane, "%s", themes_dir);
 				state_read=1; state_draw=1; 
 			}
@@ -24971,7 +25064,7 @@ skip_to_FM:
 
 		if((help_open || about_open))
 			{
-				new_pad=0; old_pad=0;
+				new_pad=0; 
 				if(about_open)
 				{                  
 					fm_sel=1<<2;
@@ -25082,15 +25175,16 @@ skip_to_FM:
 
 		if ( (new_pad & BUTTON_CROSS) && mouseX>=0.89459375f && mouseX<=0.9195f && mouseY>=0.05222f && mouseY<=0.09666f && net_used_ignore()) 
 		{
-		dialog_ret=0; new_pad=0; old_pad=0;
-		ret = cellMsgDialogOpen2( type_dialog_yes_no, "Quit to XMB\xE2\x84\xA2 screen?", dialog_fun1, (void*)0x0000aaaa, NULL );
-		wait_dialog();
- 		
-		if(dialog_ret==1)
-		{	
-			reset_mount_points();			
-			unload_modules(); sys_process_exit(1); break;}
-			new_pad=0; old_pad=0;
+			dialog_ret=0; new_pad=0; 
+			ret = cellMsgDialogOpen2( type_dialog_yes_no, "Quit to XMB\xE2\x84\xA2 screen?", dialog_fun1, (void*)0x0000aaaa, NULL );
+			wait_dialog();
+			
+			if(dialog_ret==1)
+			{	
+				reset_mount_points();			
+				unload_modules(); sys_process_exit(1); break;
+			}
+			new_pad=0;
 		}
 
 		time ( &rawtime );
@@ -25178,11 +25272,11 @@ skip_to_FM:
 				draw_text_stroke( (x+0.025f)-(float)((0.0094f*(float)(strlen(str)))/2), y-0.115f, 0.75f, 0xffc0c0c0, str);
 
 				if ( ((old_pad & BUTTON_CROSS) || (old_pad & BUTTON_L3) || (old_pad & BUTTON_CIRCLE) || (old_pad & BUTTON_R3)) && strstr(path, "/web")!=NULL)
-				{new_pad=0;old_pad=0; launch_web_browser((char*)"http://www.psxstore.com/");}
+				{new_pad=0; launch_web_browser((char*)"http://www.psxstore.com/");}
 				 
 
-				if ( (old_pad & BUTTON_CROSS)) {state_draw=1; state_read=2; sprintf(current_left_pane, "%s", path); new_pad=0; old_pad=0;}
-				if ( (old_pad & BUTTON_CIRCLE)) {state_draw=1; state_read=3; sprintf(current_right_pane, "%s", path); new_pad=0; old_pad=0;}
+				if ( (old_pad & BUTTON_CROSS)) {state_draw=1; state_read=2; sprintf(current_left_pane, "%s", path); new_pad=0;}
+				if ( (old_pad & BUTTON_CIRCLE)) {state_draw=1; state_read=3; sprintf(current_right_pane, "%s", path); new_pad=0;}
 
 			} 
 
