@@ -270,7 +270,11 @@ void file_copy(char *path, char *path2, int progress);
 
 int get_param_sfo_field(char *file, char *field, char *value);
 
+int load_png_texture(u8 *data, char *name, uint16_t _DW);
+
 void draw_stars();
+float use_drops=false;
+
 void draw_bare_xmb(int _xmb_icon);
 void draw_whole_xmb(u8 mode);
 void draw_xmb_clock(u8 *buffer, const int _xmb_icon);
@@ -723,6 +727,7 @@ char mouseInfo[128];//char mouseInfo2[128];
 	u8 *text_bmpUPSR=NULL;
 	u8 *text_bmpIC;
 	u8 *text_TEMP;
+	u8 *text_DROPS;
 	u8 *text_legend;
 	u8 *text_FONT;
 
@@ -1032,8 +1037,6 @@ double mouseX=0.5f, mouseY=0.5f, mouseYD=0.0000f, mouseXD=0.0000f, mouseYDR=0.00
 uint8_t xDZ=30, yDZ=30;
 uint8_t xDZa=30, yDZa=30;
 
-unsigned cmd_pad= 0;
-
 //int ;
 float offY=0.0f, BoffY=0.0f, offX=0.0f, incZ=0.7f, BoffX=0.0f, slideX=0.0f;
 
@@ -1342,6 +1345,7 @@ u32 new_pad=0, old_pad=0;
 uint8_t old_status=0;
 uint8_t old_status_k=0;
 int pad_num=0;
+static u32 old_info[7];
 
 static int pad_read( void )
 {
@@ -1351,8 +1355,6 @@ static int pad_read( void )
 	u32 padd;
 	u32 dev_type=0;
 
-	static u32 old_info = 0;
-	cmd_pad= 0;
 
 
 static CellPadData databuf;
@@ -1504,106 +1506,59 @@ read_mouse:
 
 read_pad:
 
-#if (CELL_SDK_VERSION<=0x210001)
-CellPadInfo infobuf;
-ret = cellPadGetInfo(&infobuf);
-
-	if ( ret != 0 ) 
-		{
-		old_pad=new_pad = 0;
-		return 1;
-		}
-
-for(pad_num=0;pad_num<7;pad_num++)
-	if ( infobuf.status[pad_num] == CELL_PAD_STATUS_CONNECTED ) {goto pad_ok;}
-
-//	if ( infobuf.status[pad_num] == CELL_PAD_STATUS_DISCONNECTED ) 
-		{
-		old_pad=new_pad = 0;
-		return 1;
-		}
-pad_ok:
-
-	if((infobuf.info & CELL_PAD_INFO_INTERCEPTED) && (!(old_info & CELL_PAD_INFO_INTERCEPTED)))
-		{
-		old_info = infobuf.info;
-		}
-	else 
-		if((!(infobuf.info & CELL_PAD_INFO_INTERCEPTED)) && (old_info & CELL_PAD_INFO_INTERCEPTED))
-			{
-			old_info = infobuf.info;
-			old_pad=new_pad = 0;
-			return 1;
-			}
-
-#else
-
 CellPadInfo2 infobuf;
-ret = cellPadGetInfo2(&infobuf);
 
-/*	sprintf(mouseInfo,"(%i/%i) ", infobuf.max_connect, infobuf.now_connect );
-	ret = cellPadGetData( pad_num, &databuf );
-for(dn=0;dn<14;dn++){
 
-	sprintf(mouseInfo, "%s %i=%04X ", mouseInfo, dn, databuf.button[dn]);
-}
-
-for(dn=14;dn<29;dn++){
-
-	sprintf(mouseInfo2, "%s %i=%04X ", mouseInfo2, dn, databuf.button[dn]);
-} */
-
-	if ( ret != 0 ) 
-		{
-		old_pad=new_pad = 0;
+	if ( cellPadGetInfo2(&infobuf) != 0 ) 
+	{
+		old_pad = new_pad = 0;
 		return 1;
-		}
+	}
 
-for(pad_num=0;pad_num<7;pad_num++)
-	if ( infobuf.port_status[pad_num] == CELL_PAD_STATUS_CONNECTED ) {goto pad_ok;}
+	//pad_num++; 
+	//if(pad_num>6) pad_num=0;
+	for(pad_num=0;pad_num<7;pad_num++)
+		if ( infobuf.port_status[pad_num] == CELL_PAD_STATUS_CONNECTED ) {goto pad_ok;}
 
-//	if ( infobuf.port_status[pad_num] == CELL_PAD_STATUS_DISCONNECTED ) 
-		{
-		old_pad=new_pad = 0;
-		return 1;
-		}
+	old_pad = new_pad = 0;
+	return 1;
+
 
 pad_ok:
 
-	if((infobuf.system_info & CELL_PAD_INFO_INTERCEPTED) && (!(old_info & CELL_PAD_INFO_INTERCEPTED)))
-		{
-		old_info = infobuf.system_info;
-		}
+	if((infobuf.system_info & CELL_PAD_INFO_INTERCEPTED) && (!(old_info[pad_num] & CELL_PAD_INFO_INTERCEPTED)))
+	{
+		old_info[pad_num] = infobuf.system_info;
+	}
 	else 
-		if((!(infobuf.system_info & CELL_PAD_INFO_INTERCEPTED)) && (old_info & CELL_PAD_INFO_INTERCEPTED))
-			{
-			old_info = infobuf.system_info;
-			old_pad=new_pad = 0;
-			goto pad_repeat;
-			}
-
-#endif
-
-	ret = cellPadGetDataExtra( pad_num, &dev_type, &databuf );
-
-	if (ret != CELL_PAD_OK) 
+		if((!(infobuf.system_info & CELL_PAD_INFO_INTERCEPTED)) && (old_info[pad_num] & CELL_PAD_INFO_INTERCEPTED))
 		{
+			old_info[pad_num] = infobuf.system_info;
+			old_pad = new_pad = 0;
+			goto pad_repeat;
+		}
+
+	if (cellPadGetDataExtra( pad_num, &dev_type, &databuf ) != CELL_PAD_OK) 
+	{
 		old_pad=new_pad = 0;
 		return 1;
-		}
+	}
 
 	if (databuf.len == 0) 
-		{
+	{
 		new_pad = 0;
 		goto pad_repeat;
-		}
+	}
 
-
-	padd = ( databuf.button[2] | ( databuf.button[3] << 8 ) );
+	padd = ( databuf.button[2] | ( databuf.button[3] << 8 ) ); //digital buttons
+	padRXstick = databuf.button[4]; // right stick
+	padRYstick = databuf.button[5];
+	padLXstick = databuf.button[6]; // left stick
+	padLYstick = databuf.button[7]; 
 
 //	cellPadSetPortSetting( pad_num, CELL_PAD_SETTING_PRESS_ON | CELL_PAD_SETTING_SENSOR_ON);
 //	sprintf(www_info, "%i %i %i %i %i %i %i %i %i %i ", databuf.button[2], databuf.button[3], databuf.button[24], databuf.button[25], databuf.button[14], databuf.len, databuf.button[20], databuf.button[21], databuf.button[22], databuf.button[23]);
-//	sprintf(www_info, "--- %i ", databuf.len);
+	//sprintf(www_info, "--- %i %i ", databuf.len, pad_num);
 
 	if(dev_type==CELL_PAD_DEV_TYPE_BD_REMOCON)
 	{
@@ -1611,26 +1566,17 @@ pad_ok:
 		else if(databuf.button[25]==0x38) padd|=BUTTON_START | BUTTON_SQUARE;//stop_mp3(5);
 		else if(databuf.button[25]==0x30) padd|=BUTTON_START | BUTTON_LEFT;//prev_mp3();
 		else if(databuf.button[25]==0x31) padd|=BUTTON_START | BUTTON_RIGHT;//next_mp3();
+		else if(databuf.button[25]==0x80) padd|=BUTTON_START | BUTTON_SELECT;//BLUE button -> file manager
 		else if(databuf.button[25]==0x39) padd|=BUTTON_PAUSE;
-			
 	}
-
-	padLYstick = databuf.button[7]; 
-	padLXstick = databuf.button[6]; 
-
-	padRXstick = databuf.button[4];
-	padRYstick = databuf.button[5];
 
 	if(cover_mode!=5 && !use_analog)
 	{
-//		if( (padd | BUTTON_UP | BUTTON_DOWN | BUTTON_LEFT | BUTTON_RIGHT)!=padd )
-		{
-			if(padLYstick<2) padd=padd | BUTTON_UP;   if(padLYstick>253) padd=padd | BUTTON_DOWN;
-			if(padLXstick<2) padd=padd | BUTTON_LEFT; if(padLXstick>253) padd=padd | BUTTON_RIGHT;
+		if(padLYstick<2) padd=padd | BUTTON_UP;   if(padLYstick>253) padd=padd | BUTTON_DOWN;
+		if(padLXstick<2) padd=padd | BUTTON_LEFT; if(padLXstick>253) padd=padd | BUTTON_RIGHT;
 
-			if(padRYstick<2) padd=padd | BUTTON_UP;   if(padRYstick>253) padd=padd | BUTTON_DOWN;
-			if(padRXstick<2) padd=padd | BUTTON_LEFT; if(padRXstick>253) padd=padd | BUTTON_RIGHT;
-		}
+		if(padRYstick<2) padd=padd | BUTTON_UP;   if(padRYstick>253) padd=padd | BUTTON_DOWN;
+		if(padRXstick<2) padd=padd | BUTTON_LEFT; if(padRXstick>253) padd=padd | BUTTON_RIGHT;
 	}
 
 	mouseYD=0.0f; mouseXD=0.0f; 
@@ -1673,7 +1619,6 @@ pad_ok:
 
 pad_out:
 
-
 	new_pad=padd & (~old_pad);
 	old_pad= padd;
 
@@ -1687,7 +1632,6 @@ pad_out:
 	ss_timer_last=time(NULL);
 
 pad_repeat:
-
 
 	key_repeat=0;
 	if(new_pad==0 && old_pad!=0)
@@ -1717,7 +1661,6 @@ pad_repeat:
 
 //	sprintf(www_info, "%i %i %i %i %i", new_pad, old_pad, repeat_counter1, repeat_counter2, key_repeat);
 
-
 	return 1;
 }
 
@@ -1726,32 +1669,66 @@ void screen_saver()
 		pad_read(); c_opacity_delta=0; new_pad=0; old_pad=0; 
 		int initial_skip=0;
 		int www_running_old=www_running;
+
+		if(use_drops)
+		{
+			sprintf(auraBG, "%s/DROPS.PNG", app_usrdir);
+			load_png_texture(text_DROPS, auraBG, 256);
+		}
+
+
 		while(1) {
 			ss_timer=0;
 			ss_timer_last=time(NULL);
 
 			ClearSurface();
+			if(use_drops) set_texture(text_DROPS, 256, 256);
 			for(int n=0; n<MAX_STARS; n++)
 			{
-				draw_square(((float)stars[n].x/1920.0f-0.5f)*2.0f, (0.5f-(float)stars[n].y/1080.0f)*2.0f, (stars[n].size/1920.f), (stars[n].size/1080.f), 0.0f, (0xffffff00 | stars[n].bri));
 				int move_star= rndv(10);
-				if(move_star>4) 
-					{stars[n].x++; } 
-				else 
-					{stars[n].x--; }
 
-				if(move_star>3) 
-					{stars[n].y++; } 
-				if(move_star==2) 
-					{stars[n].y--; }
-
-				if(move_star>7) stars[n].bri-=4;
-				if(stars[n].x>1919 || stars[n].y>1079 || stars[n].x<1 || stars[n].y<1 || stars[n].bri<4)
+				if(use_drops)
 				{
-					stars[n].x=rndv(1920);
-					stars[n].y=rndv(1080);
-					stars[n].bri=rndv(200);
-					stars[n].size=rndv(XMB_SPARK_SIZE)+1;
+					display_img(stars[n].x, stars[n].y, 256, 256, 256, 256, 0.85f, 256, 256);
+
+					if(move_star>4) 
+						{stars[n].y+=24; } 
+					else 
+						{stars[n].y+=16; }
+
+					if(stars[n].x>1919 || stars[n].y>1079 || stars[n].x<1 || stars[n].y<1 || stars[n].bri<4)
+					{
+						stars[n].x=rndv(1920);
+						stars[n].y=rndv(256);
+						stars[n].bri=rndv(200);
+						stars[n].size=rndv(XMB_SPARK_SIZE)+1;
+					}
+
+
+
+				}
+				else
+				{
+					draw_square(((float)stars[n].x/1920.0f-0.5f)*2.0f, (0.5f-(float)stars[n].y/1080.0f)*2.0f, (stars[n].size/1920.f), (stars[n].size/1080.f), 0.0f, (0xffffff00 | stars[n].bri));
+					if(move_star>4) 
+						{stars[n].x++; } 
+					else 
+						{stars[n].x--; }
+
+					if(move_star>3) 
+						{stars[n].y++; } 
+					if(move_star==2) 
+						{stars[n].y--; }
+
+					if(move_star>7) stars[n].bri-=4;
+
+					if(stars[n].x>1919 || stars[n].y>1079 || stars[n].x<1 || stars[n].y<1 || stars[n].bri<4)
+					{
+						stars[n].x=rndv(1920);
+						stars[n].y=rndv(1080);
+						stars[n].bri=rndv(200);
+						stars[n].size=rndv(XMB_SPARK_SIZE)+1;
+					}
 				}
 
 			}
@@ -4231,7 +4208,7 @@ void sort_xmb_col(xmbmem *_xmb, u16 max, int _first)
 			else 
 				//remove duplicate entries (by name) in music/photo/video columns (excl. AVCHD/Blu-ray)
 				//preference goes to hdd entries usually (null entries removed by delete_xmb_dubs
-				if(!strcasecmp(_xmb[n].name+o1, _xmb[m].name+o2) && (_xmb[n].type>=3 || _xmb[n].type<=5)) _xmb[n].name[0]=0; 
+				if(!strcasecmp(_xmb[n].name+o1, _xmb[m].name+o2) && (_xmb[n].type>=3 && _xmb[n].type<=5)) _xmb[n].name[0]=0; 
 		}
 }
 
@@ -16370,10 +16347,11 @@ void slide_xmb_left(int _xmb_icon)
 	{
 		xmb_slide+=xmb_slide_step;
 		ClearSurface();
-		if(xmb_sparks!=0) draw_stars();
+		if(!use_drops && xmb_sparks!=0) draw_stars();
 
 		set_texture( text_bmp, 1920, 1080);
 		display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+		if(use_drops && xmb_sparks!=0) draw_stars();
 
 		draw_xmb_clock(xmb_clock, 0);
 		draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
@@ -16396,10 +16374,11 @@ void slide_xmb_right()
 		{
 			xmb_slide+=xmb_slide_step;
 			ClearSurface();
-			if(xmb_sparks!=0) draw_stars();
+			if(!use_drops && xmb_sparks!=0) draw_stars();
 
 			set_texture( text_bmp, 1920, 1080);
 			display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+			if(use_drops && xmb_sparks!=0) draw_stars();
 
 			draw_xmb_clock(xmb_clock, 0);
 			draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
@@ -17134,9 +17113,9 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 		if(_xmb[_xmb_icon].first>=_xmb[_xmb_icon].size) _xmb[_xmb_icon].first=0;
 		if(n==_xmb_icon_)
 		{
-			if(egg) // :)
+			/*if(egg) // :)
 				display_img_angle(xpos-(36-mo_of)/2, 230-(36-mo_of), 164-mo_of, 164-mo_of, 128, 128, 0.8f, 128, 128, angle);
-			else
+			else*/
 				display_img(xpos-(36-mo_of)/2, 230-(36-mo_of), 164-mo_of, 164-mo_of, 128, 128, 0.8f, 128, 128);
 			set_texture(xmb_col, 300, 30); //column name
 			display_img(xpos-86, 340, 300, 30, 300, 30, 0.7f, 300, 30);
@@ -17367,13 +17346,13 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 		}
 		else
 		{
-			if(egg)
+			/*if(egg)
 			{
 				if(n==xmb_icon-1 && _xmb_x_offset>0) display_img_angle(xpos-(mo_of)/2, 230-(mo_of), 128+mo_of, 128+mo_of, 128, 128, 0.0f, 128, 128, angle);
 				else if(n==xmb_icon+1 && _xmb_x_offset<0) display_img_angle(xpos-(mo_of)/2, 230-(mo_of), 128+mo_of, 128+mo_of, 128, 128, 0.0f, 128, 128, angle);
 				else display_img_angle(xpos, 230, 128, 128, 128, 128, 0.0f, 128, 128, angle);
 			}
-			else
+			else */
 			{
 				if(n==xmb_icon-1 && _xmb_x_offset>0) display_img(xpos-(mo_of)/2, 230-(mo_of), 128+mo_of, 128+mo_of, 128, 128, 0.0f, 128, 128);
 				else if(n==xmb_icon+1 && _xmb_x_offset<0) display_img(xpos-(mo_of)/2, 230-(mo_of), 128+mo_of, 128+mo_of, 128, 128, 0.0f, 128, 128);
@@ -17459,9 +17438,10 @@ void draw_xmb_bare(u8 _xmb_icon, u8 _all_icons, bool recursive, int _sub_level)
 {
 
 	ClearSurface();
-	if(xmb_sparks!=0) draw_stars();
+	if(!use_drops && xmb_sparks!=0) draw_stars();
 	set_texture( text_bmp, 1920, 1080);
 	display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+	if(use_drops && xmb_sparks!=0) draw_stars();
 	draw_xmb_clock(xmb_clock, (_all_icons!=2 ? _xmb_icon : -1));
 
 	if(_all_icons==1) draw_xmb_icons(xmb, _xmb_icon, xmb_slide, xmb_slide_y, recursive, _sub_level);
@@ -17861,10 +17841,11 @@ int open_theme_menu(char *_caption, int _width, theme_def *list, int _max, int _
 		}
 
 		ClearSurface();
-		if(xmb_sparks!=0) draw_stars();
+		if(!use_drops && xmb_sparks!=0) draw_stars();
 
 		set_texture( text_bmp, 1920, 1080);
 		display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+		if(use_drops && xmb_sparks!=0) draw_stars();
 
 		draw_xmb_clock(xmb_clock, 0);
 		draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
@@ -18080,10 +18061,11 @@ int open_list_menu(char *_caption, int _width, t_opt_list *list, int _max, int _
 		}
 
 		ClearSurface();
-		if(xmb_sparks!=0) draw_stars();
+		if(!use_drops && xmb_sparks!=0) draw_stars();
 
 		set_texture( text_bmp, 1920, 1080);
 		display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+		if(use_drops && xmb_sparks!=0) draw_stars();
 
 		draw_xmb_clock(xmb_clock, 0);
 		draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
@@ -18735,7 +18717,7 @@ void add_music_column()
 
 void add_video_column()
 {
-	if(is_video_loading || xmb[5].init) return;
+	if(is_video_loading || xmb[5].init || !xmb[6].init) return;
 //	if(is_video_loading || is_music_loading || is_photo_loading || is_retro_loading) return;
 	is_video_loading=1;
 	xmb[5].init=1;
@@ -19264,6 +19246,16 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 		char t_ip[512];
 		u8 *g_icon=xmb[0].data;
 
+		if(!xmb[5].init || !xmb[5].size)
+		{
+			xmb[5].first=0;	
+			xmb[5].size=0;
+			add_xmb_member(xmb[5].member, &xmb[5].size, (char*)"Link Video Library to Showtime", (char*)"Make XMB\xE2\x84\xA2 video files available to Showtime",
+					/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_showtime, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
+			add_xmb_member(xmb[5].member, &xmb[5].size, (char*)"Start Showtime Media Center", (char*)"Launch Showtime to play movies and listen to music",
+					/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_showtime, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
+		}
+
 		if(!xmb[6].init)
 		{
 			xmb[6].first=0;	
@@ -19446,6 +19438,9 @@ void init_xmb_icons(t_menu_list *list, int max, int sel)
 //		mip_texture( text_FMS+(31*65536), text_bmp, 320, 178, -2); // -> 216x183
 		mip_texture( xmb_icon_star_small, xmb_icon_star, 128, 128, -4);
 		load_texture(xmb_icon_retro, xmbicons2, 128);
+		sprintf(auraBG, "%s/DROPS.PNG", app_usrdir);
+		load_texture(text_DROPS, auraBG, 256);
+
 
 		if(cover_mode==8)
 		{
@@ -19483,15 +19478,6 @@ void init_xmb_icons(t_menu_list *list, int max, int sel)
 
 			//video column
 			sprintf(xmb[5].name, "Video");
-			if(!xmb[5].init)
-			{
-				xmb[5].first=0;	
-				xmb[5].size=0;
-				add_xmb_member(xmb[5].member, &xmb[5].size, (char*)"Link Video Library to Showtime", (char*)"Make XMB\xE2\x84\xA2 video files available to Showtime",
-						/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_showtime, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
-				add_xmb_member(xmb[5].member, &xmb[5].size, (char*)"Start Showtime Media Center", (char*)"Launch Showtime to play movies and listen to music",
-						/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_showtime, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
-			}
 
 			//game column
 			sprintf(xmb[6].name, "Game");
@@ -19651,28 +19637,54 @@ void draw_xmb_icon_text(int _xmb_icon)
 
 void draw_stars()
 {
-	for(int n=0; n<MAX_STARS; n++)
+
+	if(use_drops) set_texture(text_DROPS, 256, 256);
+
+	for(int n=0; n<(use_drops?64:MAX_STARS); n++)
 	{
-		draw_square(((float)stars[n].x/1920.0f-0.5f)*2.0f, (0.5f-(float)stars[n].y/1080.0f)*2.0f, (stars[n].size/1920.f), (stars[n].size/1080.f), 0.0f, ( (XMB_SPARK_COLOR&0xffffff00) | stars[n].bri));
 		int move_star= rndv(10);
-		if(move_star>4) 
-			{stars[n].x++; } 
-		else 
-			{stars[n].x--; }
 
-		if(move_star>3) 
-			{stars[n].y++; } 
-		if(move_star==2) 
-			{stars[n].y--; }
-
-		if(move_star>6) stars[n].bri-=4;
-		if(stars[n].x>1919 || stars[n].y>1079 || stars[n].x<1 || stars[n].y<1 || stars[n].bri<4)
+		if(use_drops)
 		{
-			stars[n].x=rndv(1920);
-			if(cover_mode==8) stars[n].y=rndv(360)+360;
-			else stars[n].y=rndv(1080);
-			stars[n].bri=rndv(222);
-			stars[n].size=rndv(XMB_SPARK_SIZE)+1;
+			display_img(stars[n].x*64, stars[n].y, 256, 256, 256, 256, 0.85f, 256, 256);
+
+			if(move_star>4) 
+				{stars[n].y+=24; } 
+			else 
+				{stars[n].y+=16; }
+
+			if(stars[n].x>1919 || stars[n].y>1016)
+			{
+				stars[n].x=rndv(28);
+				stars[n].y=rndv(256);
+				stars[n].bri=rndv(200);
+				stars[n].size=rndv(XMB_SPARK_SIZE)+1;
+			}
+		}
+		else
+		{
+
+			draw_square(((float)stars[n].x/1920.0f-0.5f)*2.0f, (0.5f-(float)stars[n].y/1080.0f)*2.0f, (stars[n].size/1920.f), (stars[n].size/1080.f), 0.0f, ( (XMB_SPARK_COLOR&0xffffff00) | stars[n].bri));
+
+			if(move_star==4) 
+				{stars[n].x++; } 
+			else if(move_star==5) 
+				{stars[n].x--; }
+
+			if(move_star>3) 
+				{stars[n].y++; } 
+			if(move_star==2) 
+				{stars[n].y+=2; }
+
+			if(move_star>6) stars[n].bri-=4;
+			if(stars[n].x>1919 || stars[n].y>1079 || stars[n].x<1 || stars[n].y<1 || stars[n].bri<4)
+			{
+				stars[n].x=rndv(1920);
+				if(cover_mode==8) stars[n].y=rndv(360)+360;
+				else stars[n].y=rndv(1080);
+				stars[n].bri=rndv(222);
+				stars[n].size=rndv(XMB_SPARK_SIZE)+1;
+			}
 		}
 	}
 }
@@ -19924,18 +19936,12 @@ void draw_whole_xmb(u8 mode)
 	else if(xmb_icon==8 && xmb[8].init==0) add_emulator_column();
 
 	if(xmb_slide_step!=0 || xmb_slide_step_y!=0 || (xmb_game_bg==0 && xmb_cover==0)) xmb_bg_show=0;
-	if(xmb_sparks==1 || (xmb_sparks==2 && xmb_bg_show==0)) draw_stars();
+	if(!use_drops) if(xmb_sparks==1 || (xmb_sparks==2 && xmb_bg_show==0)) draw_stars();
 
 	if(!xmb_bg_show) set_texture( text_bmp, 1920, 1080); else set_texture( text_FONT, 1920, 1080);
 	display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
 
-/*	set_texture( text_bmp, 1920, 1080);
-	display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
-	if(xmb_bg_show) 
-	{ 
-		set_texture( text_FONT, 1920, 1080);
-		display_img(0, 0, 1920, 1080, 1920, 1080, 0.8f, 1920, 1080);
-	} */
+	if(use_drops) if(xmb_sparks==1 || (xmb_sparks==2 && xmb_bg_show==0)) draw_stars();
 
 	draw_xmb_clock(xmb_clock, 0);
 	draw_xmb_legend(xmb_icon);
@@ -20203,7 +20209,7 @@ int main(int argc, char **argv)
 	// allocate buffers for images (one big buffer = 76MB)
 	// XMMB mode uses 7 frame buffers (56MB)
 	u32 buf_align= FB(1);
-	u32 frame_buf_size = (buf_align * 9)+4976640;// for text_bmpS 320x320x12 -> 1920*648 * 4
+	u32 frame_buf_size = (buf_align * 9)+5324800;// for text_bmpS 320x320x13 -> 1920*648 * 4
 	frame_buf_size = ( frame_buf_size + 0xfffff ) & ( ~0xfffff );
 
 	text_bmp = (u8 *) memalign(0x100000, frame_buf_size);
@@ -20267,6 +20273,7 @@ int main(int argc, char **argv)
 	text_bmpIC = text_bmpS + buf_align2 * 9;
 
 	text_TEMP  = text_bmpS + buf_align2 * 10; //+11
+	text_DROPS = text_bmpS + buf_align2 * 12;
 
 
 //	ClearSurface(); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x000000ff);
@@ -22198,7 +22205,7 @@ switch_ntfs:
 	 if ((old_pad & BUTTON_START) &&  ( (new_pad & BUTTON_DOWN) || (new_pad & BUTTON_UP)) && multiStreamStarted==1) { //mp3 volume
 		if((new_pad & BUTTON_UP)) mp3_volume+=0.05f; else mp3_volume-=0.05f;
 		if(mp3_volume<0.0f) mp3_volume=0.0f;
-		new_pad=0; old_pad=0;
+		new_pad=0;
 		set_channel_vol(nChannel, mp3_volume, 0.1f);
 	 }
 
@@ -22217,7 +22224,7 @@ switch_ntfs:
 	 if (((old_pad & BUTTON_SELECT) &&  (new_pad & BUTTON_CIRCLE)) && cover_mode!=5 && (cover_mode!=8 || (cover_mode==8 && (xmb_icon==6 || xmb_icon==7))) )
  	 {
 rename_title:
-		 new_pad=0; old_pad=0;
+		 new_pad=0;
 		 xmb_bg_show=0; xmb_bg_counter=200;
 		 if((strstr(menu_list[game_sel].path, "/dev_hdd0")!=NULL || strstr(menu_list[game_sel].path, "/dev_usb")!=NULL) && strstr(menu_list[game_sel].content, "PS3")!=NULL)
 		 {
@@ -22368,13 +22375,34 @@ next_for_FM:
 		goto force_reload;
 		}
 
+	    if ( (old_pad & BUTTON_SELECT) && (new_pad & BUTTON_START))
+		{	
+			if(cover_mode==5) { new_pad=0; goto from_fm; }
+open_file_manager:
+
+			state_draw=1; c_opacity=0xff; c_opacity2=0xff;
+			if(!lock_fileman)
+			{
+				if(cover_mode!=5) last_cover_mode=cover_mode;			
+				cover_mode=5;
+				counter_png=0;
+				state_read=1;
+				state_draw=1;
+				memset(text_bmpUPSR, 0, 8294400);
+				//new_pad=0;// old_pad=0;
+				set_fm_stripes();
+				old_fi=-1;
+				goto skip_to_FM;
+			}
+		}
+
 //	 if ((old_pad & BUTTON_SELECT) &&  (new_pad & BUTTON_L1) &&  (lock_display_mode==-1 || cover_mode==5) ) {
-	 if ( ((new_pad & BUTTON_L1) || ((old_pad & BUTTON_SELECT) &&  (new_pad & BUTTON_L1))) &&  (lock_display_mode==-1 || cover_mode==5) ) {
+	 if ( ((new_pad & BUTTON_L1) || ((old_pad & BUTTON_SELECT) &&  ( (new_pad & BUTTON_L1) || (new_pad & BUTTON_START) )) ) &&  (lock_display_mode==-1 || cover_mode==5) ) {
 		//if(cover_mode==5) goto next_for_FM;
 		c_opacity_delta=16;	dimc=0; dim=1;
 		if(cover_mode==3) slide_screen_right(text_FONT); else
 		if(cover_mode==4 || cover_mode==5) slide_screen_right(text_bmpUPSR); else slide_screen_right(text_bmp);
-
+from_fm:
 		if(cover_mode==5 || cover_mode==6) {
 			load_texture(text_bmpUPSR, playBGR, 1920);
 			load_texture(text_legend, legend, 1665);
@@ -22421,36 +22449,6 @@ next_for_FM:
 		goto force_reload;
 		}
 
-
-	    if ( (old_pad & BUTTON_SELECT) && (new_pad & BUTTON_START))
-		{	
-			if(cover_mode==5) new_pad=0;
-open_file_manager:
-
-			state_draw=1; c_opacity=0xff; c_opacity2=0xff;
-			if(!lock_fileman)
-			{
-				if(cover_mode!=5) last_cover_mode=cover_mode;			
-				cover_mode=5;
-				counter_png=0;
-				state_read=1;
-				state_draw=1;
-				memset(text_bmpUPSR, 0, 8294400);
-				//new_pad=0;// old_pad=0;
-
-				load_texture(text_BLU_1, iconBLU, 320);
-				load_texture(text_NET_6, iconNET, 320);
-				load_texture(text_OFF_2, iconOFF, 320);
-				load_texture(text_CFC_3, iconCFC, 320);
-				load_texture(text_SDC_4, iconSDC, 320);
-				load_texture(text_MSC_5, iconMSC, 320);
-				set_fm_stripes();
-				old_fi=-1;
-			}
-		}
-
-	    if (( (old_pad & BUTTON_L2) && (old_pad & BUTTON_R2)) || (ss_timer>=(ss_timeout*60) && ss_timeout) || www_running) screen_saver();
-
 	    if ( (old_pad & BUTTON_START) && (new_pad & BUTTON_SELECT))
 		{	
 			char reload_self[128];
@@ -22468,6 +22466,10 @@ open_file_manager:
 				}
 			}
 		}
+
+
+	    if (( (old_pad & BUTTON_L2) && (old_pad & BUTTON_R2)) || (ss_timer>=(ss_timeout*60) && ss_timeout) || www_running) screen_saver();
+
 
 	if(force_update_check==1) {check_for_update(); force_update_check=0;}
 	if(cover_mode==5) {goto skip_to_FM;}	
@@ -24732,7 +24734,7 @@ cancel_exit_2:
 skip_1:
 
 skip_to_FM:
-	if((new_pad & BUTTON_SQUARE) && cover_mode==8) egg=1-egg;
+	if((new_pad & BUTTON_SQUARE) && cover_mode==8) {egg=1-egg; use_drops=(egg==1);}
 
 	if ( ( ((new_pad & BUTTON_SQUARE) && cover_mode!=5 && cover_mode!=8) || ((new_pad & BUTTON_TRIANGLE) && cover_mode==8)) && game_sel<max_menu_list && max_menu_list>0 && (cover_mode!=8 || (cover_mode==8 && ( (xmb_icon==6 && xmb[xmb_icon].member[xmb[xmb_icon].first].type==1 && xmb[xmb_icon].size>1) || (xmb_icon==5 && xmb[xmb_icon].member[xmb[xmb_icon].first].type==2) || (xmb_icon==7 && xmb[xmb_icon].size)))) ) {
 		new_pad=0;

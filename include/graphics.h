@@ -58,6 +58,7 @@ extern uint64_t freeSpace;
 
 extern char bluray_game[64];
 
+extern float angle;
 //extern int cover_mode;
 //extern unsigned icon_raw[8192];
 
@@ -65,6 +66,7 @@ void put_vertex(float x, float y, float z, u32 color);
 void put_texture_vertex(float x, float y, float z, float tx, float ty);
 
 void draw_square(float x, float y, float w, float h, float z, u32 rgba);
+void draw_square_angle(float x, float y, float w, float h, float z, u32 color, float angle);
 void draw_triangle(float x, float y, float w, float h, float z, u32 rgba);
 void utf8_to_ansi(char *utf8, char *ansi, int len);
 

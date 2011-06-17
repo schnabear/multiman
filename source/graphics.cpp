@@ -164,63 +164,6 @@ static void *localAllocAlign(const u32 alignment, const u32 size)
 }
 
 
-void draw_square(float x, float y, float w, float h, float z, u32 color)
-{
-	
-	vertex_color[vert_indx].x = x; 
-	vertex_color[vert_indx].y = y; 
-	vertex_color[vert_indx].z = z; 
-	vertex_color[vert_indx].color=color;
-
-	vertex_color[vert_indx+1].x = x+w; 
-	vertex_color[vert_indx+1].y = y; 
-	vertex_color[vert_indx+1].z = z; 
-	vertex_color[vert_indx+1].color=color;
-
-	vertex_color[vert_indx+2].x = x+w; 
-	vertex_color[vert_indx+2].y = y-h; 
-	vertex_color[vert_indx+2].z = z; 
-	vertex_color[vert_indx+2].color=color;
-
-	vertex_color[vert_indx+3].x = x; 
-	vertex_color[vert_indx+3].y = y-h; 
-	vertex_color[vert_indx+3].z = z; 
-	vertex_color[vert_indx+3].color=color;
-
-	cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_QUADS, vert_indx, 4);
-	vert_indx+=4;
-
-}
-
-/*
-void draw_triangle(float x, float y, float w, float h, float z, u32 color)
-{
-	
-	vertex_color[vert_indx].x = x; 
-	vertex_color[vert_indx].y = y; 
-	vertex_color[vert_indx].z = z; 
-	vertex_color[vert_indx].color=color;
-
-	vertex_color[vert_indx+1].x = x+(w/2); 
-	vertex_color[vert_indx+1].y = y-h; 
-	vertex_color[vert_indx+1].z = z; 
-	vertex_color[vert_indx+1].color=color;
-
-	vertex_color[vert_indx+2].x = x+(w/2); 
-	vertex_color[vert_indx+2].y = y-h; 
-	vertex_color[vert_indx+2].z = z; 
-	vertex_color[vert_indx+2].color=color;
-
-	vertex_color[vert_indx+3].x = x+w; 
-	vertex_color[vert_indx+3].y = y-(h/2); 
-	vertex_color[vert_indx+3].z = z; 
-	vertex_color[vert_indx+3].color=color;
-
-	cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_QUADS, vert_indx, 4);
-	vert_indx+=4;
-
-}
-*/
 void put_vertex(float x, float y, float z, u32 color)
 {
 	vertex_color[vert_indx].x = x; 
@@ -1541,4 +1484,67 @@ void display_img_angle(int x, int y, int width, int height, int tx, int ty, floa
 
     cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_TRIANGLE_STRIP, vert_texture_indx, 4 ); //CELL_GCM_PRIMITIVE_TRIANGLE_STRIP
     vert_texture_indx+=4;
+}
+
+void draw_square(float x, float y, float w, float h, float z, u32 color)
+{
+	
+	vertex_color[vert_indx].x = x; 
+	vertex_color[vert_indx].y = y; 
+	vertex_color[vert_indx].z = z; 
+	vertex_color[vert_indx].color=color;
+
+	vertex_color[vert_indx+1].x = x+w; 
+	vertex_color[vert_indx+1].y = y; 
+	vertex_color[vert_indx+1].z = z; 
+	vertex_color[vert_indx+1].color=color;
+
+	vertex_color[vert_indx+2].x = x+w; 
+	vertex_color[vert_indx+2].y = y-h; 
+	vertex_color[vert_indx+2].z = z; 
+	vertex_color[vert_indx+2].color=color;
+
+	vertex_color[vert_indx+3].x = x; 
+	vertex_color[vert_indx+3].y = y-h; 
+	vertex_color[vert_indx+3].z = z; 
+	vertex_color[vert_indx+3].color=color;
+
+	cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_QUADS, vert_indx, 4);
+	vert_indx+=4;
+
+}
+
+void draw_square_angle(float _x, float _y, float w, float h, float z, u32 color, float _angle)
+{
+	int _radius;
+	(void) w;
+	(void) h;
+
+	_radius = (int)(((float) 540.f * sqrt(2.f))/2.f); // diagonal/2 -> works for square textures at the moment
+
+	float x=_x+(float)angle_coord_x(_radius, _angle)/1920.f;
+	float y=_y+(float)angle_coord_y(_radius, _angle)/1080.f;
+
+	vertex_color[vert_indx].x = x; 
+	vertex_color[vert_indx].y = y; 
+	vertex_color[vert_indx].z = z; 
+	vertex_color[vert_indx].color=color;
+
+	vertex_color[vert_indx+1].x = x+w; 
+	vertex_color[vert_indx+1].y = y; 
+	vertex_color[vert_indx+1].z = z; 
+	vertex_color[vert_indx+1].color=color;
+
+	vertex_color[vert_indx+2].x = x+w; 
+	vertex_color[vert_indx+2].y = y-h; 
+	vertex_color[vert_indx+2].z = z; 
+	vertex_color[vert_indx+2].color=color;
+
+	vertex_color[vert_indx+3].x = x; 
+	vertex_color[vert_indx+3].y = y-h; 
+	vertex_color[vert_indx+3].z = z; 
+	vertex_color[vert_indx+3].color=color;
+
+	cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_QUADS, vert_indx, 4);
+	vert_indx+=4;
 }
