@@ -288,8 +288,8 @@ int initDisplay(void)
 	if (ret != CELL_OK) return -1;
 
 //	cellGcmSetFlipMode(CELL_GCM_DISPLAY_VSYNC);
-//	cellGcmSetFlipMode(CELL_GCM_DISPLAY_HSYNC);
-	cellGcmSetFlipMode(CELL_GCM_DISPLAY_HSYNC_WITH_NOISE);
+	cellGcmSetFlipMode(CELL_GCM_DISPLAY_HSYNC);
+//	cellGcmSetFlipMode(CELL_GCM_DISPLAY_HSYNC_WITH_NOISE);
 
 	CellGcmConfig config;
 	cellGcmGetConfiguration(&config);
