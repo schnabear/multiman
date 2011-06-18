@@ -566,11 +566,11 @@ int my_game_copy_pfsm(char *path, char *path2);
 #endif
 
 #define	GAME_INI_VER	"MMGI0100" //PS3GAME.INI	game flags (submenu)
-#define	GAME_STATE_VER	"MMLS0104" //LSTAT.BIN		multiMAN last state data
-#define	GAME_LIST_VER	"MMGL0103" //LLIST.BIN		cache for game list
-#define	XMB_COL_VER		"MMXC0106" //XMBS.00x		xmb[?] structure (1 XMMB column)
+#define	GAME_STATE_VER	"MMLS0105" //LSTAT.BIN		multiMAN last state data
+#define	GAME_LIST_VER	"MMGL0104" //LLIST.BIN		cache for game list
+#define	XMB_COL_VER		"MMXC0107" //XMBS.00x		xmb[?] structure (1 XMMB column)
 
-char current_version[9]="02.00.05";
+char current_version[9]="02.01.00";
 char current_version_NULL[10];
 char versionUP[64];
 
@@ -19777,9 +19777,9 @@ void draw_xmb_legend(const int _xmb_icon)
 			put_texture_with_alpha_gen( text_MSG, text_DOX+(dox_cross_x	*4 + dox_cross_y	* dox_width*4), dox_cross_w,	dox_cross_h,	dox_width, 300, 8, 5);
 		}
 
-		if(_xmb_icon==4 || _xmb_icon==6 || _xmb_icon==7 || _xmb_icon==8)
+		if(_xmb_icon==4 || _xmb_icon==6 || _xmb_icon==8)
 		{
-			if(_xmb_icon==6 || _xmb_icon==7)
+			if(_xmb_icon==6)
 				print_label_ex( 0.17f, 0.55f, 0.6f, 0xffd0d0d0, (char*)": Group Titles by Genre", 1.00f, 0.0f, 2, 6.40f, 18.0f, 0);
 			else if(_xmb_icon==8)
 				print_label_ex( 0.17f, 0.55f, 0.6f, 0xffd0d0d0, (char*)": Group ROMs by Emulator", 1.00f, 0.0f, 2, 6.40f, 18.0f, 0);
@@ -20853,17 +20853,11 @@ int main(int argc, char **argv)
 	sprintf(iconSDC, "%s/SDC.JPG",app_usrdir);
 	sprintf(iconMSC, "%s/MSC.JPG",app_usrdir);
 	sprintf(playBG,  "%s/FMS.PNG",app_usrdir);
-
-//	if(c_firmware==3.41f)
-//		sprintf(legend, "%s/LEGEND0.PNG", app_usrdir);
-//	else
 	sprintf(legend, "%s/LEGEND2.PNG", app_usrdir);
 
 	sprintf(versionUP,  "%s/VERSION.DAT",app_usrdir);
 
-
-
-	sprintf(filename,  "%s/LBOX.PNG",app_usrdir);
+	sprintf(filename,  "%s/DROPS.PNG",app_usrdir);
 	if(!exist(filename) || !exist(xmbdevs)) {
 		dialog_ret=0;
 		ret = cellMsgDialogOpen2( type_dialog_ok, "WARNING:\n\nYour installation of multiMAN is incomplete!\nPlease install BASE or FULL version or you may experience graphics display problems!", dialog_fun2, (void*)0x0000aaab, NULL );					
@@ -20873,10 +20867,7 @@ int main(int argc, char **argv)
 	set_texture( text_BOOT, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 	flip();
 
-//	load_texture(text_bmpBG, userBG, 1920);
-
 	load_texture(text_bmpUPSR, playBGR, 1920);
-
 	load_texture(text_bmpIC, blankBG, 320);
 	load_texture(text_HDD, iconHDD, 320);
 	load_texture(text_USB, iconUSB, 320);
@@ -20906,13 +20897,6 @@ int main(int argc, char **argv)
 
 	sprintf(game_cache_dir, "%s/game_cache",app_usrdir);
 	mkdir(game_cache_dir, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-
-
-
-//	ClearSurface(); //draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
-//	set_texture( text_bmpUBG, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
-//	cellDbgFontPrintf( 0.27f, 0.85f, 1.0f, 0x90909090, "multiMAN is checking system configuration...");
-//	cellDbgFontDrawGcm(); setRenderColor();	flip();
 
 	sc36_path_patch=0;
 
@@ -20976,16 +20960,6 @@ int main(int argc, char **argv)
 		fread((void *) bdemu, 488, 1, fpV);
 		fclose(fpV);
 
-//		sprintf(filename, "%s/BDEMU355.BIN", app_usrdir);
-//		fpV = fopen ( filename, "rb" );
-//		fseek(fpV, 0, SEEK_SET);
-//		fread((void *) bdemu355, 576, 1, fpV);
-//		fclose(fpV);
-
-//		ClearSurface(); //draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
-//		set_texture( text_bmpUBG, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
-//		cellDbgFontPrintf( 0.27f, 0.85f, 1.0f, 0x90909090, "multiMAN is enabling BD-ROM emulator...");
-//		cellDbgFontDrawGcm(); setRenderColor();	flip();
 		payload=0;
 		psgroove_main(0);
 
@@ -21080,17 +21054,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-//	ClearSurface(); //draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
-//	set_texture( text_bmpUBG, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
-//	cellDbgFontPrintf( 0.29f, 0.85f, 1.0f, 0x90909090, "multiMAN initialization completed.");
-//	cellDbgFontDrawGcm(); setRenderColor();	
-//	flip();
-//	sprintf(avchdBG, "%s/AVCHD.JPG",app_usrdir);
-
-	//parse_ini(options_ini,0);
 	parse_color_ini();
-
-//	if(load_last_state==1) 
 	parse_last_state();
 	clean_up();
 
@@ -21132,7 +21096,6 @@ int main(int argc, char **argv)
 		memset(&cache_param, 0x00 , sizeof(CellSysCacheParam)) ;
 		strncpy(cache_param.cacheId, app_path, sizeof(cache_param.cacheId)) ;
 		cellSysCacheMount( &cache_param ) ;
-//		sprintf(sys_cache, "%s", cache_param.getCachePath);
 		remove( (char*) "/dev_hdd1/multiMAN" );
 		remove( (char*) "/dev_hdd1/multiMAN.srt" );
 		remove( (char*) "/dev_hdd1/multiMAN.ssa" );
@@ -21143,7 +21106,6 @@ int main(int argc, char **argv)
 	for(int n=0;n<max_hosts;n++)
 		if(host_list[n].port>0)
 			remove(host_list[n].name);
-//			ret = network_com((char*)"GET", (char*)host_list[n].host, host_list[n].port, (char*)"/", (char*) host_list[n].name, 1);//host_list[n].root
 
 	for(int n=0; n<MAX_STARS;n++)
 	{
@@ -21384,19 +21346,6 @@ start_of_loop:
 								sprintf(menu_list[max_menu_list ].content, "%s", "DVD");
 								sprintf(menu_list[max_menu_list ].title_id, "%s", "NO_ID");
 							}
-/*							else
-							{
-								menu_list[max_menu_list ].flags=(1<<11);
-								sprintf(filename, "[Disc] Data");
-								strncpy(menu_list[max_menu_list ].title, filename, 63);
-								menu_list[max_menu_list ].title[63]=0;
-								menu_list[max_menu_list ].cover=-1;
-								sprintf(menu_list[max_menu_list ].path, "/dev_bdvd");
-								sprintf(menu_list[max_menu_list ].entry, "Data Disc");
-								sprintf(menu_list[max_menu_list ].content, "%s", "Data");
-								sprintf(menu_list[max_menu_list ].title_id, "%s", "NO_ID");
-							}*/
-
 						}
 
 						max_menu_list++;
@@ -21684,12 +21633,6 @@ fixed_cover_dm0:
 					sprintf(auraBG, "%s/AUR%i.JPG", app_usrdir, rnd);
 					load_texture(text_bmp, auraBG, 1920);
 
-//					ClearSurface();
-//					set_texture( text_bmp, 1920, 1080); //PIC1.PNG
-//					display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
-//					flip();
-//					gray_texture(text_bmp, 1920, 1080);
-//					if(game_last_page==-1)
 					memcpy(text_FONT, text_bmp + (1920*4*legend_y), (1920*4*legend_h));
 					game_last_page=int(game_sel/8); last_selected=-1;
 
@@ -21799,9 +21742,6 @@ fixed_cover:
 						c_x= 150 + (433*(c_game-4));
 					}
 
-//mip_texture( text_FONT, text_bmpS, 320, 300, 2); //scale to 160x150
-//memcpy(text_bmpS, text_FONT, 160*150*4);
-//blur_texture(text_bmpS, 320, 180, 0, 0, 320, 180, 0, 0, 1);					
 
 					if(menu_list[game_rel].title[0]=='_' || menu_list[game_rel].split) gray_texture(text_bmpS, 320, 320, 0);
 					if(cover_available==0)
@@ -21822,11 +21762,6 @@ fixed_cover:
 
 							if(glo_box==1) put_texture_with_alpha( text_bmp, text_FONT+1024*1024*2, 260, 300, 260, c_x+30, c_y, 0, 0);
 						}
-
-//					ClearSurface();
-//					set_texture( text_bmp, 1920, 1080); //PIC1.PNG
-//					display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
-//					flip();
 
 					}
 
@@ -21911,7 +21846,6 @@ fixed_cover:
 						sprintf(filename, "%s/PS3_GAME/PIC1.PNG", menu_list[game_sel].path);
 					else
 						sprintf(filename, "%s/POSTER.JPG", menu_list[game_sel].path);
-//					if(!exist(filename)) sprintf(filename, "%s/POSTER.PNG", menu_list[game_sel].path);
 
 					if(strstr(menu_list[game_sel].content,"PS3")==NULL) {
 						if(!exist(filename) && strstr(menu_list[game_sel].path,"/pvd_usb")==NULL) 
@@ -21929,12 +21863,6 @@ fixed_cover:
 
 DM2_load_textB:
 					load_texture(text_bmp, filename, 1920);
-/*
-					ClearSurface();
-					set_texture( text_bmp, 1920, 1080); //PIC1.PNG
-					display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
-					flip(); */
-
 					draw_list_text( text_bmp, 1920, 1080, menu_list, max_menu_list, game_sel | (0x10000 * ((menu_list[0].flags & 2048)!=0)), dir_mode, display_mode, cover_mode, c_opacity, 1);
 
 					if(strstr(menu_list[game_sel].content,"PS2")!=NULL)	{sprintf(filename, "%s", ps2png); goto DM2_load_text;}
@@ -22223,10 +22151,6 @@ fixed_cover6:
 					game_rel2=int(game_sel/32)*32;
 					int glo_box=0;
 
-//					sprintf(filename, "%s/CBOX.PNG", app_usrdir);
-//					load_texture(text_FONT+1024*1024*7, filename, 459);
-//					mip_texture( text_FONT+1024*1024*1, text_FONT+1024*1024*7+9420, 459, 356, -2);
-
 					sprintf(filename, "%s/SBOX.PNG", app_usrdir);
 					load_texture(text_FONT+1024*1024*7, filename, 432);
 					mip_texture( text_FONT+1024*1024*1, text_FONT+1024*1024*7, 432, 366, -2); // -> 216x183
@@ -22350,10 +22274,6 @@ fixed_cover_7:
 						c_x= 118 + (int)(216.5f*(c_game-24));
 					}
 
-//mip_texture( text_FONT, text_bmpS, 320, 300, 2); //scale to 160x150
-//memcpy(text_bmpS, text_FONT, 160*150*4);
-//blur_texture(text_bmpS, 320, 180, 0, 0, 320, 180, 0, 0, 1);					
-
 					if(menu_list[game_rel].title[0]=='_' || menu_list[game_rel].split) gray_texture(text_FONT+1024*1024*5, 160, 160, 0);
 					if(cover_available==0)
 						put_texture( text_bmp, text_FONT+1024*1024*5, 160, 88, 160, c_x+7, c_y+62, 2, 0x0080ff80);
@@ -22366,11 +22286,6 @@ fixed_cover_7:
 							put_texture( text_bmp, text_FONT+1024*1024*5, 130, 150, 160, c_x+15, c_y, 0, 0x0080ff60);
 							if(glo_box==1) put_texture_with_alpha( text_bmp, text_FONT+1024*1024*7, 130, 150, 130, c_x+15, c_y, 0, 0);
 						}
-
-//					ClearSurface();
-//					set_texture( text_bmp, 1920, 1080); //PIC1.PNG
-//					display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
-//					flip();
 
 					}
 
@@ -22560,9 +22475,6 @@ rename_title:
 						{
 							pin_result[n]  =0xC2;
 							pin_result[n+1]=0xAE;
-							// pin_result[n+2]=0x20;
-							// test(r): abc
-							// 01234567890123
 							strncpy(pin_result+n+2, pin_result+n+3, strlen(pin_result)-n-3); pin_result[strlen(pin_result)-1]=0;
 						}
 					}
@@ -22614,7 +22526,7 @@ next_for_FM:
 		if(cover_mode==3) {slide_screen_left(text_FONT); load_texture(text_bmpUPSR, playBGR, 1920);} else
 		if(cover_mode==4 || cover_mode==5) slide_screen_left(text_bmpUPSR); else slide_screen_left(text_bmp);
 		last_cover_mode=cover_mode;
-//change_display_mode:
+
 		if(cover_mode==5) 
 		{
 			load_texture(text_bmpUPSR, playBGR, 1920);
@@ -22662,9 +22574,8 @@ open_file_manager:
 			}
 		}
 
-//	 if ((old_pad & BUTTON_SELECT) &&  (new_pad & BUTTON_L1) &&  (lock_display_mode==-1 || cover_mode==5) ) {
+
 	 if ( ((new_pad & BUTTON_L1) || ((old_pad & BUTTON_SELECT) &&  ( (new_pad & BUTTON_L1) || (new_pad & BUTTON_START) )) ) &&  (lock_display_mode==-1 || cover_mode==5) ) {
-		//if(cover_mode==5) goto next_for_FM;
 		c_opacity_delta=16;	dimc=0; dim=1;
 		if(cover_mode==3) slide_screen_right(text_FONT); else
 		if(cover_mode==4 || cover_mode==5) slide_screen_right(text_bmpUPSR); else slide_screen_right(text_bmp);
@@ -22912,10 +22823,7 @@ test_title:
 				cellDbgFontDrawGcm();
 				flip(); 
 
-//		if(strstr(menu_list[game_sel].path,"/dev_hdd0")!=NULL)
 				my_game_test( menu_list[game_sel].path, 0);
-//			else
-//				my_game_test( menu_list[game_sel].path, 1);
 
 		DPrintf("Directories: %i Files: %i\nBig files: %i Split files: %i\n\n", num_directories, file_counter, num_files_big, num_files_split);
 
@@ -23018,8 +22926,6 @@ delete_title:
 					{sprintf(string1,"Done!  Files Deleted: %i Time: %2.2i:%2.2i:%2.2i\n", file_counter, seconds/3600, (seconds/60) % 60, seconds % 60); break;}
 
 					ClearSurface();
-
-//					draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
 					cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
 					
 					if(vflip & 32)
@@ -23135,7 +23041,6 @@ copy_title:
 				{
 					
 					mkdir(hdd_folder, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-					//fix_perm_recursive(hdd_folder);
 					sprintf(name, "%s/%s", hdd_folder, p);	
 					if(exist(name))
 					{
@@ -23355,8 +23260,6 @@ copy_from_bluray:
 				if (cellFsStat(name, &status) == CELL_FS_SUCCEEDED && !parse_ps3_disc((char *) "/dev_bdvd/PS3_DISC.SFB", id2))
 					{
 					
-					// reset to update datas
-					//game_sel=0;
 					old_fi=-1;
 					counter_png=0;
 					forcedevices=(1<<curr_device);
@@ -23437,9 +23340,6 @@ copy_from_bluray:
 						}
 
 						ClearSurface();
-
-//						draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
-
 						cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
 						
 						if(vflip & 32)
@@ -23499,7 +23399,6 @@ copy_from_bluray:
 
 				}
 			}
-			//forcedevices=(1);
 			if(game_sel>max_menu_list-1) game_sel=max_menu_list-1;
 			game_last_page=-1;
 			xmb[6].init=0; xmb[7].init=0;
@@ -23624,7 +23523,6 @@ cancel_theme_exit:
 						open_osk(3, (char*) string1);
 						is_any_xmb_column=xmb_icon;
 						while(1){ 
-							//draw_xmb_bare(2, 1, 0, 0);
 							draw_whole_xmb(xmb_icon);
 							if(osk_dialog==1 || osk_dialog==-1) break;
 							}
@@ -23941,8 +23839,6 @@ retry_showtime_xmb:
 						png_w2=png_w; png_h2=png_h;
 						if(pic_zoom==-1.0f){
 							pic_zoom=1.0f;
-							//if(png_w==1280 && png_h==720) pic_zoom=1920.0f/1280.0f;
-							//if(png_w==640 && png_h==360) pic_zoom=3.0f;
 							if(png_h!=0 && png_h>=png_w && (float)png_h/(float)png_w>=1.77f)
 								pic_zoom=float (1080.0f / png_h);
 							if(png_h!=0 && png_h>=png_w && (float)png_h/(float)png_w<1.77f)
@@ -24001,8 +23897,6 @@ retry_showtime_xmb:
 						png_w2=png_w; png_h2=png_h;
 						if(pic_zoom==-1.0f){
 							pic_zoom=1.0f;
-							//if(png_w==1280 && png_h==720) pic_zoom=1920.0f/1280.0f;
-							//if(png_w==640 && png_h==360) pic_zoom=3.0f;
 							if(png_h!=0 && png_h>=png_w && (float)png_h/(float)png_w>=1.77f)
 								pic_zoom=float (1080.0f / png_h);
 							if(png_h!=0 && png_h>=png_w && (float)png_h/(float)png_w<1.77f)
@@ -24046,7 +23940,6 @@ retry_showtime_xmb:
 
 				}
 
-					//flip();
 					int ci=current_image;
 					to_break=0;
 					char ss_status[8];
@@ -24064,7 +23957,6 @@ retry_showtime_xmb:
 							if(slide_show) sprintf(ss_status, "%s", "Stop"); else sprintf(ss_status, "%s", "Start");
 							sprintf(pic_info,"   Name: %s", xmb[xmb_icon].member[current_image].name); pic_info[95]=0;
 							draw_text_stroke( 0.04f+0.025f, 0.867f, 0.7f ,0xc0a0a0a0, pic_info);
-							//timeinfo = localtime ( &xmb[xmb_icon].member[current_image].time );
 							if(strstr(image_file, ".png")!=NULL || strstr(image_file, ".PNG")!=NULL)
 								sprintf(pic_info,"   Info: PNG %ix%i (Zoom: %3.0f)\n   Date: %s\n[START]: %s slideshow", png_w, png_h, pic_zoom*100.0f, xmb[xmb_icon].member[current_image].subname, ss_status);
 							else
@@ -24300,7 +24192,6 @@ pass_ok:
 			{
 
 				sprintf(filename, "%s/PS3_GAME/USRDIR/EBOOT.BIN", menu_list[game_sel].path);
-//				syscall_mount2((char *)"/dev_usb000", (char *)menu_list[game_sel].path);
 				if(exist(filename))
 				{
 
@@ -25005,7 +24896,7 @@ skip_1:
 
 skip_to_FM:
 
-	if((new_pad & BUTTON_SQUARE) && cover_mode==8 && (xmb_icon==4 || (xmb_icon>=6 && xmb_icon<=8)) && !is_retro_loading && !is_game_loading &&!is_video_loading)
+	if((new_pad & BUTTON_SQUARE) && cover_mode==8 && (xmb_icon==4 || (xmb_icon==6 || xmb_icon==8)) && !is_retro_loading && !is_game_loading &&!is_video_loading)
 	{	// grouping
 		bool use_ab= (old_pad & BUTTON_SELECT) || xmb_icon==4;
 		u8 main_group=xmb[xmb_icon].group & 0x0f;
