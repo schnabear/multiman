@@ -564,7 +564,7 @@ int my_game_copy_pfsm(char *path, char *path2);
 #endif
 
 #define	GAME_INI_VER	"MMGI0100" //PS3GAME.INI	game flags (submenu)
-#define	GAME_STATE_VER	"MMLS0102" //LSTAT.BIN		multiMAN last state data
+#define	GAME_STATE_VER	"MMLS0103" //LSTAT.BIN		multiMAN last state data
 #define	GAME_LIST_VER	"MMGL0103" //LLIST.BIN		cache for game list
 #define	XMB_COL_VER		"MMXC0106" //XMBS.00x		xmb[?] structure (1 XMMB column)
 
@@ -1008,7 +1008,7 @@ Trivia
 3D
 Other*/
 
-static const char retro_groups[][8] = { "SNES", "FCEU", "VBA", "GEN+", "FBANext" };
+static const char retro_groups[][8] = { "Retro", "SNES", "FCEU", "VBA", "GEN+", "FBANext" };
 
 static const char genre[][16] = { 
 "Other",
@@ -4386,6 +4386,8 @@ static int unload_modules()
 		fwrite((char*) &current_right_pane, sizeof(current_right_pane), 1, flist);
 		fwrite((char*) &xmb_icon, sizeof(xmb_icon), 1, flist);
 		fwrite((char*) &xmb[xmb_icon].first, sizeof(xmb[xmb_icon].first), 1, flist);
+		fwrite((char*) &xmb[6].group, sizeof(xmb[6].group), 1, flist);
+		fwrite((char*) &xmb[8].group, sizeof(xmb[8].group), 1, flist);
 		fclose(flist);
 	}
 
@@ -18782,7 +18784,7 @@ void add_emulator_column()
 	if(is_retro_loading || xmb[8].init) return;
 	is_retro_loading=1;
 
-	sprintf(xmb[8].name, "%s", (char*)"Retro"); 
+	sprintf(xmb[8].name, "%s", retro_groups[xmb[8].group]); 
 	draw_xmb_icon_text(8);
 
 	if(is_retro_loading)
@@ -19329,6 +19331,7 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 				{
 					if(!xmb[6].init)
 					{
+						if(xmb[6].group && ( (int)((list[m].user>>16)&0x0f) != (xmb[6].group-1) ) ) continue;
 						if(m==sel) xmb[6].first=xmb[6].size;
 						toff=0;
 						if(list[m].title[0]=='_') toff=1;
@@ -19373,19 +19376,7 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 
 						}
 
-		//					add_xmb_member(xmb[7].member, &xmb[7].size, list[m].title+toff, list[m].path,
-		//					/*type*/1, /*status*/2, /*game_id*/m, /*icon*/xmb_icon_star, 128, 128, /*f_path*/list[m].path, /*i_path*/(char*)"/", list[m].user, list[m].split);
-
 						sort_xmb_col(xmb[6].member, xmb[6].size, first_sort+1);
-						/*
-						if(xmb_icon==6 || xmb_icon==0)
-						{
-							if(xmb[6].size<7)
-								draw_xmb_bare(6, 1, 0, 0);
-							else
-								draw_xmb_bare(6, 1, 1, 0);
-						}
-						*/
 					}
 				}
 				else if(!strcmp(list[m].content, "AVCHD") || !strcmp(list[m].content, "BDMV") || !strcmp(list[m].content, "DVD"))
@@ -19458,6 +19449,11 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 		if(xmb[6].size>1 && xmb[6].first==0) xmb[6].first=1;
 		xmb[6].init=1;
 		xmb[7].init=1;
+		if(xmb[6].group)
+			sprintf(xmb[6].name, "%s", genre[xmb[6].group-1]); 
+		else
+			sprintf(xmb[6].name, "Game"); 
+		if(xmb_icon==6) draw_xmb_icon_text(xmb_icon);
 }
 
 void add_web_column()
@@ -19543,7 +19539,7 @@ void init_xmb_icons(t_menu_list *list, int max, int sel)
 				xmb[7].size=0;
 			}
 
-			sprintf(xmb[8].name, "%s", "Retro");
+			sprintf(xmb[8].name, "%s", retro_groups[xmb[8].group]); 
 
 			draw_xmb_icon_text(xmb_icon);
 		}
@@ -19559,7 +19555,7 @@ void init_xmb_icons(t_menu_list *list, int max, int sel)
 		is_game_loading=0;
 
 		// Retro columm
-		sprintf(xmb[8].name, "Retro"); 
+		sprintf(xmb[8].name, "%s", retro_groups[xmb[8].group]); 
 		if(!xmb[8].init)
 		{
 			xmb[8].first=0; xmb[8].size=0;
@@ -19578,7 +19574,6 @@ void init_xmb_icons(t_menu_list *list, int max, int sel)
 			add_photo_column();
 			add_emulator_column();
 		}
-
 }
 
 void draw_xmb_clock(u8 *buffer, const int _xmb_icon)
@@ -19655,7 +19650,10 @@ void draw_xmb_legend(const int _xmb_icon)
 
 		if(_xmb_icon>=6 && _xmb_icon<=8)
 		{
-			print_label_ex( 0.17f, 0.55f, 0.6f, 0xffd0d0d0, (char*)": Group Content", 1.00f, 0.0f, 2, 6.40f, 18.0f, 0);
+			if(_xmb_icon!=8)
+				print_label_ex( 0.17f, 0.55f, 0.6f, 0xffd0d0d0, (char*)": Group Content by Genre", 1.00f, 0.0f, 2, 6.40f, 18.0f, 0);
+			else
+				print_label_ex( 0.17f, 0.55f, 0.6f, 0xffd0d0d0, (char*)": Group ROMs by Emulator", 1.00f, 0.0f, 2, 6.40f, 18.0f, 0);
 			put_texture_with_alpha_gen( text_MSG, text_DOX+(dox_square_x	*4 + dox_square_y	* dox_width*4), dox_square_w,	dox_square_h,	dox_width, 300, 8, 36);
 		}
 		else
@@ -20488,6 +20486,8 @@ int main(int argc, char **argv)
 				fread((char*) &current_right_pane, sizeof(current_right_pane), 1, flist);
 				fread((char*) &xmb_icon_last, sizeof(xmb_icon), 1, flist);
 				fread((char*) &xmb_icon_last_first, sizeof(xmb[xmb_icon].first), 1, flist);
+				fread((char*) &xmb[6].group, sizeof(xmb[6].group), 1, flist);
+				fread((char*) &xmb[8].group, sizeof(xmb[8].group), 1, flist);
 				if(is_reloaded==1)forcedevices=0x0001;
 			}
 			fclose(flist);
@@ -20498,8 +20498,16 @@ int main(int argc, char **argv)
 	{
 		for(int c=3;c<9;c++)
 		{
-			if(c==5) c=8;
-			read_xmb_column(c);
+			if(c==5 && xmb[8].group)
+			{
+				c=8;
+				if(xmb[8].group)
+					read_xmb_column_type(8, xmb[8].group+7);
+				else
+					read_xmb_column(c);
+			}
+			else
+				read_xmb_column(c);
 		}
 		free_all_buffers();
 		for(int n=0; n<MAX_XMB_TEXTS; n++)
@@ -24796,34 +24804,56 @@ skip_1:
 
 skip_to_FM:
 
-	if(cover_mode==8 && xmb_icon==8 && (new_pad & BUTTON_SQUARE) && !is_retro_loading)
-	{
-		xmb[8].group++;
-		//sprintf(www_info, "%i", xmb[8].group);
-		if(xmb[8].group>5) xmb[8].group=0;
-		if(xmb[8].group)
+	if(cover_mode==8 && xmb_icon>=6 && xmb_icon<=8 && (new_pad & BUTTON_SQUARE) && !is_retro_loading && !is_game_loading &&!is_video_loading)
+	{	// grouping
+		if(xmb_icon==8)
 		{
-			read_xmb_column_type(8, xmb[8].group+7);
-			sprintf(xmb[8].name, "Retro (%s)", retro_groups[xmb[8].group-1]); 
+			xmb[8].group++;
+
+			if(xmb[8].group>5) xmb[8].group=0;
+			if(xmb[8].group)
+			{
+				read_xmb_column_type(8, xmb[8].group+7);
+				sprintf(xmb[8].name, "%s", retro_groups[xmb[8].group]); 
+			}
+			else
+			{
+				read_xmb_column(8);
+				sprintf(xmb[8].name, "Retro"); 
+			}
+			redraw_column_texts(xmb_icon);
+			draw_xmb_icon_text(xmb_icon);
+
+			xmb[8].member[0].data=-1;
+			xmb[8].member[0].status=2;
+			xmb[8].member[0].icon=xmb[0].data;
+			sort_xmb_col(xmb[8].member, xmb[8].size, 1);
+			if(xmb[8].size) xmb[8].first=1;
 		}
-		else
+		else // game/faves
 		{
-			read_xmb_column(8);
-			sprintf(xmb[8].name, "Retro"); 
+			xmb[6].group++;
+			if(xmb[6].group>16) xmb[6].group=0;
+			xmb[6].init=0; xmb[7].init=0;
+			add_game_column(menu_list, max_menu_list, game_sel, 0);
+
+			if(xmb[6].group)
+				sprintf(xmb[6].name, "%s", genre[xmb[6].group-1]); 
+			else
+				sprintf(xmb[6].name, "Game"); 
+
+			redraw_column_texts(xmb_icon);
+			draw_xmb_icon_text(xmb_icon);
 		}
-		redraw_column_texts(8);
-		draw_xmb_icon_text(8);
-		xmb[8].member[0].data=-1;
-		xmb[8].member[0].status=2;
-		xmb[8].member[0].icon=xmb[0].data;
-		sort_xmb_col(xmb[8].member, xmb[8].size, 1);
+
 		for(int n=0; n<MAX_XMB_TEXTS; n++)
 		{
 			xmb_txt_buf[n].used=0;
 			xmb_txt_buf[n].data=text_bmpUPSR+(n*XMB_TEXT_WIDTH*XMB_TEXT_HEIGHT*4);
 		}
 		xmb_txt_buf_max=0;
-		if(xmb[8].size) xmb[8].first=1;
+		xmb_bg_counter=200;
+		xmb_bg_show=0;
 		new_pad=0;
 	}
 
