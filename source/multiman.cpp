@@ -781,23 +781,18 @@ char new_file_name[128];
 char iconHDD[64], iconUSB[64], iconBLU[64], iconNET[64], iconOFF[64], iconSDC[64], iconCFC[64], iconMSC[64];
 char this_pane[256], other_pane[256];
 
- //char filename[1024];
-
  int cover_available=0, cover_available_1=0, cover_available_2=0, cover_available_3=0, cover_available_4=0, cover_available_5=0, cover_available_6=0;
  int scan_avchd=1;
  int expand_avchd=1;
  int mount_bdvd=1;
  int mount_hdd1=1;
-// int mount_dev_flash=0;
+
  int animation=3;
  int direct_launch=1;
  int disable_options=0, force_disable_copy=0;
  int download_covers=0;
  float overscan=0.0f;
-// char overscan_head[16];
-// char overscanS[128]="0";
-// int overscanX=0, overscanY=0;
-//const char *mount_point="/dev_bdvd";
+
  int force_update_check=0;
  int display_mode=0; // 0-All titles, 1-Games only, 2-AVCHD/Video only
  int game_bg_overlay=1;
@@ -994,25 +989,9 @@ using namespace cell::Gcm;
 #define IS_GENRE_MASK	 (15<<16)
 //#define IS_GENRE_CLEAR  ~(IS_GENRE_MASK) // user&= ~IS_GENRE_MASK
 
-/*Action
-Adventure
-Family
-Fighting
-Party
-Platform
-Puzzle
-Role Playing
-Racing
-Shooter
-Sim
-Sports
-Strategy
-Trivia
-3D
-Other*/
-
 static const char retro_groups[][8] = { "Retro", "SNES", "FCEU", "VBA", "GEN+", "FBANext" };
 static const char alpha_groups[][8] = { "All", "A-B", "C-D", "E-F", "G-H", "I-J", "K-L", "M-N", "O-P", "Q-R", "S-T", "U-V", "W-X", "Y-Z", "Other" };
+static const char xmb_columns[][16] = { "Empty", "multiMAN", "Settings", "Photo", "Music", "Video", "Game", "Favorites", "Retro", "Web" };
 
 static const char genre[][16] = { 
 "Other",
@@ -19027,7 +19006,7 @@ void add_settings_column()
 //		add_xmb_member(xmb[2].member, &xmb[2].size, (char*)"Edit multiMAN options", (char*)"Not implemented yet",
 //				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_tool, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
 
-		sprintf(xmb[2].name, "Settings");
+		sprintf(xmb[2].name, "%s", xmb_columns[2]);
 		xmb[2].first=0;	
 		xmb[2].size=0;
 
@@ -19363,7 +19342,7 @@ void add_settings_column()
 
 void add_home_column()
 {
-		sprintf(xmb[1].name, "multiMAN"); xmb[1].first=1; xmb[1].size=0;
+		sprintf(xmb[1].name, "%s", xmb_columns[1]); xmb[1].first=1; xmb[1].size=0;
 		add_xmb_member(xmb[1].member, &xmb[1].size, (char*)"Update", (char*)"Check for multiMAN updates",
 				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_update, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
 		if(lock_fileman)
@@ -19579,16 +19558,16 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 		else
 		{
 			if(alpha_group)
-				sprintf(xmb[6].name, "Game (%s)", alpha_groups[alpha_group]);
+				sprintf(xmb[6].name, "%s (%s)", xmb_columns[6], alpha_groups[alpha_group]);
 			else
-				sprintf(xmb[6].name, "Game"); 
+				sprintf(xmb[6].name, "%s", xmb_columns[6]); 
 		}
 		if(xmb_icon==6) draw_xmb_icon_text(xmb_icon);
 }
 
 void add_web_column()
 {
-		sprintf(xmb[9].name, "Web"); xmb[9].first=0; xmb[9].size=0;
+		sprintf(xmb[9].name, "%s", xmb_columns[9]); xmb[9].first=0; xmb[9].size=0;
 		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)"Download PS3\xE2\x84\xA2 Demos and Utilities", (char*)"Browse PSX Store Website for rich content for your Playstation\xC2\xAE\x33 system",
 				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_globe, 128, 128, /*f_path*/(char*)"http://www.psxstore.com/", /*i_path*/(char*)"/", 0, 0);
 		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)"Download Themes", (char*)"Check for new downloadable themes",
@@ -19650,20 +19629,20 @@ void init_xmb_icons(t_menu_list *list, int max, int sel)
 			add_settings_column();
 			add_web_column();
 
-			sprintf(xmb[4].name, "Music");
-			if(xmb[4].group) sprintf(xmb[4].name, "Music (%s)", alpha_groups[xmb[4].group>>4]);
-			else sprintf(xmb[4].name, "Music"); 
+			sprintf(xmb[4].name, "%s", xmb_columns[4]);
+			if(xmb[4].group) sprintf(xmb[4].name, "%s (%s)", xmb_columns[4], alpha_groups[xmb[4].group>>4]);
+			else sprintf(xmb[4].name, "%s", xmb_columns[4]); 
 
-			sprintf(xmb[3].name, "Photo");
+			sprintf(xmb[3].name, "%s", xmb_columns[3]);
 
 			//video column
-			sprintf(xmb[5].name, "Video");
+			sprintf(xmb[5].name, "%s", xmb_columns[5]);
 
 			//game column
-			sprintf(xmb[6].name, "Game");
+			sprintf(xmb[6].name, "%s", xmb_columns[6]);
 
 			//game favorites
-			sprintf(xmb[7].name, "Favorites");
+			sprintf(xmb[7].name, "%s", xmb_columns[7]);
 			if(!xmb[7].init)
 			{
 				xmb[7].first=0;	
@@ -20686,9 +20665,9 @@ int main(int argc, char **argv)
 				{
 					read_xmb_column(8, alpha_group);
 					if(alpha_group)
-						sprintf(xmb[8].name, "Retro (%s)", alpha_groups[alpha_group]);
+						sprintf(xmb[8].name, "%s (%s)", xmb_columns[8], alpha_groups[alpha_group]);
 					else
-						sprintf(xmb[8].name, "Retro"); 
+						sprintf(xmb[8].name, "%s", xmb_columns[8]); 
 				}
 			}
 			else
@@ -20697,9 +20676,9 @@ int main(int argc, char **argv)
 				{
 					read_xmb_column(c, alpha_group);
 					if(alpha_group)
-						sprintf(xmb[4].name, "Music (%s)", alpha_groups[alpha_group]);
+						sprintf(xmb[4].name, "%s (%s)", xmb_columns[4], alpha_groups[alpha_group]);
 					else
-						sprintf(xmb[4].name, "Music"); 
+						sprintf(xmb[4].name, "%s", xmb_columns[4]); 
 				}
 				else
 					read_xmb_column(c, 0);
@@ -24923,9 +24902,9 @@ skip_to_FM:
 			{
 				read_xmb_column(8, alpha_group);
 				if(alpha_group)
-					sprintf(xmb[8].name, "Retro (%s)", alpha_groups[alpha_group]);
+					sprintf(xmb[8].name, "%s (%s)", xmb_columns[8], alpha_groups[alpha_group]);
 				else
-					sprintf(xmb[8].name, "Retro"); 
+					sprintf(xmb[8].name, "%s", xmb_columns[8]); 
 			}
 			redraw_column_texts(xmb_icon);
 			draw_xmb_icon_text(xmb_icon);
@@ -24940,9 +24919,9 @@ skip_to_FM:
 		{
 			read_xmb_column(4, alpha_group);
 			if(alpha_group)
-				sprintf(xmb[4].name, "Music (%s)", alpha_groups[alpha_group]);
+				sprintf(xmb[4].name, "%s (%s)", xmb_columns[4], alpha_groups[alpha_group]);
 			else
-				sprintf(xmb[4].name, "Music"); 
+				sprintf(xmb[4].name, "%s", xmb_columns[4]); 
 
 			redraw_column_texts(xmb_icon);
 			draw_xmb_icon_text(xmb_icon);
@@ -24966,9 +24945,9 @@ skip_to_FM:
 			else
 			{
 				if(alpha_group)
-					sprintf(xmb[6].name, "Game (%s)", alpha_groups[alpha_group]);
+					sprintf(xmb[6].name, "%s (%s)", xmb_columns[6], alpha_groups[alpha_group]);
 				else
-					sprintf(xmb[6].name, "Game"); 
+					sprintf(xmb[6].name, "%s", xmb_columns[6]); 
 			}
 
 			redraw_column_texts(xmb_icon);
