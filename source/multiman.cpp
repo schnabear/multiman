@@ -4241,10 +4241,11 @@ void delete_xmb_dubs(xmbmem *_xmb, u16 *max)
 		}
 }
 
-void read_xmb_column(int c, u8 group)
+void read_xmb_column(int c, const u8 group)
 {
 	char colfile[128];
 	char string1[9];
+	int backup_group=xmb[c].group;
 	sprintf(colfile, "%s/XMBS.00%i", app_usrdir, c);
 	FILE *flist = fopen(colfile, "rb");
 	if(flist!=NULL)
@@ -4298,10 +4299,13 @@ void read_xmb_column(int c, u8 group)
 			remove(colfile);
 			xmb[c].size=0;
 		}
+		xmb[c].group=backup_group;
+		free_all_buffers();
+		free_text_buffers();
 	}
 }
 
-void read_xmb_column_type(int c, u8 type, u8 group)
+void read_xmb_column_type(int c, u8 type, const u8 group)
 {
 	char colfile[128];
 	char string1[9];
@@ -18522,9 +18526,9 @@ static void add_music_column_thread_entry( uint64_t arg )
 
 	free(pane);
 	}
-	is_music_loading=0;
 	if(xmb_icon_last==4 && (xmb_icon_last_first<xmb[4].size)) { xmb[4].first=xmb_icon_last_first; xmb_icon_last_first=0;xmb_icon_last=0; }
 	save_xmb_column(4);
+	is_music_loading=0;
 	sys_ppu_thread_exit(0);
 }
 
@@ -19647,6 +19651,9 @@ void init_xmb_icons(t_menu_list *list, int max, int sel)
 			add_web_column();
 
 			sprintf(xmb[4].name, "Music");
+			if(xmb[4].group) sprintf(xmb[4].name, "Music (%s)", alpha_groups[xmb[4].group>>4]);
+			else sprintf(xmb[4].name, "Music"); 
+
 			sprintf(xmb[3].name, "Photo");
 
 			//video column
