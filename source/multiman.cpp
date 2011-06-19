@@ -4265,7 +4265,7 @@ void read_xmb_column(int c, u8 group)
 					if(xmb[c].member[n].type!=6 && xmb[c].member[n].type!=7) 
 					{
 						u8 m_grp= (group-1)*2;
-						if( group!=15
+						if( group!=14
 							&& (m_grp+0x41) != xmb[c].member[n].name[0]
 							&& (m_grp+0x42) != xmb[c].member[n].name[0]
 							&& (m_grp+0x61) != xmb[c].member[n].name[0]
@@ -4276,12 +4276,9 @@ void read_xmb_column(int c, u8 group)
 							if(n>=xmb[c].size) break;
 							n--;
 						}
-						else if( group==15
-							&& ( (m_grp+0x41) == xmb[c].member[n].name[0]
-							||  (m_grp+0x42) == xmb[c].member[n].name[0]
-							||  (m_grp+0x61) == xmb[c].member[n].name[0]
-							||  (m_grp+0x62) == xmb[c].member[n].name[0]
-								)
+						else if( group==14
+							&& ( (xmb[c].member[n].name[0]>=0x41 && xmb[c].member[n].name[0]<=0x5a)
+							|| (xmb[c].member[n].name[0]>=0x61 && xmb[c].member[n].name[0]<=0x7a) )
 							)
 						{
 							delete_xmb_member(xmb[c].member, &xmb[c].size, n);
@@ -4345,7 +4342,7 @@ void read_xmb_column_type(int c, u8 type, u8 group)
 				if(xmb[c].member[n].type!=6 && xmb[c].member[n].type!=7) 
 				{
 					u8 m_grp= (group-1)*2;
-					if( group!=15
+					if( group!=14
 						&& (m_grp+0x41) != xmb[c].member[n].name[0]
 						&& (m_grp+0x42) != xmb[c].member[n].name[0]
 						&& (m_grp+0x61) != xmb[c].member[n].name[0]
@@ -4356,12 +4353,9 @@ void read_xmb_column_type(int c, u8 type, u8 group)
 						if(n>=xmb[c].size) break;
 						n--;
 					}
-					else if( group==15
-						&& ( (m_grp+0x41) == xmb[c].member[n].name[0]
-						||  (m_grp+0x42) == xmb[c].member[n].name[0]
-						||  (m_grp+0x61) == xmb[c].member[n].name[0]
-						||  (m_grp+0x62) == xmb[c].member[n].name[0]
-							)
+					else if( group==14
+						&& ( (xmb[c].member[n].name[0]>=0x41 && xmb[c].member[n].name[0]<=0x5a)
+						|| (xmb[c].member[n].name[0]>=0x61 && xmb[c].member[n].name[0]<=0x7a) )
 						)
 					{
 						delete_xmb_member(xmb[c].member, &xmb[c].size, n);
@@ -19445,11 +19439,8 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 									&& (m_grp+0x62) != list[m].title[0]
 									) continue;
 								else if( (xmb[6].group>>4)==15
-									&& ( (m_grp+0x41) == list[m].title[0]
-									||  (m_grp+0x42) == list[m].title[0]
-									||  (m_grp+0x61) == list[m].title[0]
-									||  (m_grp+0x62) == list[m].title[0]
-										)
+									&& ( ( list[m].title[0]>=0x41 && list[m].title[0]<=0x5a)
+									|| (list[m].title[0]>=0x61 && list[m].title[0]<=0x7a) )
 									) continue;
 							}
 						}

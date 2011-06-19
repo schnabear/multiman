@@ -18,7 +18,6 @@
 
 #include "graphics.h"
 
-
 #define ROUNDUP(x, a) (((x)+((a)-1))&(~((a)-1)))
 
 CellDbgFontConsoleId consoleID = CELL_DBGFONT_STDOUT_ID;
@@ -100,17 +99,6 @@ extern int last_selected;
 extern int b_box_opaq;
 extern int b_box_step;
 extern int draw_legend;
-
-/*
-extern long long int last_refreshD;
-typedef struct
-{
-	uint64_t freespace;
-}
-dev_free_spaceL;
-
-dev_free_spaceL dev_free_space[20];
-*/
 
 static void *vertex_program_ucode;
 static void *fragment_program_ucode;
@@ -480,51 +468,6 @@ int DPrintf( const char *string, ... )
 
 	return ret;
 }
-
-/*void utf8_to_ansi(char *utf8, char *ansi, int len)
-{
-u8 *ch= (u8 *) utf8;
-u8 c;
-
-	while(*ch!=0 && len>0){
-
-	// 3, 4 bytes utf-8 code 
-	if(((*ch & 0xF1)==0xF0 || (*ch & 0xF0)==0xe0) && (*(ch+1) & 0xc0)==0x80){
-
-	*ansi++=' '; // ignore
-	len--;
-	ch+=2+1*((*ch & 0xF1)==0xF0);
-	
-	}
-	else 
-	// 2 bytes utf-8 code	
-	if((*ch & 0xE0)==0xc0 && (*(ch+1) & 0xc0)==0x80){
-	
-	c= (((*ch & 3)<<6) | (*(ch+1) & 63));
-
-	if(c>127) c=' ';
-
-	*ansi++=c;
-	len--;
-	ch++;
-	
-	}
-	else {
-	
-	if(*ch<32) *ch=32;
-	*ansi++=*ch;
-	
-	len--;
-
-	}
-
-	ch++;
-	}
-	while(len>0) {
-	*ansi++=0;
-	len--;
-	}
-}*/
 
 void utf8_to_ansi(char *utf8, char *ansi, int len)
 {
