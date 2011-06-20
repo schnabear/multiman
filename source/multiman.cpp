@@ -87,7 +87,7 @@
 #define MB(x) ((x)*1024*1024)	// 1 MB
 #define KB(x) ((x)*1024)		// 1 KB
 
-SYS_PROCESS_PARAM(1200, 0x100000)
+SYS_PROCESS_PARAM(1200, 0x80000)
 
 //colors (COLOR.INI)
 u32 COL_PS3DISC=0xff807000;
@@ -118,14 +118,14 @@ u32 COL_XMB_SUBTITLE=0xf0909090;
 u8	XMB_SPARK_SIZE=4;
 u32 XMB_SPARK_COLOR=0xffffff00;
 
-int th_device_list=1;
-int th_device_separator=1;
-int th_device_separator_y=956;
-int th_legend=1;
-int th_legend_y=853;
-int th_drive_icon=1;
-int th_drive_icon_x=1790;
-int th_drive_icon_y=964;
+bool th_device_list=1;
+bool th_device_separator=1;
+u16 th_device_separator_y=956;
+bool th_legend=1;
+u16 th_legend_y=853;
+bool th_drive_icon=1;
+u16 th_drive_icon_x=1790;
+u16 th_drive_icon_y=964;
 
 
 //NTFS/PFS driver
@@ -154,14 +154,14 @@ _meminfo meminfo;
 	CellAudioPortConfig portConfig;
 	int nChannel;
 
-	int sizeNeeded;
+	u64 sizeNeeded;
 	int *mp3Memory;
 	u64 _mp3_buffer=KB(MP3_MEMORY_KB);
 
 	int mp3_freq=44100;
-	int mp3_durr=0;
+	u32 mp3_durr=0;
 	float mp3_skip=0.f;
-	int mp3_packet=0;
+	u32 mp3_packet=0;
 	float mp3_packet_time=0.001f;
 	char mp3_now_playing[512];
 	float mp3_volume=0.5f;
@@ -193,7 +193,7 @@ u32 frame_index = 0;
 u32 video_buffer;
 int V_WIDTH, V_HEIGHT;//, _V_WIDTH, _V_HEIGHT;
 
-int mp_WIDTH=30, mp_HEIGHT=42; //mouse icon HR
+u8 mp_WIDTH=30, mp_HEIGHT=42; //mouse icon HR
 
 //MP3 defines
 #define SAMPLE_FREQUENCY        (44100)
@@ -201,7 +201,7 @@ int mp_WIDTH=30, mp_HEIGHT=42; //mouse icon HR
 #define MAX_SUBS				(4) //(31)
 
 // for network and file_copy buffering
-#define BUF_SIZE				(4 * 1024 * 1024) 
+#define BUF_SIZE				(3 * 1024 * 1024) 
 
 //folder copy
 #define MAX_FAST_FILES			1
@@ -209,7 +209,7 @@ int mp_WIDTH=30, mp_HEIGHT=42; //mouse icon HR
 
 
 #define MEMORY_CONTAINER_SIZE_WEB (64 * 1024 * 1024) //for web browser
-#define MEMORY_CONTAINER_SIZE (5 * 1024 * 1024) //for OSK, video/photo/music export
+#define MEMORY_CONTAINER_SIZE (8 * 1024 * 1024) //for OSK, video/photo/music export
 uint32_t MEMORY_CONTAINER_SIZE_ACTIVE;
 
 enum {
@@ -217,9 +217,9 @@ enum {
 	CALLBACK_TYPE_REGIST_1,
 	CALLBACK_TYPE_FINALIZE
 };
-int ve_initialized=0;
-int me_initialized=0;
-int pe_initialized=0;
+bool ve_initialized=0;
+bool me_initialized=0;
+bool pe_initialized=0;
 static sys_memory_container_t memory_container;
 static sys_memory_container_t memory_container_web;
 static int ve_result = 0xDEAD;
@@ -342,30 +342,30 @@ u8 drawing_xmb=0;
 float angle=0.f;
 
 static int old_fi=-1;
-int counter_png=0;
-int is_reloaded=0;
+u8 counter_png=0;
+u8 is_reloaded=0;
 u32 fdevices=0;
 u32 fdevices_old=0;
-int take_screenshot=0;
+bool take_screenshot=0;
 //int sub_menu_open=0;
-int pb_step=429;
-int never_used_pfs=1;
+u16 pb_step=429;
+bool never_used_pfs=1;
 
 int repeat_init_delay=60;
 int repeat_key_delay=6;
 int repeat_counter1=repeat_init_delay; //wait before repeat
 int repeat_counter2=repeat_key_delay; // repeat after pause
 
-int repeat_counter3=1; // accelerate repeat (multiplier)
+u8 repeat_counter3=1; // accelerate repeat (multiplier)
 float repeat_counter3_inc=0.f;
-int key_repeat=0;
+bool key_repeat=0;
 
 char time_result[2];
-int seconds_clock=0;
-u8 xmb_legend_drawn=0;
-u8 xmb_info_drawn=0;
-u8 use_analog=0;
-u8 join_copy=0;
+u16 seconds_clock=0;
+bool xmb_legend_drawn=0;
+bool xmb_info_drawn=0;
+bool use_analog=0;
+bool join_copy=0;
 u8 xmb_settings_sel=0;
 
 typedef struct
@@ -381,7 +381,7 @@ unsigned char bdemu[0x1380];
 unsigned char mouse[5120];
 u8 bdemu2_present=0;
 //int to_reboot=0;
-int search_mmiso=0;
+bool search_mmiso=false;
 unsigned int debug_print=102030;
 long long int last_refresh=0;
 CellSysCacheParam cache_param ;
@@ -398,9 +398,9 @@ int c_opacity2=0xff;
 int b_box_opaq= 0xf8; //for display mode 2
 int b_box_step= -4;
 float c_firmware=3.41f;
-int use_symlinks=0;
-int ftp_service=0;
-int ftp_clients=0;
+bool use_symlinks=0;
+bool ftp_service=0;
+u8 ftp_clients=0;
 bool http_active=false;
 
 //nethost
@@ -427,132 +427,132 @@ static SampleRenderWork RenderWork;
 
 int legend_y=760, legend_h=96, last_selected, rnd, game_last_page;
 
-int dox_width=256;
-int dox_height=256;
+u16 dox_width=256;
+u16 dox_height=256;
 
-int dox_cross_x=15;
-int dox_cross_y=14;
-int dox_cross_w=34;
-int dox_cross_h=34;
+u16 dox_cross_x=15;
+u16 dox_cross_y=14;
+u16 dox_cross_w=34;
+u16 dox_cross_h=34;
 
-int dox_circle_x=207;
-int dox_circle_y=14;
-int dox_circle_w=34;
-int dox_circle_h=34;
+u16 dox_circle_x=207;
+u16 dox_circle_y=14;
+u16 dox_circle_w=34;
+u16 dox_circle_h=34;
 
 
-int dox_triangle_x=80;
-int dox_triangle_y=14;
-int dox_triangle_w=34;
-int dox_triangle_h=34;
+u16 dox_triangle_x=80;
+u16 dox_triangle_y=14;
+u16 dox_triangle_w=34;
+u16 dox_triangle_h=34;
 
-int dox_square_x=143;
-int dox_square_y=14;
-int dox_square_w=36;
-int dox_square_h=34;
+u16 dox_square_x=143;
+u16 dox_square_y=14;
+u16 dox_square_w=36;
+u16 dox_square_h=34;
 
-int dox_start_x=12;
-int dox_start_y=106;
-int dox_start_w=42;
-int dox_start_h=36;
+u16 dox_start_x=12;
+u16 dox_start_y=106;
+u16 dox_start_w=42;
+u16 dox_start_h=36;
 
-int dox_select_x=72;
-int dox_select_y=108;
-int dox_select_w=50;
-int dox_select_h=34;
+u16 dox_select_x=72;
+u16 dox_select_y=108;
+u16 dox_select_w=50;
+u16 dox_select_h=34;
 
-int dox_ls_x=132;
-int dox_ls_y=70;
-int dox_ls_w=56;
-int dox_ls_h=56;
+u16 dox_ls_x=132;
+u16 dox_ls_y=70;
+u16 dox_ls_w=56;
+u16 dox_ls_h=56;
 
-int dox_rs_x=196;
-int dox_rs_y=196;
-int dox_rs_w=58;
-int dox_rs_h=56;
+u16 dox_rs_x=196;
+u16 dox_rs_y=196;
+u16 dox_rs_w=58;
+u16 dox_rs_h=56;
 
-int dox_pad_x=7;
-int dox_pad_y=200;
-int dox_pad_w=53;
-int dox_pad_h=53;
+u16 dox_pad_x=7;
+u16 dox_pad_y=200;
+u16 dox_pad_w=53;
+u16 dox_pad_h=53;
 
-int dox_l1_x=130;
-int dox_l1_y=143;
-int dox_l1_w=60;
-int dox_l1_h=24;
+u16 dox_l1_x=130;
+u16 dox_l1_y=143;
+u16 dox_l1_w=60;
+u16 dox_l1_h=24;
 
-int dox_r1_x=194;
-int dox_r1_y=143;
-int dox_r1_w=60;
-int dox_r1_h=24;
+u16 dox_r1_x=194;
+u16 dox_r1_y=143;
+u16 dox_r1_w=60;
+u16 dox_r1_h=24;
 
-int dox_l2_x=2;
-int dox_l2_y=143;
-int dox_l2_w=62;
-int dox_l2_h=24;
+u16 dox_l2_x=2;
+u16 dox_l2_y=143;
+u16 dox_l2_w=62;
+u16 dox_l2_h=24;
 
-int dox_r2_x=66;
-int dox_r2_y=143;
-int dox_r2_w=62;
-int dox_r2_h=24;
+u16 dox_r2_x=66;
+u16 dox_r2_y=143;
+u16 dox_r2_w=62;
+u16 dox_r2_h=24;
 
-int dox_l3_x=68;
-int dox_l3_y=196;
-int dox_l3_w=58;
-int dox_l3_h=56;
+u16 dox_l3_x=68;
+u16 dox_l3_y=196;
+u16 dox_l3_w=58;
+u16 dox_l3_h=56;
 
-int dox_r3_x=132;
-int dox_r3_y=196;
-int dox_r3_w=58;
-int dox_r3_h=56;
+u16 dox_r3_x=132;
+u16 dox_r3_y=196;
+u16 dox_r3_w=58;
+u16 dox_r3_h=56;
 
 //white circle
-int dox_rb1u_x=192;
-int dox_rb1u_y=70;
-int dox_rb1u_w=32;
-int dox_rb1u_h=31;
+u16 dox_rb1u_x=192;
+u16 dox_rb1u_y=70;
+u16 dox_rb1u_w=32;
+u16 dox_rb1u_h=31;
 
 //white circle selected
-int dox_rb1s_x=192;
-int dox_rb1s_y=101;
-int dox_rb1s_w=32;
-int dox_rb1s_h=31;
+u16 dox_rb1s_x=192;
+u16 dox_rb1s_y=101;
+u16 dox_rb1s_w=32;
+u16 dox_rb1s_h=31;
 
 //gray circle
-int dox_rb2u_x=224;
-int dox_rb2u_y=70;
-int dox_rb2u_w=31;
-int dox_rb2u_h=31;
+u16 dox_rb2u_x=224;
+u16 dox_rb2u_y=70;
+u16 dox_rb2u_w=31;
+u16 dox_rb2u_h=31;
 
 //gray circle selected
-int dox_rb2s_x=224;
-int dox_rb2s_y=101;
-int dox_rb2s_w=31;
-int dox_rb2s_h=31;
+u16 dox_rb2s_x=224;
+u16 dox_rb2s_y=101;
+u16 dox_rb2s_w=31;
+u16 dox_rb2s_h=31;
 
 //selection circle
-int dox_rb3s_x=177;
-int dox_rb3s_y=40;
-int dox_rb3s_w=31;
-int dox_rb3s_h=30;
+u16 dox_rb3s_x=177;
+u16 dox_rb3s_y=40;
+u16 dox_rb3s_w=31;
+u16 dox_rb3s_h=30;
 
 //attention sign
-int dox_att_x=1;
-int dox_att_y=65;
-int dox_att_w=44;
-int dox_att_h=39;
+u16 dox_att_x=1;
+u16 dox_att_y=65;
+u16 dox_att_w=44;
+u16 dox_att_h=39;
 
 //white arrow
-int dox_arrow_w_x=44;
-int dox_arrow_w_y=41;
-int dox_arrow_w_w=44;
-int dox_arrow_w_h=44;
+u16 dox_arrow_w_x=44;
+u16 dox_arrow_w_y=41;
+u16 dox_arrow_w_w=44;
+u16 dox_arrow_w_h=44;
 
 //black arrow
-int dox_arrow_b_x=87;
-int dox_arrow_b_y=58;
-int dox_arrow_b_w=44;
-int dox_arrow_b_h=44;
+u16 dox_arrow_b_x=87;
+u16 dox_arrow_b_y=58;
+u16 dox_arrow_b_w=44;
+u16 dox_arrow_b_h=44;
 
 static int unload_modules();
 void draw_text_stroke(float x, float y, float size, u32 color, const char *str);
@@ -561,14 +561,14 @@ void main_mp3( char *temp_mp3);
 
 int my_game_delete(char *path);
 int my_game_copy(char *path, char *path2);
-#if (CELL_SDK_VERSION>0x210001)
+
 int my_game_copy_pfsm(char *path, char *path2);
-#endif
+
 
 #define	GAME_INI_VER	"MMGI0100" //PS3GAME.INI	game flags (submenu)
-#define	GAME_STATE_VER	"MMLS0105" //LSTAT.BIN		multiMAN last state data
-#define	GAME_LIST_VER	"MMGL0104" //LLIST.BIN		cache for game list
-#define	XMB_COL_VER		"MMXC0107" //XMBS.00x		xmb[?] structure (1 XMMB column)
+#define	GAME_STATE_VER	"MMLS0106" //LSTAT.BIN		multiMAN last state data
+#define	GAME_LIST_VER	"MMGL0105" //LLIST.BIN		cache for game list
+#define	XMB_COL_VER		"MMXC0108" //XMBS.00x		xmb[?] structure (1 XMMB column)
 
 char current_version[9]="02.01.00";
 char current_version_NULL[10];
@@ -580,7 +580,7 @@ char last_play[512];
 char last_play_dir[512];
 char last_play_sfo[512];
 
-int first_launch=1;
+bool first_launch=1;
 char app_path[32];
 char app_temp[128];
 char app_usrdir[64];
@@ -782,20 +782,20 @@ char iconHDD[64], iconUSB[64], iconBLU[64], iconNET[64], iconOFF[64], iconSDC[64
 char this_pane[256], other_pane[256];
 
  int cover_available=0, cover_available_1=0, cover_available_2=0, cover_available_3=0, cover_available_4=0, cover_available_5=0, cover_available_6=0;
- int scan_avchd=1;
- int expand_avchd=1;
- int mount_bdvd=1;
- int mount_hdd1=1;
+ u8 scan_avchd=1;
+ u8 expand_avchd=1;
+ u8 mount_bdvd=1;
+ u8 mount_hdd1=1;
 
- int animation=3;
+ u8 animation=3;
  int direct_launch=1;
- int disable_options=0, force_disable_copy=0;
- int download_covers=0;
+ u8 disable_options=0, force_disable_copy=0;
+ u8 download_covers=0;
  float overscan=0.0f;
 
- int force_update_check=0;
- int display_mode=0; // 0-All titles, 1-Games only, 2-AVCHD/Video only
- int game_bg_overlay=1;
+ u8 force_update_check=0;
+ u8 display_mode=0; // 0-All titles, 1-Games only, 2-AVCHD/Video only
+ u8 game_bg_overlay=1;
 
 
 	typedef struct
@@ -890,10 +890,10 @@ net_hosts host_list[10];
 int max_hosts=0;
 
 
-#define MAX_F_FILES 4000
+#define MAX_F_FILES 3000
 typedef struct
 {
-	char 		path[512];
+	char 		path[384];
 	uint64_t	size;
 }
 f_files_stru;
@@ -913,10 +913,10 @@ typedef struct
 	float	scale;
 	float	weight;
 	float	slant;
-	int		font;
+	u8		font;
 	float	hscale;
 	float	vscale;
-	int		centered;
+	u8		centered;
 	float	cut;
 	uint32_t color;
 }
@@ -934,13 +934,13 @@ u8 fm_sel_old=15;
 int game_sel=0;
 int game_sel_last=0;
 int cover_mode=8, initial_cover_mode=8, user_font=1, last_cover_mode=8;
-int dir_mode=2;
-int game_details=2;
-int bd_emulator=1;
+u8 dir_mode=2;
+u8 game_details=2;
+u8 bd_emulator=1;
 int net_available=0;
 union CellNetCtlInfo net_info;
 int net_avail=1;
-int theme_sound=1;
+u8 theme_sound=1;
 
 int copy_file_counter=0;
 //int64_t 
@@ -1065,7 +1065,7 @@ int xmb_txt_buf_max=0;
 
 #define XMB_THUMB_WIDTH 408
 #define XMB_THUMB_HEIGHT 408
-#define MAX_XMB_THUMBS (1920 * 1080 * 4) / (XMB_THUMB_WIDTH * XMB_THUMB_HEIGHT)
+#define MAX_XMB_THUMBS (1920 * 1080 * 3) / (XMB_THUMB_WIDTH * XMB_THUMB_HEIGHT)
 typedef struct
 {
 	int used;
@@ -1081,37 +1081,37 @@ typedef struct
 {
 //	u8 type; //0-list 1-text
 	char label[32];
-	char value[8];
+	char value[4];
 
 }
 xmbopt;
 
 //sys_addr_t vm; //pointer to virtual memory
 
-#define MAX_XMB_MEMBERS 2048
+#define MAX_XMB_MEMBERS 2560
 typedef struct __xmbmem
 {
-	u8 type; //0 unkn, 1 ps3 game, 2 video from gamelist, 3 showtime vid, 4 music, 5 photo, 6 function, 7 setting, 8 snes rom, 9 fceu rom, 10 vba rom, 11 genp rom, 12 fbanext
+	u8 type; //0 unkn, 1 ps3 game, 2 AVCHD/Blu-ray video from gamelist, 3 showtime vid, 4 music, 5 photo, 6 function, 7 setting, 8 snes rom, 9 fceu rom, 10 vba rom, 11 genp rom, 12 fbanext
 	u8 status; //0 idle, 1 loading, 2 loaded
 	bool is_checked;
 	int game_id; //pointer to menu_list[id]
-	int game_split;
-	int game_user_flags;
+	u8 game_split;
+	u32 game_user_flags;
 	char name[128];
 	char subname[96];
 	u8 option_size;
 	u8 option_selected;
-	char optionini[32];
+	char optionini[20];
 	xmbopt	option[MAX_XMB_OPTIONS];
 	int	data; //pointer to text image (xmbtexts) xmb_txt_buf
 	int icon_buf;
 	u8	*icon; //pointer to icon image
 	u16	iconw;
 	u16	iconh;
-	char file_path[128]; //path to entry file
-	char icon_path[128]; //path to entry icon
+	char file_path[384]; //path to entry file
+	char icon_path[256]; //path to entry icon
 }
-xmbmem __attribute__((aligned(8)));
+xmbmem __attribute__((aligned(16)));
 
 #define MAX_XMB_ICONS 10
 typedef struct
@@ -1129,14 +1129,14 @@ typedef struct
 xmb_def;
 xmb_def xmb[MAX_XMB_ICONS]; //xmb[0] can be used as temp column when doing grouping
 
-int xmb_icon=6;				//1 home, 2 settings, 3 photo, 4 music, 5 video, 6 game, 7 faves, 8 retro, 9 web
-int xmb_icon_last=6;
+u8 xmb_icon=6;				//1 home, 2 settings, 3 photo, 4 music, 5 video, 6 game, 7 faves, 8 retro, 9 web
+u8 xmb_icon_last=6;
 u16 xmb_icon_last_first=0;
 int xmb_slide=0;
 int xmb_slide_y=0;
 int xmb_slide_step=0;
 int xmb_slide_step_y=0;
-int xmb_sublevel=0;
+u8 xmb_sublevel=0;
 
 #define MAX_GROUPS (4)
 u8 is_group_mode=0;
@@ -1165,7 +1165,7 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 #define MAX_DOWN_LIST (128) //queue for background downloads
 typedef struct
 {
-	int status;
+	u8 status;
 	char url[512];
 	char local[512];
 }
@@ -1176,7 +1176,7 @@ int downloads_max=0;
 #define MAX_MSG (128) //queue for pop-up messages
 typedef struct
 {
-	int status;
+	u8 status;
 	char line1[64];
 	char line2[64];
 	char line3[64];
@@ -4421,13 +4421,14 @@ static int unload_modules()
 	}
 
 	reset_xmb_checked();
-	sprintf(list_file_state, "%s/XMBS.ALL", app_usrdir); remove(list_file_state);
-	for(int c=3;c<9;c++)
+	if( !(is_video_loading || is_music_loading || is_photo_loading || is_retro_loading || is_game_loading || is_any_xmb_column))
 	{
-		if(c==5) c=8;
-		save_xmb_column(c);
+		for(int c=3;c<9;c++)
+		{
+			if(c==6) c=8;
+			save_xmb_column(c);
+		}
 	}
-
 
 	sprintf(list_file_state, "%s/LSTAT.BIN", app_usrdir);
 	remove(list_file_state);
@@ -9759,7 +9760,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 
 	while(dir)
 		{
-		pb_step-=10; if(pb_step<0) pb_step=429;
+		pb_step-=10; if(pb_step<1) pb_step=429;
 		if(first_launch)
 		{
 			ClearSurface();
@@ -9878,7 +9879,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 
 	while(1)
 		{
-		pb_step-=10; if(pb_step<0) pb_step=429;
+		pb_step-=10; if(pb_step<1) pb_step=429;
 		if(first_launch)
 		{
 			ClearSurface();
@@ -18378,7 +18379,7 @@ thumb_ok:
 				sort_xmb_col(xmb[5].member, xmb[5].size, 2);
 				delete_xmb_dubs(xmb[5].member, &xmb[5].size);
 				sort_xmb_col(xmb[5].member, xmb[5].size, 2);
-				sys_timer_usleep(1668); //let other threads run, too
+				sys_timer_usleep(250); //let other threads run, too
 			}
 		free_all_buffers();
 		free(pane);
@@ -18386,6 +18387,7 @@ thumb_ok:
 	}
 	if(xmb_icon_last==5 && (xmb_icon_last_first<xmb[5].size)) { xmb[5].first=xmb_icon_last_first; xmb_icon_last_first=0;xmb_icon_last=0; }
 
+	save_xmb_column(5);
 	is_video_loading=0;
 	sys_ppu_thread_exit(0);
 }
@@ -18431,7 +18433,7 @@ static void add_photo_column_thread_entry( uint64_t arg )
 				/*type*/5, /*status*/i_status, /*game_id*/-1, /*icon*/xmb_icon_photo, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)t_ip, 0, 0);
 				//if(xmb[3].size<12)	draw_xmb_bare(3, 1, 0, 0);
 				if(xmb[3].size>=MAX_XMB_MEMBERS) break;
-				sys_timer_usleep(1668); //let other threads run, too
+				sys_timer_usleep(250); //let other threads run, too
 			}
 		}
 
@@ -18442,8 +18444,9 @@ static void add_photo_column_thread_entry( uint64_t arg )
 		free(pane);
 	}
 
-	is_photo_loading=0;
 	if(xmb_icon_last==3 && (xmb_icon_last_first<xmb[3].size)) { xmb[3].first=xmb_icon_last_first; xmb_icon_last_first=0;xmb_icon_last=0; }
+	save_xmb_column(3);
+	is_photo_loading=0;
 	sys_ppu_thread_exit(0);
 }
 
@@ -18499,7 +18502,7 @@ static void add_music_column_thread_entry( uint64_t arg )
 				sort_xmb_col(xmb[4].member, xmb[4].size, 0);
 				delete_xmb_dubs(xmb[4].member, &xmb[4].size);
 				sort_xmb_col(xmb[4].member, xmb[4].size, 0);
-				sys_timer_usleep(1668); //let other threads run, too
+				sys_timer_usleep(250); //let other threads run, too
 			}
 		}
 
@@ -18819,10 +18822,10 @@ thumb_ok_fba:
 		free(pane);
 	}
 
-	is_retro_loading=0;
 	if(xmb_icon_last==8 && (xmb_icon_last_first<xmb[8].size)) { xmb[8].first=xmb_icon_last_first; xmb_icon_last_first=0;xmb_icon_last=0; }
 	xmb[8].group=0;
 	save_xmb_column(8);
+	is_retro_loading=0;
 	sys_ppu_thread_exit(0);
 }
 
@@ -19388,6 +19391,12 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 			add_xmb_member(xmb[5].member, &xmb[5].size, (char*)"Start Showtime Media Center", (char*)"Launch Showtime to play movies and listen to music",
 					/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_showtime, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
 		}
+		else
+		{
+			for(int m=0; m<xmb[5].size; m++)
+				if(xmb[5].member[m].type==2) delete_xmb_member(xmb[5].member, &xmb[5].size, m);
+
+		}
 
 		if(!xmb[6].init)
 		{
@@ -19400,7 +19409,7 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 			xmb[7].size=0;
 		}
 
-		if(!xmb[6].init || !xmb[5].init  || !xmb[7].init)
+		if(!xmb[6].init || !xmb[7].init) //!xmb[5].init  || 
 		{
 
 			for(int m=0; m<max; m++)
@@ -19476,7 +19485,7 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 				}
 				else if(!strcmp(list[m].content, "AVCHD") || !strcmp(list[m].content, "BDMV") || !strcmp(list[m].content, "DVD"))
 				{
-					if(!xmb[5].init && cover_mode==8)
+					if(cover_mode==8) //!xmb[5].init && 
 					{
 						if(m==sel) xmb[5].first=xmb[5].size;
 						toff=0;
@@ -19522,6 +19531,7 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 
 			//sort_xmb_col(xmb[6].member, xmb[6].size, first_sort+1);
 			sort_xmb_col(xmb[7].member, xmb[7].size, 0);
+			sort_xmb_col(xmb[5].member, xmb[5].size, 2);
 		}
 
 		for(int m=0; m<max; m++)
@@ -20399,7 +20409,7 @@ int main(int argc, char **argv)
 		fclose( fpA);
 		sprintf(string1, "%s/PARAM.SFO", app_homedir);
 		change_param_sfo_version(string1);
-		change_param_sfo_field( string1, (char*)"TITLE", (char*) "multiMAN");
+		//change_param_sfo_field( string1, (char*)"TITLE", (char*) "multiMAN");
 	}
 
 	sprintf(current_version_NULL, "%s", current_version);
@@ -20411,18 +20421,18 @@ int main(int argc, char **argv)
 	// allocate buffers for images (one big buffer = 76MB)
 	// XMMB mode uses 7 frame buffers (56MB)
 	u32 buf_align= FB(1);
-	u32 frame_buf_size = (buf_align * 9)+5324800;// for text_bmpS 320x320x13 -> 1920*648 * 4
+	u32 frame_buf_size = (buf_align * 8)+5324800;// for text_bmpS 320x320x13 -> 1920*648 * 4
 	frame_buf_size = ( frame_buf_size + 0xfffff ) & ( ~0xfffff );
 
 	text_bmp = (u8 *) memalign(0x100000, frame_buf_size);
 	if(map_rsx_memory( text_bmp, frame_buf_size)) sys_process_exit(1);
 
-	text_bmpUBG	= text_bmp + buf_align * 1; //4 x 1920x1080
-	text_bmpUPSR= text_bmp + buf_align * 5; //2 x 1920x1080
-	text_FONT	= text_bmp + buf_align * 7;
+	text_bmpUBG	= text_bmp + buf_align * 1; //3 x 1920x1080
+	text_bmpUPSR= text_bmp + buf_align * 4; //2 x 1920x1080
+	text_FONT	= text_bmp + buf_align * 6;
 
-	text_FMS	= text_bmp + buf_align * 8;
-	text_bmpS	= text_bmp + buf_align * 9;
+	text_FMS	= text_bmp + buf_align * 7;
+	text_bmpS	= text_bmp + buf_align * 8;
 
 	text_legend = text_bmpUPSR + buf_align;
 	text_BOOT	= text_bmpUBG  + buf_align;
@@ -20644,7 +20654,7 @@ int main(int argc, char **argv)
 	{
 		for(int c=3;c<9;c++)
 		{
-			if(c==5) c=8;
+			if(c>5) c=8;
 			u8 main_group=xmb[c].group & 0x0f;
 			u8 alpha_group=xmb[c].group>>4 & 0x0f;
 			if(alpha_group>14) alpha_group=0;
@@ -20686,7 +20696,7 @@ int main(int argc, char **argv)
 		}
 		free_all_buffers();
 		free_text_buffers();
-		xmb[5].init=0;
+		//xmb[5].init=0;
 		xmb[6].init=0;
 		xmb[7].init=0;
 	}

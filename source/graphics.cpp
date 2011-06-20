@@ -27,17 +27,17 @@ extern int V_WIDTH;
 extern int V_HEIGHT;
 extern float overscan;
 extern int cover_mode;
-extern int key_repeat;
+extern bool key_repeat;
 extern int xmb_slide_y;
 
-extern int th_device_list;
-extern int th_device_separator;
-extern int th_device_separator_y;
-extern int th_legend;
-extern int th_legend_y;
-extern int th_drive_icon;
-extern int th_drive_icon_x;
-extern int th_drive_icon_y;
+extern bool th_device_list;
+extern bool th_device_separator;
+extern u16 th_device_separator_y;
+extern bool th_legend;
+extern u16 th_legend_y;
+extern bool th_drive_icon;
+extern u16 th_drive_icon_x;
+extern u16 th_drive_icon_y;
 extern bool use_depth;
 extern u8 hide_bd;
 typedef struct
