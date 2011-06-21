@@ -154,7 +154,7 @@ _meminfo meminfo;
 	CellAudioPortConfig portConfig;
 	int nChannel;
 
-	u64 sizeNeeded;
+	int sizeNeeded;
 	int *mp3Memory;
 	u64 _mp3_buffer=KB(MP3_MEMORY_KB);
 
@@ -342,13 +342,13 @@ u8 drawing_xmb=0;
 float angle=0.f;
 
 static int old_fi=-1;
-u8 counter_png=0;
+int counter_png=0;
 u8 is_reloaded=0;
 u32 fdevices=0;
 u32 fdevices_old=0;
 bool take_screenshot=0;
 //int sub_menu_open=0;
-u16 pb_step=429;
+int pb_step=429;
 bool never_used_pfs=1;
 
 int repeat_init_delay=60;
@@ -638,7 +638,7 @@ int egg=0;
 int ss_timer_last=0;
 int direct_launch_forced=0;
 int clear_activity_logs=1;
-int load_custom_payload=0;
+
 int	sc36_path_patch=0;
 //int load_last_state=1;
 int lock_display_mode=-1;
@@ -17601,7 +17601,7 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 	float c_persp2=35.f;
 
 
-	if(xmb_bg_counter>0 && !xmb_bg_show && !key_repeat) xmb_bg_counter--;
+	if(xmb_bg_counter>0 && !xmb_bg_show && !key_repeat && _xmb_y_offset==0) xmb_bg_counter--;
 	if(xmb_bg_counter==0 && !xmb_bg_show && _xmb_y_offset==0 && xmb_game_bg==1 && !key_repeat && (_xmb_icon==6 && _xmb[_xmb_icon].first && _xmb[_xmb_icon].member[_xmb[_xmb_icon].first].type==1) && !is_game_loading) //show poster for games only
 	{
 		sprintf(filename, "%s/%s_1920.PNG", cache_dir, menu_list[_xmb[_xmb_icon].member[_xmb[_xmb_icon].first].game_id].title_id);
@@ -20557,7 +20557,7 @@ int main(int argc, char **argv)
 	max_menu_list=0;
 
 	c_firmware = (float) get_system_version();
-	if(c_firmware>3.41f && c_firmware<3.42f) c_firmware=3.41f;
+	if(c_firmware>3.40f && c_firmware<3.55f) c_firmware=3.41f;
 	if(c_firmware>3.55f) c_firmware=3.55f;
 
 	mod_mount_table((char*)"nothing", 0); //restore
@@ -20927,7 +20927,7 @@ int main(int argc, char **argv)
 		}
 	}   
 
-	load_custom_payload=0; //force PG
+	
 
 	sprintf(filename, "%s/BDEMU.BIN", app_usrdir);
 	if(exist(filename))
@@ -20936,11 +20936,12 @@ int main(int argc, char **argv)
 		fseek(fpV, 0, SEEK_END);
 		u32 len=ftell(fpV);
 		fclose(fpV);
-		if(len==488) {bd_emulator=2;bdemu2_present=0;}
+		if(len==488)  {bdemu2_present=0; if(bd_emulator) bd_emulator=2;}
 		if(len==4992) {bdemu2_present=1;}
 		
 	}
-	if(c_firmware == 3.55f && payload==-1 && load_custom_payload != 1 && exist(filename) && bd_emulator==2) 
+	sprintf(filename, "%s/BDEMU.BIN", app_usrdir);
+	if(c_firmware == 3.55f && payload==-1 && exist(filename) && bd_emulator==2) 
 	{
 		fpV = fopen ( filename, "rb" );
 		fseek(fpV, 0, SEEK_SET);
@@ -20971,7 +20972,7 @@ int main(int argc, char **argv)
 
 
 	sprintf(filename, "%s/BDEMU.BIN", app_usrdir);
-	if(c_firmware == 3.55f && payload==-1 && load_custom_payload != 1 && exist(filename) && bd_emulator==1) 
+	if(c_firmware == 3.55f && payload==-1 && exist(filename) && bd_emulator==1) 
 	{
 		fpV = fopen ( filename, "rb" );
 
@@ -21007,7 +21008,7 @@ int main(int argc, char **argv)
 	}
 
 	sprintf(filename, "%s/BDEMU.BIN", app_usrdir);
-	if(c_firmware == 3.41f && payload==-1 && load_custom_payload != 1 && exist(filename) && bd_emulator==1)
+	if(c_firmware == 3.41f && payload==-1 && exist(filename) && bd_emulator==1)
 	{
 		fpV = fopen ( filename, "rb" );
 		fseek(fpV, 0, SEEK_END);
@@ -24448,7 +24449,7 @@ pass_ok:
 			int selx=0;
 			if((menu_list[game_sel].title[0]=='_' || menu_list[game_sel].split) && payload!=1)
 				{
-					sprintf(filename, "You cannot launch games with split big files!\n\nTransfer the game to internal HDD and try again\nor use [Hermes] option for BD-Emulator type in SETTINGS XMMB column.");
+					sprintf(filename, "You cannot launch games with split big files!\n\nTransfer the game to internal HDD and try again\nor use [Hermes] option for BD-Emulator type in SETTINGS XMMB column\nand restart your PS3\xE2\x84\xA2 system.");
 					if(!menu_list[game_sel].split) { game_last_page=-1; old_fi=-1; };
 					menu_list[game_sel].split=1;
 					dialog_ret=0;
@@ -24472,7 +24473,7 @@ again_sc8:
 				if(exist(filename))
 				{
 
-					if(strstr(filename, "/dev_hdd0/")==NULL && strstr(filename, "/dev_bdvd/")==NULL && (verify_data==2 || (verify_data==1 && payload==1)) )
+					if(strstr(filename, "/dev_hdd0/")==NULL && strstr(filename, "/dev_bdvd/")==NULL && (verify_data==2 || (verify_data==1)) ) // && payload==1
 					{
 						abort_copy=0;
 						dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, "Verifying game data, please wait...", dialog_fun2, (void*)0x0000aaab, NULL ); flipc(60);
@@ -24485,8 +24486,8 @@ again_sc8:
 						my_game_test(s_tmp2, 2); 
 						cellMsgDialogAbort(); flip();							
 
-						if( (num_files_big!=0 && payload!=1) || (num_files_big>10) ) {
-							sprintf(filename, "You cannot launch games with split big files!\n\nTransfer the game to internal HDD and try again\nor enable [Verify USB Games] option in SETTINGS XMMB column.");
+						if( ((num_files_big || num_files_split) && payload!=1) || (num_files_big>10) ) {
+							sprintf(filename, "You cannot launch games with split big files!\n\nTransfer the game to internal HDD and try again\nor enable [Verify USB Games] option in SETTINGS XMMB column\nand restart your PS3\xE2\x84\xA2 system.");
 							dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
 							if(!menu_list[game_sel].split) { game_last_page=-1; old_fi=-1; };
 							menu_list[game_sel].split=1;

@@ -19,14 +19,14 @@ MAKE_SELF_NPDRM = make_self_npdrm
 
 PPU_SRCS = $(MM)main.cpp
 PPU_TARGET = $(MM_REL)_BOOT.elf
-PPU_OPTIMIZE_LV := -O2
+PPU_OPTIMIZE_LV := -O2 -fno-exceptions
 
 PPU_INCDIRS= -Iinclude -I$(CELL_INC_DIR) -I$(CELL_SDK)/target/ppu/include/sysutil -I$(CELL_SDK)/target/ppu/include
 PPU_LDLIBS += -lpthread -lm -lio_stub -lsysmodule_stub -lsysutil_stub -lfs_stub\
 
 all : $(PPU_TARGET)
 
-PPU_CFLAGS  += -g
+PPU_CFLAGS  += -g -O2 -fno-exceptions 
 
 include $(CELL_MK_DIR)/sdk.target.mk
 

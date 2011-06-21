@@ -23,7 +23,7 @@ PPU_SRCS = $(MM)graphics.cpp $(MM)multiman.cpp $(MM)peek_poke.cpp $(MM)mm.cpp $(
 PPU_SRCS += $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS) 
 PPU_TARGET = $(MM_REL)_BARE.elf
 
-PPU_OPTIMIZE_LV := -O3 -fno-exceptions -falign-functions=16 -Wframe-larger-than=65535
+PPU_OPTIMIZE_LV := -O2 -fno-exceptions
 #PPU_CPPFLAGS	:= -fno-rtti -DPSGL
 
 PPU_INCDIRS= -Iinclude -I$(CELL_INC_DIR) -I$(CELL_INC_DIR)/usb/usbpad -I$(CELL_INC_DIR)/usb/usbkb -I$(CELL_SDK)/target/ppu/include/sysutil -I$(CELL_SDK)/target/ppu/include -I/psl1ght/include
@@ -36,7 +36,7 @@ PPU_LIBS += -l./libpmsd -l./libpfs -l./libpfsm
 
 all : $(PPU_TARGET)
 
-PPU_CFLAGS  += -g -O3 -fno-exceptions -falign-functions=16 -Wframe-larger-than=65535
+PPU_CFLAGS  += -g -O2 -fno-exceptions 
 
 VPSHADER_SRCS = vpshader.cg vpshader2.cg
 FPSHADER_SRCS = fpshader.cg fpshader2.cg
