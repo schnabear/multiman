@@ -1553,6 +1553,8 @@ pad_ok:
 		if(padSensorX>404 && padSensorX<424) padd|=BUTTON_L1;
 		if(padSensorX>620 && padSensorY<640) padd|=BUTTON_R1;
 	}
+	else
+		cellPadSetPortSetting( pad_num, 0);
 
 	if(debug_mode)
 	{
@@ -15853,6 +15855,9 @@ if ( fp != NULL )
 		if(strstr (line,"game_details=2")!=NULL) game_details=2;
 		if(strstr (line,"game_details=3")!=NULL) game_details=3;
 
+		if(strstr (line,"use_pad_sensor=0")!=NULL) use_pad_sensor=0;
+		if(strstr (line,"use_pad_sensor=1")!=NULL) use_pad_sensor=1;
+
 		if(strstr (line,"bd_emulator=0")!=NULL) bd_emulator=0;
 		if(strstr (line,"bd_emulator=1")!=NULL) bd_emulator=1;
 		if(strstr (line,"bd_emulator=2")!=NULL) bd_emulator=2;
@@ -18937,6 +18942,9 @@ void save_options()
 		fprintf(fpA, "ss_timeout=%i\r\n", ss_timeout);
 		fprintf(fpA, "deadzone_x=%i\r\n", xDZ);
 		fprintf(fpA, "deadzone_y=%i\r\n", yDZ);
+
+		fprintf(fpA, "use_pad_sensor=%i\r\n", use_pad_sensor);
+		
 		fprintf(fpA, "parental_level=%i\r\n", parental_level);
 		fprintf(fpA, "parental_pass=%s\r\n", parental_pass);
 		fprintf(fpA, "theme_sound=%i\r\n", theme_sound);
@@ -19002,6 +19010,9 @@ void parse_settings()
 		else if(!strcmp(oini, "ss_timeout"))		ss_timeout		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "deadzone_x"))		xDZ				=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "deadzone_y"))		yDZ				=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+
+		else if(!strcmp(oini, "use_pad_sensor"))	use_pad_sensor	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		
 		else if(!strcmp(oini, "parental_level"))	parental_level	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 
 		else if(!strcmp(oini, "bd_emulator"))		bd_emulator		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
@@ -19293,6 +19304,11 @@ void add_settings_column()
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"10 min",						(char*)"10");
 		xmb[2].member[xmb[2].size-1].option_selected=ss_timeout;
 		xmb[2].member[xmb[2].size-1].icon=xmb_icon_ss;
+
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Motion Sensor", (char*)"Sets whether to use sensor information from SIXAXIS\xE2\x84\xA2 controller.",	(char*)"use_pad_sensor");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disabled",						(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Enabled",						(char*)"1");
+		xmb[2].member[xmb[2].size-1].option_selected=use_pad_sensor;
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Mouse Sensitivity (X)", (char*)"Sets analogue sticks horizontal sensitivity (dead zone).",	(char*)"deadzone_x");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable",						(char*)"0");
