@@ -19783,6 +19783,7 @@ void draw_xmb_legend(const int _xmb_icon)
 		print_label_ex( 0.17f, 0.10f, 0.6f, 0xffd0d0d0, xmb_text, 1.00f, 0.0f, 2, 6.40f, 18.0f, 0);
 		flush_ttf(text_MSG, 300, 70);
 	}
+	if(c_opacity2<=0x80) change_opacity(text_MSG, -95, 84000);
 	set_texture(text_MSG, 300, 70);
 	display_img(1520, 930, 300, 70, 300, 70, -0.1f, 300, 70);
 }
@@ -19811,6 +19812,7 @@ void draw_xmb_info(const int _xmb_icon)
 
 		flush_ttf(text_INFO, 380, 70);
 	}
+	if(c_opacity2<=0x80) change_opacity(text_INFO, -95, 106400);
 	set_texture(text_INFO, 380, 70);
 	display_img(100, 930, 380, 70, 380, 70, -0.1f, 380, 70);
 }
@@ -19960,7 +19962,8 @@ u8 read_pad_info()
 		{
 			xmb_legend_drawn=0;
 			xmb_info_drawn=0;
-			if(xmb[xmb_icon].first==0) {xmb[xmb_icon].first=xmb[xmb_icon].size-1; xmb_bg_show=0; xmb_bg_counter=200; xmb_slide_y=0; xmb_slide_step_y=0; if(cover_mode==4) load_coverflow_legend();}
+			xmb_bg_show=0; xmb_bg_counter=200;
+			if(xmb[xmb_icon].first==0) {xmb[xmb_icon].first=xmb[xmb_icon].size-1; xmb_slide_y=0; xmb_slide_step_y=0; if(cover_mode==4) load_coverflow_legend();}
 			else 
 			{
 				if(xmb_slide_step_y!=0)
@@ -20008,7 +20011,8 @@ u8 read_pad_info()
 		{
 			xmb_legend_drawn=0;
 			xmb_info_drawn=0;
-			if(xmb[xmb_icon].first==xmb[xmb_icon].size-1) {xmb[xmb_icon].first=0; xmb_bg_show=0; xmb_bg_counter=200; xmb_slide_y=0; xmb_slide_step_y=0;if(cover_mode==4) load_coverflow_legend();}
+			xmb_bg_show=0; xmb_bg_counter=200;
+			if(xmb[xmb_icon].first==xmb[xmb_icon].size-1) {xmb[xmb_icon].first=0; xmb_slide_y=0; xmb_slide_step_y=0;if(cover_mode==4) load_coverflow_legend();}
 			else 
 			{
 				if(xmb_slide_step_y!=0)
