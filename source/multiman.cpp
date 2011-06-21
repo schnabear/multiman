@@ -81,7 +81,6 @@
 
 #include "graphics.h"
 #include "fonts.h"
-//#include "video.h"
 
 #define FB(x) ((x)*1920*1080*4)	// 1 video frame buffer
 #define MB(x) ((x)*1024*1024)	// 1 MB
@@ -118,6 +117,7 @@ u32 COL_XMB_SUBTITLE=0xf0909090;
 u8	XMB_SPARK_SIZE=4;
 u32 XMB_SPARK_COLOR=0xffffff00;
 
+// theme related
 bool th_device_list=1;
 bool th_device_separator=1;
 u16 th_device_separator_y=956;
@@ -126,7 +126,6 @@ u16 th_legend_y=853;
 bool th_drive_icon=1;
 u16 th_drive_icon_x=1790;
 u16 th_drive_icon_y=964;
-
 
 //NTFS/PFS driver
 int max_usb_volumes=1;
@@ -147,45 +146,53 @@ typedef struct {
 _meminfo meminfo;
 
 
+// mp3 related
 #define MP3_MEMORY_KB 384
 #define MP3_BUF (MP3_MEMORY_KB/2)
+#define SAMPLE_FREQUENCY        (44100)
+#define MAX_STREAMS             (4) //CELL_MS_MAX_STREAMS//(400)
+#define MAX_SUBS				(4) //(31)
 
-	CellAudioPortParam audioParam;
-	CellAudioPortConfig portConfig;
-	int nChannel;
+CellAudioPortParam audioParam;
+CellAudioPortConfig portConfig;
+int nChannel;
 
-	int sizeNeeded;
-	int *mp3Memory;
-	u64 _mp3_buffer=KB(MP3_MEMORY_KB);
+int sizeNeeded;
+int *mp3Memory;
+u64 _mp3_buffer=KB(MP3_MEMORY_KB);
 
-	int mp3_freq=44100;
-	u32 mp3_durr=0;
-	float mp3_skip=0.f;
-	u32 mp3_packet=0;
-	float mp3_packet_time=0.001f;
-	char mp3_now_playing[512];
-	float mp3_volume=0.5f;
-	char *pData=NULL;
-	char *pDataB=NULL;
-	char my_mp3_file[512];
+int mp3_freq=44100;
+u32 mp3_durr=0;
+float mp3_skip=0.f;
+u32 mp3_packet=0;
+float mp3_packet_time=0.001f;
+char mp3_now_playing[512];
+float mp3_volume=0.5f;
+char *pData=NULL;
+char *pDataB=NULL;
+char my_mp3_file[512];
 
-	bool update_ms=true;
-	bool force_mp3;
-	int force_mp3_fd=-1;
-	char force_mp3_file[512];
-	u64 force_mp3_offset=0;
-	u64 force_mp3_size=0;
-	bool mm_audio=true; //goes to false if XMB BGM is playing
-	bool mm_is_playing=false;
-	bool is_theme_playing=false; 
-	bool audio_sub_proc=false;
-	bool mp3_force_position=false;
+bool update_ms=true;
+bool force_mp3;
+int force_mp3_fd=-1;
+char force_mp3_file[512];
+u64 force_mp3_offset=0;
+u64 force_mp3_size=0;
+bool mm_audio=true; //goes to false if XMB BGM is playing
+bool mm_is_playing=false;
+bool is_theme_playing=false; 
+bool audio_sub_proc=false;
+bool mp3_force_position=false;
 
 int StartMultiStream();
 void stop_audio(float attn);
 void stop_mp3(float _attn);
 void prev_mp3();
 void next_mp3();
+
+void main_mp3( char *temp_mp3);
+int main_mp3_th( char *my_mp3, float skip);
+
 
 void *color_base_addr;
 u32 frame_index = 0;
@@ -194,11 +201,6 @@ u32 video_buffer;
 int V_WIDTH, V_HEIGHT;//, _V_WIDTH, _V_HEIGHT;
 
 u8 mp_WIDTH=30, mp_HEIGHT=42; //mouse icon HR
-
-//MP3 defines
-#define SAMPLE_FREQUENCY        (44100)
-#define MAX_STREAMS             (4) //CELL_MS_MAX_STREAMS//(400)
-#define MAX_SUBS				(4) //(31)
 
 // for network and file_copy buffering
 #define BUF_SIZE				(3 * 1024 * 1024) 
@@ -256,7 +258,6 @@ void enable_sc36();
 void write_last_state();
 void save_options();
 
-void cache_png(char *path, char *title_id);
 
 void mip_texture( uint8_t *buffer_to, uint8_t *buffer_from, uint32_t width, uint32_t height, int scaleF);
 void blur_texture(uint8_t *buffer_to, uint32_t width, uint32_t height, int x, int y,  int wx, int wy, uint32_t c_BRI, int use_grayscale, int iterations, int p_range);
@@ -266,33 +267,38 @@ void print_label_ex(float x, float y, float scale, uint32_t color, char *str1p, 
 void flush_ttf(uint8_t *buffer, uint32_t _V_WIDTH, uint32_t _V_HEIGHT);
 
 void show_sysinfo();
-void file_copy(char *path, char *path2, int progress);
 
 int get_param_sfo_field(char *file, char *field, char *value);
+void file_copy(char *path, char *path2, int progress);
+void cache_png(char *path, char *title_id);
+void fix_perm_recursive(const char* start_path);
+int my_game_delete(char *path);
+int my_game_copy(char *path, char *path2);
+int my_game_copy_pfsm(char *path, char *path2);
 
 int load_png_texture(u8 *data, char *name, uint16_t _DW);
+void change_opacity(u8 *buffer, int delta, u32 size);
 
 void draw_stars();
 float use_drops=false;
 
-void draw_bare_xmb(int _xmb_icon);
 void draw_whole_xmb(u8 mode);
 void draw_xmb_clock(u8 *buffer, const int _xmb_icon);
-void reset_xmb_checked();
 void draw_xmb_icon_text(int _xmb_icon);
 void draw_xmb_bare(u8 _xmb_icon, u8 _all_icons, bool recursive, int _sub_level);
 void init_xmb_icons(t_menu_list *list, int max, int sel);
+
+void redraw_column_texts(int _xmb_icon);
+void reset_xmb_checked();
+void reset_xmb(u8 _flag);
 void free_all_buffers();
 void free_text_buffers();
 
 void draw_fileman();
-void draw_xmb_info(const int _xmb_icon);
-void apply_theme (const char *theme_file, const char *theme_path);
-void redraw_column_texts(int _xmb_icon);
-void reset_xmb(u8 _flag);
 
-void fix_perm_recursive(const char* start_path);
-void change_opacity(u8 *buffer, int delta, u32 size);
+void draw_xmb_info();
+void apply_theme (const char *theme_file, const char *theme_path);
+
 
 int vert_indx=0, vert_texture_indx=0;
 void flip(void);
@@ -300,24 +306,24 @@ void flip(void);
 //misc thread
 sys_ppu_thread_t addmus_thr_id;
 static void add_music_column_thread_entry( uint64_t arg );
-int is_music_loading=0;
+bool is_music_loading=0;
 
 sys_ppu_thread_t addpic_thr_id;
 static void add_photo_column_thread_entry( uint64_t arg );
-int is_photo_loading=0;
+bool is_photo_loading=0;
 
 sys_ppu_thread_t addret_thr_id;
 static void add_retro_column_thread_entry( uint64_t arg );
-int is_retro_loading=0;
+bool is_retro_loading=0;
 
 sys_ppu_thread_t addvid_thr_id;
 static void add_video_column_thread_entry( uint64_t arg );
-int is_video_loading=0;
+bool is_video_loading=0;
 
-int is_decoding_jpg=0;
+bool is_decoding_jpg=0;
 void load_jpg_threaded(int _xmb_icon, int cn);
 
-int is_decoding_png=0;
+bool is_decoding_png=0;
 void load_png_threaded(int _xmb_icon, int cn);
 
 static void download_thread_entry( uint64_t arg );
@@ -335,21 +341,20 @@ sys_ppu_thread_t pngdec_thr_id;
 const int32_t misc_thr_prio  = 1600;	
 const size_t app_stack_size  = 32768;
 
-//int32_t main_video( void );
-bool g_exec;
-int is_game_loading=0;
-int is_any_xmb_column=0;
+bool is_game_loading=0;
+bool is_any_xmb_column=0;
 u8 drawing_xmb=0;
 float angle=0.f;
 
 bool debug_mode=false;
+bool use_pad_sensor=true;
 
 static int old_fi=-1;
-int counter_png=0;
+u16 counter_png=0;
 u8 is_reloaded=0;
 u32 fdevices=0;
 u32 fdevices_old=0;
-bool take_screenshot=0;
+
 //int sub_menu_open=0;
 int pb_step=429;
 bool never_used_pfs=1;
@@ -383,7 +388,7 @@ char d1[512], d2[512], df[512];
 unsigned char bdemu[0x1380];
 unsigned char mouse[5120];
 u8 bdemu2_present=0;
-//int to_reboot=0;
+
 bool search_mmiso=false;
 unsigned int debug_print=102030;
 long long int last_refresh=0;
@@ -559,14 +564,6 @@ u16 dox_arrow_b_h=44;
 
 static int unload_modules();
 void draw_text_stroke(float x, float y, float size, u32 color, const char *str);
-int main_mp3_th( char *my_mp3, float skip);
-void main_mp3( char *temp_mp3);
-
-int my_game_delete(char *path);
-int my_game_copy(char *path, char *path2);
-
-int my_game_copy_pfsm(char *path, char *path2);
-
 
 #define	GAME_INI_VER	"MMGI0100" //PS3GAME.INI	game flags (submenu)
 #define	GAME_STATE_VER	"MMLS0106" //LSTAT.BIN		multiMAN last state data
@@ -1141,10 +1138,6 @@ int xmb_slide_step=0;
 int xmb_slide_step_y=0;
 u8 xmb_sublevel=0;
 
-#define MAX_GROUPS (4)
-u8 is_group_mode=0;
-
-
 #define MAX_WWW_THEMES 128
 typedef struct
 {
@@ -1549,13 +1542,18 @@ pad_ok:
 	padLXstick = databuf.button[6]; // left stick
 	padLYstick = databuf.button[7]; 
 
-	padSensorX = databuf.button[20]; 
-	padSensorY = databuf.button[21]; 
-	padSensorG = databuf.button[23]; 
+	if(use_pad_sensor)
+	{
+		cellPadSetPortSetting( pad_num, CELL_PAD_SETTING_SENSOR_ON); //CELL_PAD_SETTING_PRESS_ON | 
 
-	if(padSensorX>404 && padSensorX<424) padd|=BUTTON_L1;
-	if(padSensorX>620 && padSensorY<640) padd|=BUTTON_R1;
-	cellPadSetPortSetting( pad_num, CELL_PAD_SETTING_SENSOR_ON); //CELL_PAD_SETTING_PRESS_ON | 
+		padSensorX = databuf.button[20]; 
+		padSensorY = databuf.button[21]; 
+		padSensorG = databuf.button[23]; 
+
+		if(padSensorX>404 && padSensorX<424) padd|=BUTTON_L1;
+		if(padSensorX>620 && padSensorY<640) padd|=BUTTON_R1;
+	}
+
 	if(debug_mode)
 	{
 		get_free_memory();
@@ -16688,7 +16686,7 @@ void draw_fileman()
 
 		set_texture( text_bmpUPSR+V_WIDTH*4*(int)((107.f/1080.f)*V_HEIGHT), V_WIDTH, V_HEIGHT-(int)((235.f/1080.f)*V_HEIGHT));//V_HEIGHT-); 
 		display_img_nr(0, (int)((107.f/1080.f)*V_HEIGHT), V_WIDTH, V_HEIGHT-(int)((235.f/1080.f)*V_HEIGHT), V_WIDTH, V_HEIGHT-(int)((235.f/1080.f)*V_HEIGHT), 0.0f, V_WIDTH, V_HEIGHT-(int)((235.f/1080.f)*V_HEIGHT));
-		draw_xmb_info(0);
+		draw_xmb_info();
 
 }
 
@@ -19805,9 +19803,8 @@ void draw_xmb_legend(const int _xmb_icon)
 	display_img(1520, 930, 300, 70, 300, 70, -0.1f, 300, 70);
 }
 
-void draw_xmb_info(const int _xmb_icon)
+void draw_xmb_info()
 {
-	(void) _xmb_icon;
 	if( c_opacity2<=0x10 
 		|| (cover_mode!=5 && (xmb_bg_counter>30 || xmb_slide_step!=0 || xmb_slide_step_y!=0 || xmb_popup==0))
 		|| !mm_is_playing || is_theme_playing 
@@ -20180,7 +20177,7 @@ void draw_whole_xmb(u8 mode)
 
 	draw_xmb_clock(xmb_clock, 0);
 	draw_xmb_legend(xmb_icon);
-	draw_xmb_info(xmb_icon);
+	draw_xmb_info();
 
 	if(xmb_slide_step!=0) //xmmb sliding horizontally
 	{
@@ -22355,9 +22352,8 @@ switch_ntfs:
 	}
 
 
-	if ( ((old_pad & BUTTON_START) && (new_pad & BUTTON_R2)) || take_screenshot) {
+	if ( ((old_pad & BUTTON_START) && (new_pad & BUTTON_R2))) {
 		new_pad=0; 
-		take_screenshot=0;
 		time ( &rawtime );
 		timeinfo = localtime ( &rawtime );
 		char video_mem[64];
@@ -22749,7 +22745,7 @@ update_title:
 			if(ret_f==1) force_update_check=1; 
 			if(ret_f==2) {	if(!lock_fileman) {last_cover_mode=cover_mode; cover_mode=5; new_pad=0; goto open_file_manager;}}
 			if(ret_f==3) goto switch_ntfs; 
-//			if(ret_f==4) {take_screenshot=1;}
+//			if(ret_f==4) {screenshot}
 			
 			if(ret_f==5 && net_used_ignore()) {
 				char reload_self[128];

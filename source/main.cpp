@@ -1,31 +1,8 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <assert.h>
 #include <string.h>
-#include <dirent.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <time.h>
-#include <math.h>
-#include <stddef.h>
-
-
-#include <sys/return_code.h>
 #include <sys/process.h>
-#include <sys/memory.h>
-#include <sys/timer.h>
-#include <sys/paths.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
-#include <cell/sysmodule.h>
-#include <cell/cell_fs.h>
-#include <sysutil/sysutil_sysparam.h>
-//#include <sysutil/sysutil_discgame.h>
-#include <sysutil/sysutil_common.h>
-
-SYS_PROCESS_PARAM(64, 0x10000)
+SYS_PROCESS_PARAM(1001, 0x10000)
 
 int main(int argc, char **argv) 
 {
@@ -42,5 +19,5 @@ int main(int argc, char **argv)
 	remove(filename);
 
 	sprintf(filename, "%s/RELOAD.SELF", tn);
-	sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
+	sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 1200, SYS_PROCESS_PRIMARY_STACK_SIZE_512K);
 }
