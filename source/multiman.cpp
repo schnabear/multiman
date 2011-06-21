@@ -286,6 +286,7 @@ void free_all_buffers();
 void free_text_buffers();
 
 void draw_fileman();
+void draw_xmb_info(const int _xmb_icon);
 void apply_theme (const char *theme_file, const char *theme_path);
 void redraw_column_texts(int _xmb_icon);
 void reset_xmb(u8 _flag);
@@ -341,6 +342,8 @@ int is_any_xmb_column=0;
 u8 drawing_xmb=0;
 float angle=0.f;
 
+bool debug_mode=false;
+
 static int old_fi=-1;
 int counter_png=0;
 u8 is_reloaded=0;
@@ -388,7 +391,7 @@ CellSysCacheParam cache_param ;
 
 //web browser
 volatile int www_running = 0;
-char www_info[256];
+char status_info[256];
 static CellWebBrowserConfig2 config_full;
 
 
@@ -1356,6 +1359,10 @@ float mouse_speed=0.001f;
 uint32_t old_info_m = 0;
 uint32_t old_info_k = 0;
 
+	u16 padSensorX; 
+	u16 padSensorY; 
+	u16 padSensorG;
+
 //check for keyboard input
 
 
@@ -1542,8 +1549,18 @@ pad_ok:
 	padLXstick = databuf.button[6]; // left stick
 	padLYstick = databuf.button[7]; 
 
-//	cellPadSetPortSetting( pad_num, CELL_PAD_SETTING_PRESS_ON | CELL_PAD_SETTING_SENSOR_ON);
-//	sprintf(www_info, "%i %i %i %i %i %i %i %i %i %i ", databuf.button[2], databuf.button[3], databuf.button[24], databuf.button[25], databuf.button[14], databuf.len, databuf.button[20], databuf.button[21], databuf.button[22], databuf.button[23]);
+	padSensorX = databuf.button[20]; 
+	padSensorY = databuf.button[21]; 
+	padSensorG = databuf.button[23]; 
+
+	if(padSensorX>404 && padSensorX<424) padd|=BUTTON_L1;
+	if(padSensorX>620 && padSensorY<640) padd|=BUTTON_R1;
+	cellPadSetPortSetting( pad_num, CELL_PAD_SETTING_SENSOR_ON); //CELL_PAD_SETTING_PRESS_ON | 
+	if(debug_mode)
+	{
+		get_free_memory();
+		sprintf(status_info, "%i %i %i %i (MEM: %.f)", databuf.button[20], databuf.button[21], databuf.button[22], databuf.button[23], (double) (meminfo.avail/1024.0f));
+	}
 	//sprintf(www_info, "--- %i %i ", databuf.len, pad_num);
 
 	if(dev_type==CELL_PAD_DEV_TYPE_BD_REMOCON)
@@ -5841,7 +5858,6 @@ static void unknown_mimetype_callback(const char* mimetype, const char* url, voi
 		sprintf(local_file_d, "%s/%s", download_dir, (pathpos+1));
 	else
 		sprintf(local_file_d, "%s/DOWNLOADS/%s", app_usrdir, (pathpos+1));
-	sprintf(www_info, "File download requested : (%s)", local_file_d);
 	download_file( url, (char *) local_file_d, 3);
 }
 
@@ -8530,7 +8546,7 @@ static double get_system_version(void)
 		fclose(fp);
 		uint32_t crc=0, crc_c;
 		for(crc_c=0; crc_c<len; crc_c++) crc+=mem[crc_c];
-//		sprintf(www_info, "%x", crc);
+//		sprintf(status_info, "%x", crc);
 		if(crc==0x416bbaULL) base=3.15;	else //ignore spoofers by crcing libfs
 		if(crc==0x41721eULL) base=3.41; else
 		if(crc==0x41655eULL) base=3.55;
@@ -12872,7 +12888,7 @@ static void MS_update_thread(uint64_t param)
 		if(mm_is_playing && update_ms)
 			cellMSSystemSignalSPU();
 		cellMSSystemGenerateCallbacks();
-		//sprintf(www_info, "%i", (int)time(NULL));
+		//sprintf(status_info, "%i", (int)time(NULL));
 	}
 	cellAudioPortStop(portNum);
     sys_ppu_thread_exit(0);
@@ -16672,6 +16688,7 @@ void draw_fileman()
 
 		set_texture( text_bmpUPSR+V_WIDTH*4*(int)((107.f/1080.f)*V_HEIGHT), V_WIDTH, V_HEIGHT-(int)((235.f/1080.f)*V_HEIGHT));//V_HEIGHT-); 
 		display_img_nr(0, (int)((107.f/1080.f)*V_HEIGHT), V_WIDTH, V_HEIGHT-(int)((235.f/1080.f)*V_HEIGHT), V_WIDTH, V_HEIGHT-(int)((235.f/1080.f)*V_HEIGHT), 0.0f, V_WIDTH, V_HEIGHT-(int)((235.f/1080.f)*V_HEIGHT));
+		draw_xmb_info(0);
 
 }
 
@@ -17859,10 +17876,10 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 		xmb_slide_y+=xmb_slide_step_y;
 			 if(xmb_slide_y == 10) xmb_slide_step_y = 5;
 		else if(xmb_slide_y ==-10) xmb_slide_step_y =-5;
-		else if(xmb_slide_y == 50) xmb_slide_step_y = 2;
-		else if(xmb_slide_y ==-50) xmb_slide_step_y =-2;
-		else if(xmb_slide_y == 80) xmb_slide_step_y = 1;
-		else if(xmb_slide_y ==-80) xmb_slide_step_y =-1;
+//		else if(xmb_slide_y == 50) xmb_slide_step_y = 2;
+//		else if(xmb_slide_y ==-50) xmb_slide_step_y =-2;
+		else if(xmb_slide_y == 80) xmb_slide_step_y = 2;
+		else if(xmb_slide_y ==-80) xmb_slide_step_y =-2;
 		else if(xmb_slide_y >= 90) {xmb_slide_step_y= 0; if(_xmb[_xmb_icon].first>0) _xmb[_xmb_icon].first--; xmb_slide_y=0; load_coverflow_legend();}
 		else if(xmb_slide_y <=-90) {xmb_slide_step_y= 0; if(_xmb[_xmb_icon].first<_xmb[_xmb_icon].size-1) _xmb[_xmb_icon].first++; xmb_slide_y=0;load_coverflow_legend();}
 		if(xmb_slide_step_y==0) xmb_bg_counter=200;
@@ -19791,7 +19808,10 @@ void draw_xmb_legend(const int _xmb_icon)
 void draw_xmb_info(const int _xmb_icon)
 {
 	(void) _xmb_icon;
-	if(xmb_bg_counter>30 || c_opacity2<=0x10 || xmb_slide_step!=0 || xmb_slide_step_y!=0 || xmb_popup==0 || !mm_is_playing || is_theme_playing || !(multiStreamStarted==1 && current_mp3!=0 && max_mp3>1)) return;
+	if( c_opacity2<=0x10 
+		|| (cover_mode!=5 && (xmb_bg_counter>30 || xmb_slide_step!=0 || xmb_slide_step_y!=0 || xmb_popup==0))
+		|| !mm_is_playing || is_theme_playing 
+		|| !(multiStreamStarted==1 && current_mp3!=0 && max_mp3>1)) return;
 
 	if(!xmb_info_drawn)
 	{
@@ -19812,9 +19832,9 @@ void draw_xmb_info(const int _xmb_icon)
 
 		flush_ttf(text_INFO, 380, 70);
 	}
-	if(c_opacity2<=0x80) change_opacity(text_INFO, -95, 106400);
+	if(c_opacity2<=0x80 && c_opacity2) change_opacity(text_INFO, -95, 106400);
 	set_texture(text_INFO, 380, 70);
-	display_img(100, 930, 380, 70, 380, 70, -0.1f, 380, 70);
+	display_img( (cover_mode==5 ? 1540 : 100), (cover_mode==5 ? 880 : 930), 380, 70, 380, 70, -0.1f, 380, 70);
 }
 
 void redraw_column_texts(int _xmb_icon)
@@ -19919,7 +19939,7 @@ void launch_web_browser(char *start_page)
 	{
 		dimc=0; dim=1;c_opacity_delta=-2; c_opacity=0x98; c_opacity2=0x98;
 		www_running = 1;
-		sprintf(www_info, "%s", "Web browser mode");
+		sprintf(status_info, "%s", "Web browser mode");
 		cellWebBrowserInitialize(system_callback, memory_container_web);
 		cellWebBrowserCreate2(&config_full, start_page);
 	}
@@ -19927,7 +19947,7 @@ void launch_web_browser(char *start_page)
 	{
 err_web:
 		www_running = 0;
-		www_info[0]=0;
+		status_info[0]=0;
 //		sprintf(string1, "Browser disabled during Remote Play!\n\nNot enough memory to launch web browser!\n\nRequired memory: %.2f MB (allocated %.2f MB)", (double) mc_size/1024/1024, (double) MEMORY_CONTAINER_SIZE_ACTIVE/1024/1024);dialog_ret=0;		cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 		dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, "Not enough memory to launch web browser!\n\nPlease restart multiMAN and try again.", dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 	}
@@ -20165,9 +20185,9 @@ void draw_whole_xmb(u8 mode)
 	if(xmb_slide_step!=0) //xmmb sliding horizontally
 	{
 		xmb_slide+=xmb_slide_step;
-			 if(xmb_slide == 165)  xmb_slide_step=3; //slow it down before settling
+			 /*if(xmb_slide == 165)  xmb_slide_step=3; //slow it down before settling
 		else if(xmb_slide ==-165)  xmb_slide_step=-3;
-		else if(xmb_slide == 180)  xmb_slide_step= 2;
+		else */ if(xmb_slide == 180)  xmb_slide_step= 2;
 		else if(xmb_slide ==-180)  xmb_slide_step=-2;
 		else if(xmb_slide >= 200) {xmb_slide_step= 0; if(xmb_icon==3) free_all_buffers(); xmb_icon--; xmb_slide=0; draw_xmb_icon_text(xmb_icon); parental_pin_entered=0;}
 		else if(xmb_slide <=-200) {xmb_slide_step= 0; if(xmb_icon==3) free_all_buffers(); xmb_icon++; xmb_slide=0; draw_xmb_icon_text(xmb_icon); parental_pin_entered=0;}
@@ -21160,6 +21180,21 @@ int main(int argc, char **argv)
 	{
 			dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, "Please restart multiMAN from PS3 XMB\xE2\x84\xA2", dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 			unload_modules(); sys_process_exit(1);
+	}
+
+
+	pad_read();pad_read();
+	if( (new_pad|old_pad) & (BUTTON_R2|BUTTON_L2) ) {
+		new_pad=0; old_pad=0;
+		dialog_ret=0;
+		ret = cellMsgDialogOpen2( type_dialog_ok, "Debug Mode", dialog_fun2, (void*)0x0000aaab, NULL );					
+		wait_dialog_simple();
+
+		debug_mode=true;
+		current_version[6]=0x44;
+		current_version[7]=0x44;
+		current_version_NULL[6]=0x44;
+		current_version_NULL[7]=0x44;
 	}
 
 
@@ -25540,8 +25575,8 @@ skip_to_FM:
 
 			setRenderColor();
 
-			if(www_info[0]) 
-				cellDbgFontPrintf( 0.01f, 0.98f, 0.5f,0x60606080, www_info); 
+			if(status_info[0] && debug_mode) 
+				cellDbgFontPrintf( 0.01f, 0.98f, 0.5f,0x60606080, status_info); 
 
 
 			if(patchmode==1	&& (c_opacity2>0x00)) 
