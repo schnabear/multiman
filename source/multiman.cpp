@@ -567,7 +567,7 @@ void draw_text_stroke(float x, float y, float size, u32 color, const char *str);
 
 #define	GAME_INI_VER	"MMGI0100" //PS3GAME.INI	game flags (submenu)
 #define	GAME_STATE_VER	"MMLS0106" //LSTAT.BIN		multiMAN last state data
-#define	GAME_LIST_VER	"MMGL0105" //LLIST.BIN		cache for game list
+#define	GAME_LIST_VER	"MMGL0106" //LLIST.BIN		cache for game list
 #define	XMB_COL_VER		"MMXC0108" //XMBS.00x		xmb[?] structure (1 XMMB column)
 
 char current_version[9]="02.01.00";
@@ -575,10 +575,6 @@ char current_version_NULL[10];
 char versionUP[64];
 
 char hdd_folder[64]="/dev_hdd0/GAMES/";
-
-char last_play[512];
-char last_play_dir[512];
-char last_play_sfo[512];
 
 bool first_launch=1;
 char app_path[32];
@@ -809,7 +805,7 @@ char this_pane[256], other_pane[256];
 
 char gameID[512];
 
-#define MAX_LIST 640
+#define MAX_LIST 768
 t_menu_list menu_list[MAX_LIST];
 
 void DBPrintf( const char *string)
@@ -4217,7 +4213,7 @@ void sort_xmb_col(xmbmem *_xmb, u16 max, int _first)
 			else 
 				//remove duplicate entries (by name) in music/photo/video columns (excl. AVCHD/Blu-ray)
 				//preference goes to hdd entries usually (null entries removed by delete_xmb_dubs
-				if(!strcasecmp(_xmb[n].name+o1, _xmb[m].name+o2) && (_xmb[n].type>=3 && _xmb[n].type<=5)) _xmb[n].name[0]=0; 
+				if(!strcasecmp(_xmb[n].name+o1, _xmb[m].name+o2) && (_xmb[n].type>=4 && _xmb[n].type<=5)) _xmb[n].name[0]=0; 
 		}
 }
 
@@ -4294,6 +4290,9 @@ void read_xmb_column(int c, const u8 group)
 			fclose(flist);
 			remove(colfile);
 			xmb[c].size=0;
+			xmb[c].init=0;
+			xmb[c].first=0;
+			backup_group=0;
 		}
 		xmb[c].group=backup_group;
 		free_all_buffers();
@@ -4324,6 +4323,10 @@ void read_xmb_column_type(int c, u8 type, const u8 group)
 			fclose(flist);
 			remove(colfile);
 			xmb[c].size=0;
+			xmb[c].init=0;
+			xmb[c].first=0;
+			xmb[c].group=0;
+			backup_group=0;
 		}
 		for(int n=0; n<xmb[c].size; n++)
 		{
@@ -9673,8 +9676,7 @@ void fill_entries_from_device_pfs(char *path, t_menu_list *list, int *max, u32 f
 
 		(*max)++;
 
-		if (*max >= MAX_LIST)
-			break;
+		if (*max >= MAX_LIST) break;
 
 	} while (PfsFileFindNext(dir, &entry) == 0);
 
@@ -9775,7 +9777,8 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 	dir=opendir (avchd_path);
 
 	while(dir)
-		{
+	{
+		if(*max >=MAX_LIST-1) break;
 		pb_step-=10; if(pb_step<1) pb_step=429;
 		if(first_launch)
 		{
@@ -9815,7 +9818,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 			if(exist(file)) sprintf(BDtype,"BDMV");}
 
 		if(exist(file))
-			{
+		{
 
 			char is_multiAVCHD[13];is_multiAVCHD[0]=0;
 			sprintf(detailsfile, "%s/multiAVCHD.mpf", path2);
@@ -9833,56 +9836,57 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 			list[*max ].split=0;
 			list[*max ].user=0;
 
-	sprintf(detailsfile, "%s/details.txt", path2);
-	fp = fopen ( detailsfile, "r" );
-	if ( fp != NULL ) 
-	{
-		fseek (fp, 0, SEEK_SET);
-		char lines[2048]="/"; lines[1]=0;
-		int cline=0;
-		while (fscanf(fp,"%[^;];%[^;];%[^;];%[^;];%s\n", title, length, video, audio, web)==5)
-		{ 
-				cline++;
-				if(expand_avchd==1) 
-				{
-					sprintf(list[*max].title, "[Video] %s", title);
-//					utf8_to_ansi(string2, list[*max].title, 63);
-					list[*max].title[63]=0;
+			sprintf(detailsfile, "%s/details.txt", path2);
+			fp = fopen ( detailsfile, "r" );
+			if ( fp != NULL ) 
+			{
+				fseek (fp, 0, SEEK_SET);
+				char lines[2048]="/"; lines[1]=0;
+				int cline=0;
+				while (fscanf(fp,"%[^;];%[^;];%[^;];%[^;];%s\n", title, length, video, audio, web)==5)
+				{ 
+						cline++;
+						if(expand_avchd==1) 
+						{
+							sprintf(list[*max].title, "[Video] %s", title);
+		//					utf8_to_ansi(string2, list[*max].title, 63);
+							list[*max].title[63]=0;
 
-					list[*max ].flags=flag;
-					sprintf(list[*max ].title_id, "%s", "AVCHD");
-					sprintf(list[*max ].path, "%s", path2);
-					sprintf(list[*max ].entry, "%s", entry->d_name);
-					sprintf(list[*max ].content, "%s", BDtype);
-					sprintf(list[*max ].details, "Duration: %s, Video: %s, Audio: %s", length, video, audio);
-					list[*max ].cover=-1;
-					(*max) ++;
-				}
-				else
-				{
-					if(cline==1) {
-						is_multiAVCHD[13]=0;
-						sprintf(string2, "[Video] %s%s", title, is_multiAVCHD); string2[62]=0;
-						sprintf(list[*max].title, "%s", string2);
-//						utf8_to_ansi(string2, list[*max].title, 58);list[*max].title[58]=0;
+							list[*max ].flags=flag;
+							sprintf(list[*max ].title_id, "%s", "AVCHD");
+							sprintf(list[*max ].path, "%s", path2);
+							sprintf(list[*max ].entry, "%s", entry->d_name);
+							sprintf(list[*max ].content, "%s", BDtype);
+							sprintf(list[*max ].details, "Duration: %s, Video: %s, Audio: %s", length, video, audio);
+							list[*max ].cover=-1;
+							(*max) ++;
 						}
-					else
-						sprintf(lines, "%s %s /", lines, title);
-				}
+						else
+						{
+							if(cline==1) {
+								is_multiAVCHD[13]=0;
+								sprintf(string2, "[Video] %s%s", title, is_multiAVCHD); string2[62]=0;
+								sprintf(list[*max].title, "%s", string2);
+		//						utf8_to_ansi(string2, list[*max].title, 58);list[*max].title[58]=0;
+								}
+							else
+								sprintf(lines, "%s %s /", lines, title);
+						}
 
-				if(*max >=MAX_LIST) break;
-		}
-		lines[100]=0;
-		if(expand_avchd==0) 
-			{lines[90]=0; sprintf(list[*max].details, "%s", lines);}
-//			{utf8_to_ansi(lines, list[*max].details, 90);list[*max].details[90]=0;}
-		else {if(cline>0) (*max) --;}
-		fclose ( fp );
-	}
+						if(*max >=MAX_LIST-1) break;
+				}
+				lines[100]=0;
+				if(expand_avchd==0) 
+					{lines[90]=0; sprintf(list[*max].details, "%s", lines);}
+		//			{utf8_to_ansi(lines, list[*max].details, 90);list[*max].details[90]=0;}
+				else {if(cline>0) (*max) --;}
+				fclose ( fp );
+			}
 
 			(*max) ++; 
-			} // INDEX.BDM found
-		} // while
+			if(*max >=MAX_LIST-1) break;
+		} // INDEX.BDM found
+	} // while
 		closedir (dir);
 	} // scan AVCHD
 
@@ -9894,7 +9898,8 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 
 
 	while(1)
-		{
+	{
+		if(*max >=MAX_LIST-1) break;
 		pb_step-=10; if(pb_step<1) pb_step=429;
 		if(first_launch)
 		{
@@ -10067,7 +10072,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 			if(exist(file)) sprintf(BDtype,"BDMV");}
 
 		if(display_mode!=1 && exist(file))
-			{
+		{
 
 			char is_multiAVCHD[13];is_multiAVCHD[0]=0;
 			sprintf(detailsfile, "%s/multiAVCHD.mpf", path2);
@@ -10084,59 +10089,58 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 			sprintf(list[*max ].content, "%s", BDtype);
 			list[*max ].cover=-1;
 
-	sprintf(detailsfile, "%s/details.txt", path2);
-	fp = fopen ( detailsfile, "r" );
-	if ( fp != NULL ) 
-	{
-		fseek (fp, 0, SEEK_SET);
-		char lines[2048]="/"; lines[1]=0;
-		int cline=0;
-		while (fscanf(fp,"%[^;];%[^;];%[^;];%[^;];%s\n", title, length, video, audio, web)==5)
-		{ 
-		
-				cline++;
-				if(expand_avchd==1) 
-				{
-					sprintf(string2, "[%sVideo] %s", ext_int, title); string2[63]=0;
-					sprintf(list[*max].title, "%s", string2);
-//					utf8_to_ansi(string2, list[*max].title, 63);
-					list[*max].title[63]=0;
+			sprintf(detailsfile, "%s/details.txt", path2);
+			fp = fopen ( detailsfile, "r" );
+			if ( fp != NULL ) 
+			{
+				fseek (fp, 0, SEEK_SET);
+				char lines[2048]="/"; lines[1]=0;
+				int cline=0;
+				while (fscanf(fp,"%[^;];%[^;];%[^;];%[^;];%s\n", title, length, video, audio, web)==5)
+				{ 
+				
+						cline++;
+						if(expand_avchd==1) 
+						{
+							sprintf(string2, "[%sVideo] %s", ext_int, title); string2[63]=0;
+							sprintf(list[*max].title, "%s", string2);
+		//					utf8_to_ansi(string2, list[*max].title, 63);
+							list[*max].title[63]=0;
 
-					list[*max ].flags=flag;
-					sprintf(list[*max ].title_id, "%s", "AVCHD");
-					sprintf(list[*max ].path, "%s", path2);
-					sprintf(list[*max ].entry, "%s", entry->d_name);
-					sprintf(list[*max ].content, "%s", BDtype);
-					sprintf(list[*max ].details, "Duration: %s, Video: %s, Audio: %s", length, video, audio);
-					list[*max ].cover=-1;
-					(*max) ++;
-				}
-				else
-				{
-					if(cline==1) {
-						is_multiAVCHD[13]=0;
-						sprintf(string2, "[%sVideo] %s%s", ext_int, title, is_multiAVCHD); string2[58]=0;
-						sprintf(list[*max].title, "%s", string2);
-//						utf8_to_ansi(string2, list[*max].title, 58);list[*max].title[58]=0;
+							list[*max ].flags=flag;
+							sprintf(list[*max ].title_id, "%s", "AVCHD");
+							sprintf(list[*max ].path, "%s", path2);
+							sprintf(list[*max ].entry, "%s", entry->d_name);
+							sprintf(list[*max ].content, "%s", BDtype);
+							sprintf(list[*max ].details, "Duration: %s, Video: %s, Audio: %s", length, video, audio);
+							list[*max ].cover=-1;
+							(*max) ++;
 						}
-					else
-						sprintf(lines, "%s %s /", lines, title);
-				}
+						else
+						{
+							if(cline==1) {
+								is_multiAVCHD[13]=0;
+								sprintf(string2, "[%sVideo] %s%s", ext_int, title, is_multiAVCHD); string2[58]=0;
+								sprintf(list[*max].title, "%s", string2);
+		//						utf8_to_ansi(string2, list[*max].title, 58);list[*max].title[58]=0;
+								}
+							else
+								sprintf(lines, "%s %s /", lines, title);
+						}
 
-				if(*max >=MAX_LIST) break;
-		}
-		lines[100]=0;
-		if(expand_avchd==0) 
-		{	lines[90]=0; sprintf(list[*max].details, "%s", lines);
-			//utf8_to_ansi(lines, list[*max].details, 90);list[*max].details[90]=0;
-		}
-		else { if(cline>0) (*max) --;}
-		fclose ( fp );
-	}
+						if(*max >=MAX_LIST) break;
+				}
+				lines[100]=0;
+				if(expand_avchd==0) 
+				{	lines[90]=0; sprintf(list[*max].details, "%s", lines);
+					//utf8_to_ansi(lines, list[*max].details, 90);list[*max].details[90]=0;
+				}
+				else { if(cline>0) (*max) --;}
+				fclose ( fp );
+			}
 
 			(*max) ++; 
-			} // INDEX.BDM found
-
+		} // INDEX.BDM found
 
 
 				}
@@ -10149,7 +10153,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 
 		if(*max >=MAX_LIST) break;
 
-		}
+	}
 	
 	closedir (dir);
     load_texture(text_bmpIC, blankBG, 320);
@@ -11022,6 +11026,26 @@ void write_last_play( const char *gamebin, const char *path, const char *tname, 
 {
 	(void) tid;
 	(void) tname;
+
+	char last_play[128];
+	char last_play_dir[128];
+	char last_play_sfo[128];
+    char last_play_id[10];
+
+	last_play_id[0]=0x42; //B
+	last_play_id[1]=0x4C; //L
+	last_play_id[2]=0x45; //E
+	last_play_id[3]=0x53; //S
+
+	last_play_id[4]=0x38;
+	last_play_id[5]=0x30;
+	last_play_id[6]=0x36;
+	last_play_id[7]=0x31;
+	last_play_id[8]=0x30;
+	last_play_id[9]=0x00;
+	sprintf(last_play, "/dev_hdd0/game/%s/LASTPLAY.BIN", last_play_id);
+	sprintf(last_play_dir, "/dev_hdd0/game/%s", last_play_id);
+	sprintf(last_play_sfo, "/dev_hdd0/game/%s/PARAM.SFO", last_play_id);
 
 	if(!exist(last_play_dir)) return;
 
@@ -16075,6 +16099,7 @@ void get_www_themes(theme_def *list, u8 *max)
 //			dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, t_name, dialog_fun2, (void*)0x0000aaab, NULL );wait_dialog();
 //			dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, t_pkg, dialog_fun2, (void*)0x0000aaab, NULL );wait_dialog();
 						(*max)++;
+
 					}
 			}
 			fclose(fpV);
@@ -19422,12 +19447,10 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 			add_xmb_member(xmb[5].member, &xmb[5].size, (char*)"Start Showtime Media Center", (char*)"Launch Showtime to play movies and listen to music",
 					/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_showtime, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
 		}
-		else
-		{
-			for(int m=0; m<xmb[5].size; m++)
-				if(xmb[5].member[m].type==2) delete_xmb_member(xmb[5].member, &xmb[5].size, m);
 
-		}
+		for(int m=0; m<xmb[5].size; m++)
+			if(xmb[5].member[m].type==2) delete_xmb_member(xmb[5].member, &xmb[5].size, m);
+
 
 		if(!xmb[6].init)
 		{
@@ -20574,22 +20597,7 @@ int main(int argc, char **argv)
 
 	multiStreamStarted = StartMultiStream();
 
-    char last_play_id[10];
 
-	last_play_id[0]=0x42; //B
-	last_play_id[1]=0x4C; //L
-	last_play_id[2]=0x45; //E
-	last_play_id[3]=0x53; //S
-
-	last_play_id[4]=0x38;
-	last_play_id[5]=0x30;
-	last_play_id[6]=0x36;
-	last_play_id[7]=0x31;
-	last_play_id[8]=0x30;
-	last_play_id[9]=0x00;
-	sprintf(last_play, "/dev_hdd0/game/%s/LASTPLAY.BIN", last_play_id);
-	sprintf(last_play_dir, "/dev_hdd0/game/%s", last_play_id);
-	sprintf(last_play_sfo, "/dev_hdd0/game/%s/PARAM.SFO", last_play_id);
 
 	max_menu_list=0;
 
