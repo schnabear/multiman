@@ -81,6 +81,7 @@
 
 #include "graphics.h"
 #include "fonts.h"
+#include "language.h"
 
 #define FB(x) ((x)*1920*1080*4)	// 1 video frame buffer
 #define MB(x) ((x)*1024*1024)	// 1 MB
@@ -933,6 +934,7 @@ int cover_mode=8, initial_cover_mode=8, user_font=1, last_cover_mode=8;
 u8 dir_mode=2;
 u8 game_details=2;
 u8 bd_emulator=1;
+u8 mm_locale=0;
 int net_available=0;
 union CellNetCtlInfo net_info;
 int net_avail=1;
@@ -1008,21 +1010,34 @@ static const char genre[][16] = {
 "3D Support"
 };
 
+static char locales[][16] = { 
+	"default",
+	"LANG_BG.TXT", //Bulgarian 
+	"LANG_RU.TXT", //Russian
+	"LANG_TR.TXT", //Turkish
+	"LANG_ES.TXT", //Spanish
+	"LANG_DE.TXT", //German
+	"LANG_FR.TXT", //French
+	"LANG_IT.TXT", //Italian
+	"LANG_BR.TXT", //Brazil
+	"LANG_PR.TXT", //Portuguese
+	"LANG_NL.TXT", //Dutch
+	""
+};
+
 #define CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF	(0<<7)
 #define CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_ON	(1<<7)
 #define CELL_MSGDIALOG_TYPE_PROGRESSBAR_DOUBLE	(2<<12)
 
-uint8_t padLYstick=0, padLXstick=0, padRYstick=0, padRXstick=0, BDremote=0;
+uint8_t padLYstick=0, padLXstick=0, padRYstick=0, padRXstick=0;
 
 double mouseX=0.5f, mouseY=0.5f, mouseYD=0.0000f, mouseXD=0.0000f, mouseYDR=0.0000f, mouseXDR=0.0000f, mouseYDL=0.0000f, mouseXDL=0.0000f;
 uint8_t xDZ=30, yDZ=30;
 uint8_t xDZa=30, yDZa=30;
 
-//int ;
 float offY=0.0f, BoffY=0.0f, offX=0.0f, incZ=0.7f, BoffX=0.0f, slideX=0.0f;
 
 static void *host_addr;
-//static void *fast_files_mem;
 
 static uint32_t syscall35(const char *srcpath, const char *dstpath);
 static void syscall_mount(const char *path,  int mountbdvd);
@@ -1165,6 +1180,7 @@ downqueue;
 downqueue downloads[MAX_DOWN_LIST];
 int downloads_max=0;
 
+/*
 #define MAX_MSG (128) //queue for pop-up messages
 typedef struct
 {
@@ -1176,6 +1192,7 @@ typedef struct
 msgqueue;
 msgqueue message[MAX_MSG];
 int max_message=0;
+*/
 
 #define MAX_MP3 1024//MAX_XMB_MEMBERS
 typedef struct
@@ -1204,7 +1221,7 @@ char *tmhour(int _hour)
 
 void set_xo()
 {
-	if(confirm_with_x==1)
+	if(confirm_with_x)
 	{
 		BUTTON_CROSS =	_BUTTON_CROSS;	 //(1<<12)
 		BUTTON_CIRCLE=	_BUTTON_CIRCLE;	 //(1<<13)
@@ -1555,7 +1572,7 @@ pad_ok:
 	if(debug_mode)
 	{
 		get_free_memory();
-		sprintf(status_info, "%i %i %i %i (MEM: %.f)", databuf.button[20], databuf.button[21], databuf.button[22], databuf.button[23], (double) (meminfo.avail/1024.0f));
+		sprintf(status_info, "%i %i %i %i (MEM: %.f) %s", databuf.button[20], databuf.button[21], databuf.button[22], databuf.button[23], (double) (meminfo.avail/1024.0f), STR_DEBUG_MODE);
 	}
 	//sprintf(www_info, "--- %i %i ", databuf.len, pad_num);
 
@@ -1926,7 +1943,7 @@ int net_used_ignore()
 	int t_dialog_ret=dialog_ret;
 	dialog_ret=0;
 	cellMsgDialogAbort();
-	cellMsgDialogOpen2(type_dialog_yes_no, "There are active FTP connections!\n\nAre you sure you want to continue and abort FTP transfers?", dialog_fun1, (void *) 0x0000aaaa, NULL);
+	cellMsgDialogOpen2(type_dialog_yes_no, (const char*) STR_WARN_FTP, dialog_fun1, (void *) 0x0000aaaa, NULL);
 	wait_dialog();
 	if(dialog_ret==1) {dialog_ret=t_dialog_ret; return 1;}
 	dialog_ret=t_dialog_ret;
@@ -1988,7 +2005,7 @@ void launch_snes_emu(char *rom)
 	if(!exist(snes_self))
 	{
 		dialog_ret=0;
-		cellMsgDialogOpen2( type_dialog_ok, "To play SNES games you must install the latest version of SNEX9x for the PS3\xE2\x84\xA2", dialog_fun2, (void*)0x0000aaab, NULL );
+		cellMsgDialogOpen2( type_dialog_ok, (const char*)STR_WARN_SNES, dialog_fun2, (void*)0x0000aaab, NULL );
 		wait_dialog();
 		return;
 	}
@@ -2067,7 +2084,7 @@ void launch_genp_emu(char *rom)
 	if(!exist(genp_self))
 	{
 		dialog_ret=0;
-		cellMsgDialogOpen2( type_dialog_ok, "To play Genesis+ GX games you must install the latest version of GENESIS Emulator for the PS3\xE2\x84\xA2", dialog_fun2, (void*)0x0000aaab, NULL );
+		cellMsgDialogOpen2( type_dialog_ok, (const char*)STR_WARN_GEN, dialog_fun2, (void*)0x0000aaab, NULL );
 		wait_dialog();
 		return;
 	}
@@ -2088,7 +2105,7 @@ void launch_fceu_emu(char *rom)
 	if(!exist(fceu_self))
 	{
 		dialog_ret=0;
-		cellMsgDialogOpen2( type_dialog_ok, "To play NES/FCE Ultra games you must install the latest version of FCEU Emulator for the PS3\xE2\x84\xA2", dialog_fun2, (void*)0x0000aaab, NULL );
+		cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_WARN_FCEU, dialog_fun2, (void*)0x0000aaab, NULL );
 		wait_dialog();
 		return;
 	}
@@ -2108,7 +2125,7 @@ void launch_vba_emu(char *rom)
 	if(!exist(vba_self))
 	{
 		dialog_ret=0;
-		cellMsgDialogOpen2( type_dialog_ok, "To play GameBoy/Advanced games you must install the latest version of VBA Emulator for the PS3\xE2\x84\xA2", dialog_fun2, (void*)0x0000aaab, NULL );
+		cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_WARN_VBA, dialog_fun2, (void*)0x0000aaab, NULL );
 		wait_dialog();
 		return;
 	}
@@ -2128,7 +2145,7 @@ void launch_fba_emu(char *rom)
 	if(!exist(fba_self))
 	{
 		dialog_ret=0;
-		cellMsgDialogOpen2( type_dialog_ok, "To play FBA games you must install the latest version of FB Alpha/Next for the PS3\xE2\x84\xA2", dialog_fun2, (void*)0x0000aaab, NULL );
+		cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_WARN_FBA, dialog_fun2, (void*)0x0000aaab, NULL );
 		wait_dialog();
 		return;
 	}
@@ -2401,7 +2418,7 @@ void net_folder_copy(char *path, char *path_new, char *path_name)
 
 //	if(copy_folder_bytes>1048576)
 	{
-		sprintf(string1n, "Copying network folder (%i files in %i folders) from [%s], please wait!", t_files, t_folders, host_list[chost].host); //, (double) (copy_global_bytes/1024.0f/1024.0f) 
+		sprintf(string1n, (const char*)STR_NETCOPY0, t_files, t_folders, host_list[chost].host); //, (double) (copy_global_bytes/1024.0f/1024.0f) 
 //		dialog_ret=0;cellMsgDialogOpen2( type_dialog_yes_no, string1n, dialog_fun1, (void*)0x0000aaaa, NULL );	wait_dialog();
 //		ClearSurface(); cellDbgFontPrintf( 0.20f, 0.45f, 0.8f, 0xc0c0c0c0, string1); cellDbgFontDrawGcm();
 		dialog_ret=0;
@@ -2801,7 +2818,7 @@ int network_put(char *command, char *server_name, int server_port, char *net_fil
 	ret = recv(socket_handle, buf, BUF_SIZE, 0);
 
 	if(show_progress!=0 && copy_global_bytes>1048576){
-		dialog_ret=0; sprintf(string1, "Copying file to network host [%s], please wait!", server_name); //, (double) (copy_global_bytes/1024.0f/1024.0f) 
+		dialog_ret=0; sprintf(string1, (const char*) STR_NETCOPY1, server_name); //, (double) (copy_global_bytes/1024.0f/1024.0f) 
 		cellMsgDialogOpen2(CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL	|CELL_MSGDIALOG_TYPE_BUTTON_TYPE_NONE|CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF	|CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_NONE	|CELL_MSGDIALOG_TYPE_PROGRESSBAR_SINGLE, string1,	NULL,	NULL,	NULL);
 
 		flip();
@@ -3104,7 +3121,7 @@ int network_com(char *command, char *server_name, int server_port, char *net_fil
 	
 
 	if(show_progress!=0 && copy_global_bytes>1048576){
-		sprintf(string1, "Copying network file from [%s], please wait!", server_name); //, (double) (copy_global_bytes/1024.0f/1024.0f) 
+		sprintf(string1, (const char*) STR_NETCOPY2, server_name); //, (double) (copy_global_bytes/1024.0f/1024.0f) 
 //		ClearSurface(); cellDbgFontPrintf( 0.20f, 0.45f, 0.8f, 0xc0c0c0c0, string1); cellDbgFontDrawGcm();
 
 		cellMsgDialogOpen2(CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL	|CELL_MSGDIALOG_TYPE_BUTTON_TYPE_NONE|CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF	|CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_NONE	|CELL_MSGDIALOG_TYPE_PROGRESSBAR_SINGLE, string1,	NULL,	NULL,	NULL);
@@ -3282,7 +3299,7 @@ void net_folder_copy_put(char *path, char *path_new, char *path_name)
 		cellMsgDialogAbort(); flip();
 
 		char string1[256];
-		sprintf(string1, "Copying local folder (%i files in %i folders) to network host [%s], please wait!", file_counter, num_directories, host_list[chost].host);
+		sprintf(string1, (const char*) STR_NETCOPY3, file_counter, num_directories, host_list[chost].host);
 		cellMsgDialogOpen2(CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL	|CELL_MSGDIALOG_TYPE_BUTTON_TYPE_NONE|CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF	|CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_NONE	|CELL_MSGDIALOG_TYPE_PROGRESSBAR_SINGLE, string1,	NULL,	NULL,	NULL);
 		flipc(60);
 //		dialog_ret=0;cellMsgDialogOpen2( type_dialog_yes_no, string1, dialog_fun1, (void*)0x0000aaaa, NULL );	wait_dialog();
@@ -11888,17 +11905,17 @@ int my_game_copy(char *path, char *path2)
 		lastINC=0; lastINC3=0; lastINC2=0;
 
 	if(join_copy==1)
-		sprintf(string1, "%s", "Installing Game Files to HDD cache, please wait...");	
+		sprintf(string1, "%s", STR_COPY3);	
 	else
 	{
 		if(abort_copy==1)
-			sprintf(string1, "Copying %d files, please wait...", copy_file_counter);
+			sprintf(string1, (const char*) STR_COPY1, copy_file_counter);
 		else 
 		{
 			if(use_symlinks==1)
-				sprintf(string1, "Creating links for %d files (%1.3f GB), please wait...", copy_file_counter, (double)(copy_global_bytes/(1024.0*1024.0*1024.0)));
+				sprintf(string1, (const char*) STR_COPY2, copy_file_counter, (double)(copy_global_bytes/(1024.0*1024.0*1024.0)));
 			else
-				sprintf(string1, "Copying %d files (%1.3f GB), please wait...", copy_file_counter, (double)(copy_global_bytes/(1024.0*1024.0*1024.0)));
+				sprintf(string1, (const char*)STR_COPY0, copy_file_counter, (double)(copy_global_bytes/(1024.0*1024.0*1024.0)));
 		}
 	}
 
@@ -12187,9 +12204,9 @@ int copy_nr(char *path, char *path_new, char *path_name) // recursive to single 
 		lastINC=0; lastINC3=0; lastINC2=0;
 
 if(abort_copy==1)
-	sprintf(string1, "Copying over %d+ files (%1.3f+ GB), please wait...", copy_file_counter, (double)(copy_global_bytes/(1024.0*1024.0*1024.0)));
+	sprintf(string1, (const char*)STR_COPY4, copy_file_counter, (double)(copy_global_bytes/(1024.0*1024.0*1024.0)));
 	else 
-	sprintf(string1, "Copying %d files (%1.3f GB), please wait...", copy_file_counter, (double)(copy_global_bytes/(1024.0*1024.0*1024.0)));
+	sprintf(string1, (const char*)STR_COPY0, copy_file_counter, (double)(copy_global_bytes/(1024.0*1024.0*1024.0)));
 
 ret3=cellMsgDialogOpen2(
 	CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL
@@ -14949,22 +14966,22 @@ cancel_exit:
 				new_pad=0; old_pad=0;
 
 				if(do_move==1)
-					sprintf(filename, "Do you want to move the selected folders?\n\nSource: [%s]\n\nDestination: [%s]", list[e].path, other_pane);
+					sprintf(filename, (const char*) STR_MOVE0, list[e].path, other_pane);
 				else
 				{
 					if(use_symlinks==1)
 					{
 						if(strstr(list[e].name, "PS3_GAME")!=NULL && strstr(list[e].path, "/dev_hdd0")!=NULL && !strcmp(fm_func, "pkgshortcut"))
-							sprintf(filename, "Do you want to create a shadow copy of the selected folder?\n\nSource: [%s]\n\nDestination: [/dev_hdd0/G/<special_pkg_id>", list[e].path);
+							sprintf(filename, (const char*) STR_COPY7, list[e].path);
 						else
 						if(strstr(list[e].name, "PS3_GAME")!=NULL && strstr(list[e].path, "/dev_usb")!=NULL && (c_firmware==3.41f || c_firmware==3.55f || c_firmware==3.15f) && !strcmp(fm_func, "bdmirror"))
-							sprintf(filename, "Do you want to enable BD-ROM GAME DISC mirror on external USB?\n\nSource: [%s]\n\nDestination: [Emulated BD-ROM on USB device]", list[e].path);
+							sprintf(filename, (const char*) STR_COPY10, list[e].path);
 						else
-							sprintf(filename, "Do you want to create a shadow copy of the selected folder?\n\nSource: [%s]\n\nDestination: [%s/%s]", list[e].path, other_pane, list[e].name);
+							sprintf(filename, (const char*) STR_COPY8, list[e].path, other_pane, list[e].name);
 
 					}
 					else
-						sprintf(filename, "Do you want to copy the selected folders?\n\nSource: [%s]\n\nDestination: [%s]", list[e].path, other_pane);
+						sprintf(filename, (const char*) STR_COPY9, list[e].path, other_pane);
 				}
 
 				dialog_ret=0;
@@ -15058,7 +15075,7 @@ cancel_exit:
 							{
 								ret = mod_mount_table((char *) "reset", 0); //reset
 								rename (usb_mount1, usb_mount0);
-								dialog_ret=0; ret = cellMsgDialogOpen2( type_dialog_ok, "Error occured while parsing device mount table!", dialog_fun2, (void*)0x0000aaab, NULL );; wait_dialog();
+								dialog_ret=0; ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_MNT, dialog_fun2, (void*)0x0000aaab, NULL );; wait_dialog();
 								goto cancel_mount;
 							}
 
@@ -15067,7 +15084,7 @@ cancel_exit:
 						{
 							ret = mod_mount_table((char *) "reset", 0); //reset
 							dialog_ret=0;
-							ret = cellMsgDialogOpen2( type_dialog_ok, "Error occured while moving game to new location!", dialog_fun2, (void*)0x0000aaab, NULL );					
+							ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_MVGAME, dialog_fun2, (void*)0x0000aaab, NULL );					
 							wait_dialog();
 						}
 
@@ -15077,7 +15094,7 @@ cancel_exit:
 					{
 						dialog_ret=0;
 						ret = mod_mount_table((char *) "reset", 0); //reset
-						ret = cellMsgDialogOpen2( type_dialog_ok, "Error occured while parsing device mount table!", dialog_fun2, (void*)0x0000aaab, NULL );					
+						ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_MNT, dialog_fun2, (void*)0x0000aaab, NULL );					
 						wait_dialog();
 					}
 
@@ -15260,16 +15277,16 @@ overwrite_cancel_3:
 				if(m_copy_total==1)
 				{
 					if(do_move==1)
-					sprintf(filename, "Do you want to move the selected file?\n\nSource: [%s]\n\nDestination: [%s/%s]", list[e].path, other_pane, list[e].name);
+					sprintf(filename, (const char*) STR_MOVE1, list[e].path, other_pane, list[e].name);
 						else
-					sprintf(filename, "Do you want to copy the selected file?\n\nSource: [%s]\n\nDestination: [%s/%s]", list[e].path, other_pane, list[e].name);
+					sprintf(filename, (const char*) STR_COPY11, list[e].path, other_pane, list[e].name);
 				}
 				else
 				{
 					if(do_move==1)
-					sprintf(filename, "Do you want to move selected %i files?\n\nSource: [%s]\n\nDestination: [%s]", m_copy_total, this_pane, other_pane);
+					sprintf(filename, (const char*) STR_MOVE2, m_copy_total, this_pane, other_pane);
 						else
-					sprintf(filename, "Do you want to copy selected %i files?\n\nSource: [%s]\n\nDestination: [%s]", m_copy_total, this_pane, other_pane);
+					sprintf(filename, (const char*) STR_COPY12, m_copy_total, this_pane, other_pane);
 				}
 
 				dialog_ret=0;
@@ -15302,17 +15319,17 @@ overwrite_cancel_3:
 					else
 					{
 						if(do_move==1)
-							sprintf(string1, "Moving, please wait!");
+							sprintf(string1, "%s", STR_MOVE3);
 						else
-							sprintf(string1, "Copying, please wait!");
+							sprintf(string1, "%s", STR_COPY5);
 
 						ClearSurface();
 						cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string1);
 						cellDbgFontDrawGcm();
 						if(do_move==1)
-							sprintf(string1, "Moving file, please wait...");
+							sprintf(string1, "%s", STR_MOVE4);
 						else
-							sprintf(string1, "Copying file, please wait...");
+							sprintf(string1, "%s", STR_COPY6);
 
 
 						if(strstr(other_pane, "/net_host")!=NULL){
@@ -16039,15 +16056,13 @@ void get_www_themes(theme_def *list, u8 *max)
 		{
 			//net_avail=-1;
 			dialog_ret=0;
-			ret = cellMsgDialogOpen2( type_dialog_ok, "Internet connection is not available or an error has occured!", dialog_fun2, (void*)0x0000aaab, NULL );					
+			ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_WARN_INET, dialog_fun2, (void*)0x0000aaab, NULL );					
 			wait_dialog();
 			return;
 		}
 
 		//dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, "Please wait...", dialog_fun2, (void*)0x0000aaab, NULL );
 		//flipc(60);
-
-		char filename[1024];
 
 		char update_url[128]=" ";
 		char local_file[64]=" ";
@@ -16067,7 +16082,7 @@ void get_www_themes(theme_def *list, u8 *max)
 		if(ret==0) 		{
 			dialog_ret=0;
 			//net_avail=-1;
-			ret = cellMsgDialogOpen2( type_dialog_ok, "Internet connection is not available or an error has occured!", dialog_fun2, (void*)0x0000aaab, NULL );					
+			ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_WARN_INET, dialog_fun2, (void*)0x0000aaab, NULL );					
 			wait_dialog();
 			remove(local_file);
 //			sprintf(local_file, "%s/themes_check.bin", app_temp);
@@ -16107,9 +16122,8 @@ void get_www_themes(theme_def *list, u8 *max)
 
 		 if ((*max)==0)
 		 {
-				sprintf(filename, "Error occured while contacting the server!\n\nPlease try again later."); 
 				dialog_ret=0;
-				ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );					
+				ret = cellMsgDialogOpen2( type_dialog_ok, (const char*)STR_ERR_SRV0, dialog_fun2, (void*)0x0000aaab, NULL );					
 				wait_dialog();
 		 }
 
@@ -16127,7 +16141,7 @@ void check_for_update()
 		{
 			net_avail=-1;
 			dialog_ret=0;
-			ret = cellMsgDialogOpen2( type_dialog_ok, "Internet connection is not available or an error has occured!", dialog_fun2, (void*)0x0000aaab, NULL );					
+			ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_WARN_INET, dialog_fun2, (void*)0x0000aaab, NULL );					
 			wait_dialog();
 			return;
 		}
@@ -16172,7 +16186,7 @@ void check_for_update()
 		if(ret==0) 		{
 			dialog_ret=0;
 			net_avail=-1;
-			ret = cellMsgDialogOpen2( type_dialog_ok, "Internet connection is not available or an error has occured!", dialog_fun2, (void*)0x0000aaab, NULL );					
+			ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_WARN_INET, dialog_fun2, (void*)0x0000aaab, NULL );					
 			wait_dialog();
 			return;
 		}
@@ -16239,8 +16253,8 @@ void check_for_update()
 				if(dialog_ret==1) {
 
 				if(c_firmware<=3.30f) sprintf(update_url,"%smultiMAN2_315.bin", update_server);
-				if(c_firmware>3.54f) sprintf(update_url,"%smultiMAN2_355.bin", update_server);
-				if(c_firmware>3.39f) sprintf(update_url,"%smultiMAN2_340.bin", update_server);
+				if(c_firmware> 3.39f) sprintf(update_url,"%smultiMAN2_340.bin", update_server);
+				if(c_firmware> 3.54f) sprintf(update_url,"%smultiMAN2_355.bin", update_server);
 
 
 					sprintf(local_file,"%s/multiMAN_%s.pkg", usb_save, new_version);
@@ -16249,7 +16263,7 @@ void check_for_update()
 					if(ret==1) 
 						{
 							if(strstr(local_file, "USRDIR/TEMP")!=NULL) sprintf(local_file, "/app_home/multiMAN_%s.pkg", new_version);
-							sprintf(filename, "Download completed successfully!\n\nInstall the update from [* Install Package Files] XMB\xE2\x84\xA2 tab.\n\nUpdate file saved as: %s\n\nQuit to XMB\xE2\x84\xA2 now?", local_file); 
+							sprintf(filename, "Download completed successfully!\n\nInstall the update from [* Install Package Files] XMB\xE2\x84\xA2 tab.\n\nUpdate file saved as: %s\n\n%s now?", local_file, STR_QUIT); 
 							ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );					
 							wait_dialog();
 							if(dialog_ret==1)
@@ -16261,7 +16275,7 @@ void check_for_update()
 						}
 					else
 						{
-							ret = cellMsgDialogOpen2( type_dialog_ok, "Error occured while downloading the update!\n\nPlease try again later.", dialog_fun2, (void*)0x0000aaab, NULL );					
+							ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_UPD0, dialog_fun2, (void*)0x0000aaab, NULL );					
 							wait_dialog();
 						}
 				}
@@ -16288,9 +16302,8 @@ void check_for_update()
 		}
 		else
 		 {
-				sprintf(filename, "Error occured while contacting the update server!\n\nPlease try again later."); 
 				dialog_ret=0;
-				ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );					
+				ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_UPD1, dialog_fun2, (void*)0x0000aaab, NULL );					
 				wait_dialog();
 		 }
  		remove(versionUP);
@@ -16437,9 +16450,9 @@ if(get_param_sfo_field((char *)game_param_sfo, (char *)"APP_VER", (char *)temp_v
 					if(ret==1) 
 						{
 						if(max_pkg==1)
-							sprintf(filename, "Download completed successfully!\n\nInstall the update from [* Install Package Files] XMB\xE2\x84\xA2 tab.\n\nUpdate file saved as: %s\n\nQuit to XMB\xE2\x84\xA2 now?", local_file); 
+							sprintf(filename, "Download completed successfully!\n\nInstall the update from [* Install Package Files] XMB\xE2\x84\xA2 tab.\n\nUpdate file saved as: %s\n\n%s now?", local_file, STR_QUIT); 
 						else
-							sprintf(filename, "Download completed successfully!\n\nUpdate files saved in: %s\n\nQuit to XMB\xE2\x84\xA2 now?", usb_save); 
+							sprintf(filename, "Download completed successfully!\n\nUpdate files saved in: %s\n\n%s now?", usb_save, STR_QUIT); 
 							ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );					
 							wait_dialog();
 							if(dialog_ret==1) 
@@ -16454,7 +16467,7 @@ if(get_param_sfo_field((char *)game_param_sfo, (char *)"APP_VER", (char *)temp_v
 							if(first_pkg>=max_pkg)
 								ret = cellMsgDialogOpen2( type_dialog_ok, "You already have the latest version of the game.", dialog_fun2, (void*)0x0000aaab, NULL );					
 							else
-								ret = cellMsgDialogOpen2( type_dialog_ok, "Error occured while downloading the update!\n\nPlease try again later.", dialog_fun2, (void*)0x0000aaab, NULL );					
+								ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_UPD0, dialog_fun2, (void*)0x0000aaab, NULL );					
 							wait_dialog();
 						}
 			}
@@ -20439,7 +20452,9 @@ int main(int argc, char **argv)
 	sprintf(string1  ,  "%s/DISACC.BIN", app_usrdir);
 	cellMsgDialogAbort();
 
+	MM_LocaleSet (0);
 
+	sprintf(string1  ,  "%s/DISACC.BIN", app_usrdir);
 
 	if(!exist(disclaimer) || exist(string1)) 
 	{
@@ -20455,8 +20470,11 @@ int main(int argc, char **argv)
 
 			FILE *fpA;
 			fpA = fopen ( disclaimer, "w" );
-			fputs ( "USER AGREED TO DISCLAIMER: ",  fpA );fputs ( string1x,  fpA );fputs ( string2x,  fpA ); fputs ( string3x,  fpA );
-			fclose( fpA);
+			if(fpA!=NULL)
+			{
+				fputs ( "USER AGREED TO DISCLAIMER: ",  fpA );fputs ( string1x,  fpA );fputs ( string2x,  fpA ); fputs ( string3x,  fpA );
+				fclose( fpA);
+			}
 			remove(string1);
 	}
 
@@ -20793,36 +20811,56 @@ int main(int argc, char **argv)
 	mkdir(themes_dir, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
 	sprintf(themes_web_dir, "%s/themes_web",app_usrdir);
 	mkdir(themes_web_dir, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-	
+
+	sprintf(string1, "%s/lang", app_usrdir);
+	mkdir(string1, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); 
+
+	pad_read();pad_read();
+	debug_mode = ( (new_pad | old_pad) & (BUTTON_R2 | BUTTON_L2) );
+	new_pad=0; old_pad=0;
+
+	if(debug_mode) 
+					// Save default English GUI labels (for debug purposes, not intended for translation!)
+					// \n is missing in the output label strings and must be replaced manually
+					// after removing all header lines (the ones starting with #).
+					// Use HEX+TEXT editor to change single byte 0x0a to 2 bytes -> 0x5c 0x6e (\n)
+	{
+		sprintf(string1, "%s/lang/LANG_DEBUG.TXT", app_usrdir);
+		remove(string1);
+		FILE *fpA;
+		fpA = fopen ( string1, "wb" );
+		if(fpA!=NULL)
+		{
+			fputs ( "\xEF\xBB\xBF",  fpA ); // set text file header to UTF-8
+			fprintf(fpA, "###############################################################################\x0d\x0a#\x0d\x0a# multiMAN ver %s GUI Base File [English]\x0d\x0a# Do not edit or modify the contents of this file\x0d\x0a# It is provided as start point for translating multiMAN into another language\x0d\x0a# This file contains all editable GUI lables for current multiMAN version\x0d\x0a# If you decide to use it as template,\x0d\x0a# remove all lines starting with # including this and the next two lines!\x0d\x0a#\x0d\x0a###############################################################################\x0d\x0a", current_version_NULL);
+			for(int n=0; n<STR_LAST_ID; n++)
+			{
+				fwrite ( g_MMString[n].m_pStr, g_MMString[n].m_Len, 1, fpA ); 
+				fputs ( (char*)"\r\n",  fpA );
+			}
+			fclose( fpA);
+		}
+	}
 
 	parse_ini(options_ini,0);
 
+	mm_locale=0;
+	if(mm_locale) 
+	{
+		char lfile[128];
+		sprintf(lfile, "%s/lang/%s", app_usrdir, locales[mm_locale]);
+		if(MM_LocaleInit ( lfile )) MM_LocaleSet (1);
+	}
 
-//	ClearSurface(); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
-//	cellDbgFontPrintf( 0.32f, 0.85f, 1.0f, 0x90909090, "multiMAN is allocating memory...");
-//	cellDbgFontDrawGcm(); setRenderColor();	flip();
 
-
-
-
-
-
-//reboot:
-//	ClearSurface(); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
-//	cellDbgFontPrintf( 0.30f, 0.85f, 1.0f, 0x90909090, "multiMAN is loading user options...");
-//	cellDbgFontDrawGcm(); setRenderColor();	flip();
-//	ClearSurface(); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
-//	cellDbgFontPrintf( 0.31f, 0.85f, 1.0f, 0x90909090, "multiMAN is loading textures...");
-//	cellDbgFontDrawGcm(); setRenderColor();	flip();
-
-		for(usb_loop=0;usb_loop<8;usb_loop++)
-		{
-			sprintf(filename, "/dev_usb00%i/COLOR.INI", usb_loop);
-			if(exist(filename)) {
-				sprintf(string1,  "%s/COLOR.INI", app_usrdir);
-				file_copy(filename, string1, 0); break;
-			}
+	for(usb_loop=0;usb_loop<8;usb_loop++)
+	{
+		sprintf(filename, "/dev_usb00%i/COLOR.INI", usb_loop);
+		if(exist(filename)) {
+			sprintf(string1,  "%s/COLOR.INI", app_usrdir);
+			file_copy(filename, string1, 0); break;
 		}
+	}
 
 
 	sprintf(app_temp, "%s/TEMP",app_usrdir);
@@ -21203,15 +21241,13 @@ int main(int argc, char **argv)
 			unload_modules(); sys_process_exit(1);
 	}
 
-
-	pad_read();pad_read();
-	if( (new_pad|old_pad) & (BUTTON_R2|BUTTON_L2) ) {
-		new_pad=0; old_pad=0;
+	if(debug_mode)
+	{
 		dialog_ret=0;
-		ret = cellMsgDialogOpen2( type_dialog_ok, "Debug Mode", dialog_fun2, (void*)0x0000aaab, NULL );					
+		ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_DEBUG_MODE, dialog_fun2, (void*)0x0000aaab, NULL );					
 		wait_dialog_simple();
 
-		debug_mode=true;
+
 		current_version[6]=0x44;
 		current_version[7]=0x44;
 		current_version_NULL[6]=0x44;
@@ -22681,7 +22717,7 @@ from_fm:
 			if(exist(reload_self) && net_used_ignore())
 			{
 				cellMsgDialogAbort();
-				dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, "Restart multiMAN?", dialog_fun1, (void*)0x0000aaaa, NULL ); wait_dialog();
+				dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, (const char*) STR_RESTART, dialog_fun1, (void*)0x0000aaaa, NULL ); wait_dialog();
 				
 				if(dialog_ret==1){
 
@@ -24483,7 +24519,7 @@ pass_ok:
 				}
 
 				if(!exist(avchd_ROOT)) {
-					sprintf(line, "Error (%08X) occured while setting active AVCHD folder.\n\nCannot rename [%s] to [%s]", ret, avchd_CURRENT, avchd_ROOT);
+					sprintf(line, (const char*) STR_ERR_MVAV, ret, avchd_CURRENT, avchd_ROOT);
 					dialog_ret=0;
 					ret = cellMsgDialogOpen2( type_dialog_ok, line, dialog_fun2, (void*)0x0000aaab, NULL );
 					wait_dialog();
@@ -24769,7 +24805,7 @@ again_sc8:
 							{
 								mod_mount_table((char *) "reset", 0); //reset
 								rename (usb_mount1, usb_mount0);
-								dialog_ret=0; ret = cellMsgDialogOpen2( type_dialog_ok, "Error occured while parsing device mount table!", dialog_fun2, (void*)0x0000aaab, NULL );; wait_dialog();
+								dialog_ret=0; ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_MNT, dialog_fun2, (void*)0x0000aaab, NULL );; wait_dialog();
 								rename (usb_mount1, usb_mount0);
 								goto cancel_mount2;
 							}
@@ -24780,7 +24816,7 @@ again_sc8:
 						{
 							dialog_ret=0;
 							mod_mount_table((char *) "reset", 0); //reset
-							ret = cellMsgDialogOpen2( type_dialog_ok, "Error occured while moving game to new location!", dialog_fun2, (void*)0x0000aaab, NULL );					
+							ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_MVGAME, dialog_fun2, (void*)0x0000aaab, NULL );					
 							wait_dialog();
 						}
 
@@ -24789,7 +24825,7 @@ again_sc8:
 					else
 					{
 						dialog_ret=0;
-						ret = cellMsgDialogOpen2( type_dialog_ok, "Error occured while parsing device mount table!", dialog_fun2, (void*)0x0000aaab, NULL );					
+						ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_MNT, dialog_fun2, (void*)0x0000aaab, NULL );					
 						wait_dialog();
 					}
 
@@ -25058,7 +25094,7 @@ skip_to_FM:
 		new_pad=0; 
 		c_opacity_delta=16;	dimc=0; dim=1;
 		dialog_ret=0;
-		ret = cellMsgDialogOpen2( type_dialog_yes_no, "Quit to XMB\xE2\x84\xA2 screen?", dialog_fun1, (void*)0x0000aaaa, NULL );
+		ret = cellMsgDialogOpen2( type_dialog_yes_no, (const char*) STR_QUIT1, dialog_fun1, (void*)0x0000aaaa, NULL );
 		wait_dialog();
  		
 		if(dialog_ret==1)
@@ -25380,7 +25416,7 @@ skip_to_FM:
 		if ( (new_pad & BUTTON_CROSS) && mouseX>=0.89459375f && mouseX<=0.9195f && mouseY>=0.05222f && mouseY<=0.09666f && net_used_ignore()) 
 		{
 			dialog_ret=0; new_pad=0; 
-			ret = cellMsgDialogOpen2( type_dialog_yes_no, "Quit to XMB\xE2\x84\xA2 screen?", dialog_fun1, (void*)0x0000aaaa, NULL );
+			ret = cellMsgDialogOpen2( type_dialog_yes_no, (const char*) STR_QUIT1, dialog_fun1, (void*)0x0000aaaa, NULL );
 			wait_dialog();
 			
 			if(dialog_ret==1)
