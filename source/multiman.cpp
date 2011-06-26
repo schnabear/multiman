@@ -343,7 +343,7 @@ const int32_t misc_thr_prio  = 1600;
 const size_t app_stack_size  = 32768;
 
 bool is_game_loading=0;
-bool is_any_xmb_column=0;
+u8 is_any_xmb_column=0;
 u8 drawing_xmb=0;
 float angle=0.f;
 
@@ -569,7 +569,7 @@ void draw_text_stroke(float x, float y, float size, u32 color, const char *str);
 #define	GAME_INI_VER	"MMGI0100" //PS3GAME.INI	game flags (submenu)
 #define	GAME_STATE_VER	"MMLS0106" //LSTAT.BIN		multiMAN last state data
 #define	GAME_LIST_VER	"MMGL0106" //LLIST.BIN		cache for game list
-#define	XMB_COL_VER		"MMXC0108" //XMBS.00x		xmb[?] structure (1 XMMB column)
+#define	XMB_COL_VER		"MMXC0109" //XMBS.00x		xmb[?] structure (1 XMMB column)
 
 char current_version[9]="02.01.00";
 char current_version_NULL[10];
@@ -987,11 +987,11 @@ using namespace cell::Gcm;
 #define IS_GENRE_MASK	 (15<<16)
 //#define IS_GENRE_CLEAR  ~(IS_GENRE_MASK) // user&= ~IS_GENRE_MASK
 
-static const char retro_groups[][8] = { "Retro", "SNES", "FCEU", "VBA", "GEN+", "FBANext" };
-static const char alpha_groups[][8] = { "All", "A-B", "C-D", "E-F", "G-H", "I-J", "K-L", "M-N", "O-P", "Q-R", "S-T", "U-V", "W-X", "Y-Z", "Other" };
-static const char xmb_columns[][16] = { "Empty", "multiMAN", "Settings", "Photo", "Music", "Video", "Game", "Favorites", "Retro", "Web" };
+static unsigned char retro_groups[][24] = { "Retro", "SNES", "FCEU", "VBA", "GEN+", "FBANext" };
+static unsigned char alpha_groups[][16] = { "All", "A-B", "C-D", "E-F", "G-H", "I-J", "K-L", "M-N", "O-P", "Q-R", "S-T", "U-V", "W-X", "Y-Z", "Other" };
+static unsigned char xmb_columns[][32] = { "Empty", "multiMAN", "Settings", "Photo", "Music", "Video", "Game", "Favorites", "Retro", "Web" };
 
-static const char genre[][16] = { 
+static unsigned char genre[][48] = { 
 "Other",
 "Action",
 "Adventure",
@@ -1010,19 +1010,32 @@ static const char genre[][16] = {
 "3D Support"
 };
 
-static char locales[][16] = { 
-	"default",
-	"LANG_BG.TXT", //Bulgarian 
-	"LANG_RU.TXT", //Russian
-	"LANG_TR.TXT", //Turkish
-	"LANG_ES.TXT", //Spanish
-	"LANG_DE.TXT", //German
-	"LANG_FR.TXT", //French
-	"LANG_IT.TXT", //Italian
-	"LANG_BR.TXT", //Brazil
-	"LANG_PR.TXT", //Portuguese
-	"LANG_NL.TXT", //Dutch
-	""
+typedef struct {
+	u8				val;
+	char			id[4];
+	unsigned char	eng_name[32];
+	unsigned char	loc_name[32];
+
+} _locales;
+
+#define MAX_LOCALES	16
+static _locales locales[] = {
+	{	0, "EN",	"English",		"English"		},
+	{	1, "BG",	"Bulgarian",	"Български"		},
+	{	2, "RU",	"Russian",		"Русский"		},
+	{	3, "RO",	"Romanian",		"Român"			},
+	{	4, "TR",	"Turkish",		"Türkçe"		},
+	{	5, "ES",	"Spanish",		"Español"		},
+	{	6, "DE",	"German",		"Deutsch"		},
+	{	7, "FR",	"French",		"Français"		},
+	{	8, "IT",	"Italian",		"Italiano"		},
+	{	9, "BR",	"Brazilian",	"Português BR"	},
+	{  10, "PR",	"Portuguese",	"Português"		},
+	{  11, "NL",	"Dutch",		"Nederlands"	},
+	{  12, "PL",	"Polish",		"Polski"		},
+	{  13, "UA",	"Ukrainian",	"Українська"	},
+	{  14, "HU",	"Hungarian",	"Magyar"		},
+	{  15, "DK",	"Danish",		"Dansk"			},
 };
 
 #define CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF	(0<<7)
@@ -1119,8 +1132,8 @@ typedef struct __xmbmem
 	u8	*icon; //pointer to icon image
 	u16	iconw;
 	u16	iconh;
-	char file_path[384]; //path to entry file
-	char icon_path[256]; //path to entry icon
+	char file_path[256]; //path to entry file
+	char icon_path[128]; //path to entry icon
 }
 xmbmem __attribute__((aligned(16)));
 
@@ -1250,6 +1263,16 @@ void set_xo()
 		dox_cross_w=34;
 		dox_cross_h=34;
 
+	}
+}
+
+void load_localization(int id)
+{
+	if(id) 
+	{
+		char lfile[128];
+		sprintf(lfile, "%s/lang/LANG_%s.TXT", app_usrdir, locales[id].id);
+		if(MM_LocaleInit ( lfile )) MM_LocaleSet (1);
 	}
 }
 
@@ -2546,7 +2569,7 @@ void net_folder_copy(char *path, char *path_new, char *path_name)
 
 			cellDbgFontDrawGcm();
 */
-			sprintf(string1n,"Transferred %.2f of %.2f MB. Remaining: %imin %2.2isec",((double) global_folder_bytes)/(1024.0)/(1024.0),((double) copy_folder_bytes)/(1024.0)/(1024.0), (eta/60), eta % 60);
+			sprintf(string1n, (const char*) STR_NETCOPY4,((double) global_folder_bytes)/(1024.0)/(1024.0),((double) copy_folder_bytes)/(1024.0)/(1024.0), (eta/60), eta % 60);
 			cellMsgDialogProgressBarSetMsg(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE, string1n);
 
 			seconds2= (int) (time(NULL));
@@ -2851,7 +2874,7 @@ int network_put(char *command, char *server_name, int server_port, char *net_fil
 			ClearSurface();
 			draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x101010ff);
 
-			sprintf(string1,"Transferred %.2f of %.2f MB. Remaining: %imin %2.2isec",((double) global_device_bytes)/(1024.0)/(1024.0),((double) copy_global_bytes)/(1024.0)/(1024.0), (eta/60), eta % 60);
+			sprintf(string1, (const char*) STR_NETCOPY4,((double) global_device_bytes)/(1024.0)/(1024.0),((double) copy_global_bytes)/(1024.0)/(1024.0), (eta/60), eta % 60);
 			cellMsgDialogProgressBarSetMsg(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE, string1);
 
 			seconds2= (int) (time(NULL));
@@ -3169,7 +3192,7 @@ int network_com(char *command, char *server_name, int server_port, char *net_fil
 
 			cellDbgFontDrawGcm();
 */
-			sprintf(string1,"Transferred %.2f of %.2f MB. Remaining: %imin %2.2isec",((double) global_device_bytes)/(1024.0)/(1024.0),((double) copy_global_bytes)/(1024.0)/(1024.0), (eta/60), eta % 60);
+			sprintf(string1, (const char*) STR_NETCOPY4,((double) global_device_bytes)/(1024.0)/(1024.0),((double) copy_global_bytes)/(1024.0)/(1024.0), (eta/60), eta % 60);
 			cellMsgDialogProgressBarSetMsg(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE, string1);
 
 			seconds2= (int) (time(NULL));
@@ -3349,7 +3372,7 @@ void net_folder_copy_put(char *path, char *path_new, char *path_name)
 			ClearSurface();
 			draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x101010ff);
 
-			sprintf(string1,"Transferred %.2f of %.2f MB. Remaining: %imin %2.2isec",((double) global_device_bytes)/(1024.0)/(1024.0),((double) copy_global_bytes)/(1024.0)/(1024.0), (eta/60), eta % 60);
+			sprintf(string1,(const char*) STR_NETCOPY4,((double) global_device_bytes)/(1024.0)/(1024.0),((double) copy_global_bytes)/(1024.0)/(1024.0), (eta/60), eta % 60);
 			cellMsgDialogProgressBarSetMsg(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE, string1);
 
 			seconds2= (int) (time(NULL));
@@ -3420,10 +3443,10 @@ int download_file(const char *http_file, const char *save_path, int show_progres
 	char string1[256];
 	global_device_bytes=0x00UL;
 	int seconds2=0;
-	if(show_progress==1) sprintf(string1, "Downloading update data, please wait!");
-	if(show_progress==2) sprintf(string1, "Downloading cover, please wait!");
-	if(show_progress==3) sprintf(string1, "Downloading file, please wait!");
-	if(show_progress==4) sprintf(string1, "Downloading theme, please wait!");
+	if(show_progress==1) sprintf(string1, (const char*) STR_DOWN_UPD);
+	if(show_progress==2) sprintf(string1, (const char*) STR_DOWN_COVER);
+	if(show_progress==3) sprintf(string1, (const char*) STR_DOWN_FILE);
+	if(show_progress==4) sprintf(string1, (const char*) STR_DOWN_THM);
 	if(show_progress!=0){
 	ClearSurface();
 	cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string1);
@@ -3561,18 +3584,18 @@ if(lastINC3>3 || (time(NULL)-seconds2)>1 || (show_progress==3 && www_running))
 						display_img(3840+(int)BoffX, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
 					}
 		}
-		sprintf(string1,"\nDownloaded %.1f of %.3f MB. Remaining: %imin %2.2isec (/\\ to cancel)\nSave path: %s",((double) global_device_bytes)/(1024.0)/(1024.0f),((double) copy_global_bytes)/(1024.0)/(1024.0f), (eta/60), eta % 60, save_path);
+		sprintf(string1, (const char*) STR_DOWN_MSG0,((double) global_device_bytes)/(1024.0)/(1024.0f),((double) copy_global_bytes)/(1024.0)/(1024.0f), (eta/60), eta % 60, save_path);
 		cellDbgFontPrintf( 0.07f, 0.9f, 1.0f, 0xc0c0c0c0, string1);
 	}
 	else
 	{
 		draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x101010ff);
-		sprintf(string1,"Downloaded %1.2f of %1.2f KB. Remaining: %imin %2.2isec\n\nPress /\\ to cancel download",((double) global_device_bytes)/(1024.0),((double) copy_global_bytes)/(1024.0), (eta/60), eta % 60);
+		sprintf(string1, (const char*) STR_DOWN_MSG1,((double) global_device_bytes)/(1024.0),((double) copy_global_bytes)/(1024.0), (eta/60), eta % 60);
 		cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
 	}
 	cellDbgFontDrawGcm();
 	seconds2= (int) (time(NULL));
-	sprintf(string1,"Downloaded %1.2f of %1.2f KB. Remaining: %imin %2.2isec",((double) global_device_bytes)/(1024.0),((double) copy_global_bytes)/(1024.0), (eta/60), eta % 60);
+	sprintf(string1, (const char*) STR_DOWN_MSG2,((double) global_device_bytes)/(1024.0),((double) copy_global_bytes)/(1024.0), (eta/60), eta % 60);
 	if(show_progress!=3)
 		cellMsgDialogProgressBarSetMsg(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE, string1);
 	flip(); 
@@ -8739,7 +8762,7 @@ void change_param_sfo_version(const char *file) //parts from drizzt
 				if (c_firmware < ver) {
 					char msg[170];
 					snprintf(msg, sizeof(msg),
-							 "Game requires PS3 firmware version %.2f.\n\nDo you want to change PARAM.SFO version to %.2f?", ver, c_firmware);
+							 (const char*) STR_PARAM_VER, ver, c_firmware);
 
 					int t_dialog_ret=dialog_ret;
 					dialog_ret = 0; cellMsgDialogAbort();
@@ -8955,6 +8978,7 @@ void delete_entries_content(t_menu_list *list, int *max, char *content_type)
 
 int ps3_home_scan(char *path, t_dir_pane *list, int *max)
 {
+	if((*max)>=MAX_PANE_SIZE || strlen(path)>sizeof(list[0].path) || strlen(path)>512) return 0;
 	DIR  *dir;
 	char *f= NULL;
 	struct CellFsStat s;
@@ -9015,7 +9039,7 @@ int ps3_home_scan(char *path, t_dir_pane *list, int *max)
 
 int ps3_home_scan_ext(char *path, t_dir_pane *list, int *max, char *_ext)
 {
-	if((*max)>=MAX_PANE_SIZE) return 0;
+	if((*max)>=MAX_PANE_SIZE || strlen(path)>sizeof(list[0].path) || strlen(path)>512) return 0;
 	DIR  *dir;
 	char *f= NULL;
 
@@ -9064,7 +9088,7 @@ int ps3_home_scan_ext(char *path, t_dir_pane *list, int *max, char *_ext)
 
 int ps3_home_scan_ext_bare(char *path, t_dir_pane_bare *list, int *max, char *_ext)
 {
-	if((*max)>=MAX_PANE_SIZE_BARE) return 0;
+	if((*max)>=MAX_PANE_SIZE_BARE || strlen(path)>sizeof(list[0].path) || strlen(path)>512) return 0;
 	DIR  *dir;
 	char *f= NULL;
 
@@ -9114,7 +9138,7 @@ int ps3_home_scan_ext_bare(char *path, t_dir_pane_bare *list, int *max, char *_e
 
 int ps3_home_scan_bare(char *path, t_dir_pane_bare *list, int *max)
 {
-	if((*max)>=MAX_PANE_SIZE_BARE) return 0;
+	if((*max)>=MAX_PANE_SIZE_BARE || strlen(path)>sizeof(list[0].path) || strlen(path)>512) return 0;
 	DIR  *dir;
 	char *f= NULL;
 
@@ -10791,7 +10815,7 @@ if(lastINC3>0 || (time(NULL)-seconds2)!=0 || use_symlinks==1)
 		else
 		{
 			if(no_real_progress==1)
-				sprintf(string1,"Copied %.0f MB (%i of %i files). Elapsed %2.2i:%2.2i min",((double) global_device_bytes)/(1024.0*1024.0), file_counter+1, copy_file_counter, (seconds/60), seconds % 60);
+				sprintf(string1,"Copied %.0f MB (%i of %i files). Elapsed: %2.2i:%2.2i min",((double) global_device_bytes)/(1024.0*1024.0), file_counter+1, copy_file_counter, (seconds/60), seconds % 60);
 			else
 				sprintf(string1,"Copied %.0f / %.0f MB (%i/%i) Remaining: %i:%2.2i min", ((double) global_device_bytes)/(1024.0*1024.0),((double) copy_global_bytes)/(1024.0*1024.0), file_counter+1, copy_file_counter, (eta/60), eta % 60);
 		}
@@ -11066,7 +11090,7 @@ void write_last_play( const char *gamebin, const char *path, const char *tname, 
 
 	if(!exist(last_play_dir)) return;
 
-	dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, "Setting data for last played game, please wait...", dialog_fun2, (void*)0x0000aaab, NULL );
+	dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, (const char*) STR_LP_DATA, dialog_fun2, (void*)0x0000aaab, NULL );
 	flipc(60);
 
 	char org_param_sfo[512], sldir[512];//, dldir[512];
@@ -11083,6 +11107,21 @@ void write_last_play( const char *gamebin, const char *path, const char *tname, 
 		sprintf( ICON0, "%s/PS3_GAME/ICON0.PNG", path);
 		sprintf( ICON1_PAM, "%s/PS3_GAME/ICON1.PAM", path);
 		sprintf (sldir, "%s/PS3_GAME/USRDIR", path);
+
+		char s_source[512];
+		char s_destination[512];
+		sprintf(s_source, "%s/PS3_GAME/TROPDIR", path);
+		sprintf(s_destination, "%s/TROPDIR", last_play_dir);
+		mkdir(s_destination, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); cellFsChmod(s_destination, 0777);
+		sprintf(s_destination, "%s/TROPDIR", last_play_dir);
+		my_game_copy((char*)s_source, (char*)s_destination); 
+
+		sprintf(s_source, "%s/PS3_GAME/LICDIR/LIC.DAT", path);
+		sprintf(s_destination, "%s/LICDIR", last_play_dir);
+		mkdir(s_destination, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); cellFsChmod(s_destination, 0777);
+		sprintf(s_destination, "%s/LICDIR/LIC.DAT", last_play_dir);
+		file_copy((char*)s_source, (char*)s_destination, 0); 
+
 	}
 	else
 	{
@@ -11894,7 +11933,7 @@ int my_game_copy(char *path, char *path2)
 		freeSpace = ( (uint64_t) (blockSize * freeSize) );
 		if((uint64_t)global_device_bytes>(uint64_t)freeSpace && use_symlinks!=1 && freeSpace!=0)
 		{
-			sprintf(string1, "Not enough space on destination drive! (Available: %.2fMB)\n\nAdditional %.2fMB of free space required!", (double) ((freeSpace)/1048576.00f), (double) ((global_device_bytes-freeSpace)/1048576.00f) );	dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
+			sprintf(string1, (const char*) STR_ERR_NOSPACE1, (double) ((freeSpace)/1048576.00f), (double) ((global_device_bytes-freeSpace)/1048576.00f) );	dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 			abort_copy=1;
 			goto return_error;
 		}
@@ -16000,6 +16039,12 @@ if ( fp != NULL )
 			if(user_font<0 || user_font>9) user_font=0;
 		}
 
+		if(strstr (line,"mm_locale=")!=NULL) {
+			int len = strlen(line)-2; for(i = 10; i < len; i++) {dimS[i-10] = line[i];} dimS[i-10]=0;
+			mm_locale=strtoul(dimS, NULL, 10);
+			if(mm_locale>=MAX_LOCALES) mm_locale=0;
+		}		
+
 		if(strstr (line,"deadzone_x=")!=NULL) {
 			int len = strlen(line)-2; for(i = 11; i < len; i++) {dimS[i-11] = line[i];} dimS[i-11]=0;
 			xDZ=strtoul(dimS, NULL, 10);
@@ -16263,7 +16308,7 @@ void check_for_update()
 					if(ret==1) 
 						{
 							if(strstr(local_file, "USRDIR/TEMP")!=NULL) sprintf(local_file, "/app_home/multiMAN_%s.pkg", new_version);
-							sprintf(filename, "Download completed successfully!\n\nInstall the update from [* Install Package Files] XMB\xE2\x84\xA2 tab.\n\nUpdate file saved as: %s\n\n%s now?", local_file, STR_QUIT); 
+							sprintf(filename, "Download completed successfully!\n\nInstall the update from [* Install Package Files] XMB\xE2\x84\xA2 tab.\n\nUpdate file saved as: %s\n\n%s?", local_file, STR_QUIT); 
 							ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );					
 							wait_dialog();
 							if(dialog_ret==1)
@@ -16450,9 +16495,9 @@ if(get_param_sfo_field((char *)game_param_sfo, (char *)"APP_VER", (char *)temp_v
 					if(ret==1) 
 						{
 						if(max_pkg==1)
-							sprintf(filename, "Download completed successfully!\n\nInstall the update from [* Install Package Files] XMB\xE2\x84\xA2 tab.\n\nUpdate file saved as: %s\n\n%s now?", local_file, STR_QUIT); 
+							sprintf(filename, "Download completed successfully!\n\nInstall the update from [* Install Package Files] XMB\xE2\x84\xA2 tab.\n\nUpdate file saved as: %s\n\n%s?", local_file, STR_QUIT); 
 						else
-							sprintf(filename, "Download completed successfully!\n\nUpdate files saved in: %s\n\n%s now?", usb_save, STR_QUIT); 
+							sprintf(filename, "Download completed successfully!\n\nUpdate files saved in: %s\n\n%s?", usb_save, STR_QUIT); 
 							ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );					
 							wait_dialog();
 							if(dialog_ret==1) 
@@ -16473,9 +16518,8 @@ if(get_param_sfo_field((char *)game_param_sfo, (char *)"APP_VER", (char *)temp_v
 			}
 			else //no usb/card connected
 			{
-				sprintf(filename, "Please attach USB storage device to save update data and try again!"); 
 				dialog_ret=0;
-				ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );					
+				ret = cellMsgDialogOpen2( type_dialog_ok, "Please attach USB storage device to save update data and try again!", dialog_fun2, (void*)0x0000aaab, NULL );					
 				wait_dialog();
 			} 
 
@@ -16484,9 +16528,8 @@ if(get_param_sfo_field((char *)game_param_sfo, (char *)"APP_VER", (char *)temp_v
 		}
 		else
 		 {
-				sprintf(filename, "Cannot find update information for this title!"); 
 				dialog_ret=0;
-				ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );					
+				ret = cellMsgDialogOpen2( type_dialog_ok, "Cannot find update information for this title!", dialog_fun2, (void*)0x0000aaab, NULL );					
 				wait_dialog();
 		 }
 just_quit:
@@ -16616,6 +16659,34 @@ void select_theme()
 
 //		draw_xmb_bare(1, 1, 0, 1);
 		free(pane);
+}
+
+int select_language()
+{
+	use_analog=1;
+	float b_mX=mouseX;
+	float b_mY=mouseY;
+	mouseX=660.f/1920.f;
+	mouseY=225.f/1080.f;
+	slide_xmb_left(2);
+	for (int n=0;n<MAX_LOCALES;n++ )
+	{
+		sprintf(opt_list[n].label, "%s", locales[n].loc_name);
+		sprintf(opt_list[n].value, "%i", locales[n].val);
+	}
+	opt_list_max=MAX_LOCALES;
+	int ret_f=open_select_menu((char*) "Select Language", 600, opt_list, opt_list_max, text_FONT, 16, 1);
+	use_analog=0;
+	mouseX=b_mX;
+	mouseY=b_mY;
+	if(ret_f!=-1) 
+	{
+		mm_locale = (int)(strtod(opt_list[ret_f].value, NULL));
+		load_localization(mm_locale);
+		redraw_column_texts(xmb_icon);
+	}
+	slide_xmb_right();
+	return mm_locale;
 }
 
 int delete_game_cache()
@@ -17079,7 +17150,7 @@ void draw_xmb_title(u8 *buffer, xmbmem *member, int cn, u32 col1, u32 col2, u8 _
 void add_xmb_member(xmbmem *_member, u16 *_size, char *_name, char *_subname,
 		/*type*/u8 _type, /*status*/u8 _status, /*game_id*/int _game_id, /*icon*/u8 *_data, u16 _iconw, u16 _iconh, /*f_path*/char *_file_path, /*i_path*/ char *_icon_path, int _u_flags, int _split)
 {
-	if((*_size)>=MAX_XMB_MEMBERS-1) return;
+	if( (*_size)>=(MAX_XMB_MEMBERS-1) || strlen(_file_path)>sizeof(_member[0].file_path) || strlen(_icon_path)>sizeof(_member[0].icon_path) ) return;
 
 	u16 size=(*_size);
 	_member[size].is_checked = true;
@@ -17090,10 +17161,10 @@ void add_xmb_member(xmbmem *_member, u16 *_size, char *_name, char *_subname,
 	_member[size].game_user_flags =_u_flags;
 	_member[size].game_split	  =_split;
 
-	sprintf(_member[size].name, "%s", _name);
-	_member[size].name[128]=0;
-	sprintf(_member[size].subname, "%s", _subname);
-	_member[size].subname[96]=0;
+	snprintf(_member[size].name, sizeof(_member[size].name), "%s", _name);
+	_member[size].name[sizeof(_member[size].name)]=0;
+	snprintf(_member[size].subname, sizeof(_member[size].subname), "%s", _subname);
+	_member[size].subname[sizeof(_member[size].subname)]=0;
 
 	_member[size].option_size=0;
 	_member[size].option_selected=0;
@@ -17104,8 +17175,8 @@ void add_xmb_member(xmbmem *_member, u16 *_size, char *_name, char *_subname,
 	_member[size].iconw =_iconw;
 	_member[size].iconh =_iconh;
 
-	sprintf(_member[size].file_path, "%s", _file_path);
-	sprintf(_member[size].icon_path, "%s", _icon_path);
+	snprintf(_member[size].file_path, sizeof(_member[size].file_path), "%s", _file_path);
+	snprintf(_member[size].icon_path, sizeof(_member[size].icon_path), "%s", _icon_path);
 
 	(*_size)++;
 }
@@ -17123,7 +17194,7 @@ void add_xmb_suboption(xmbopt *_option, u8 *_size, u8 _type, char *_label, char 
 
 void add_xmb_option(xmbmem *_member, u16 *_size, char *_name, char *_subname, char *_optionini)
 {
-	if((*_size)>=MAX_XMB_MEMBERS-1) return;
+	if((*_size)>=(MAX_XMB_MEMBERS-1)) return;
 
 	u16 size=(*_size);
 	_member[size].type		=  7;//option
@@ -17133,8 +17204,10 @@ void add_xmb_option(xmbmem *_member, u16 *_size, char *_name, char *_subname, ch
 	_member[size].game_user_flags = 0;
 	_member[size].game_split	  = 0;
 
-	sprintf(_member[size].name, "%s", _name);
-	sprintf(_member[size].subname, "%s", _subname);
+	snprintf(_member[size].name, sizeof(_member[size].name), "%s", _name);
+	_member[size].name[sizeof(_member[size].name)]=0;
+	snprintf(_member[size].subname, sizeof(_member[size].subname), "%s", _subname);
+	_member[size].subname[sizeof(_member[size].subname)]=0;
 
 	_member[size].option_size=0;
 	_member[size].option_selected=0;
@@ -18095,6 +18168,16 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 	int first=0;
 	int sel=0;
 	char filename[1024];
+	int _menu_font = 15;
+	float _y_scale=1.0f;
+	if(strstr(_caption, "Language")!=NULL) 
+	{
+		sel=mm_locale;
+		first=sel-_max_entries+2;
+		if(first<0) first=0;
+		_menu_font = 2;
+		_y_scale=0.7f;
+	}
 
 	sprintf(filename, "%s/LBOX.PNG", app_usrdir);
 	load_texture(text_LIST+1512000, filename, 600);
@@ -18128,27 +18211,27 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 //			for(int fsr=0; fsr<(_width*_height*4); fsr+=4) *(uint32_t*) ( (u8*)(text_LIST)+fsr )=0x222222a0;
 			memcpy(text_LIST, text_LIST+1512000, 1512000);
 			max_ttf_label=0;
-			print_label_ex( 0.5f, 0.05f, 1.0f, COL_XMB_COLUMN, _caption, 1.04f, 0.0f, 15, 1.0f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 1);
+			print_label_ex( 0.5f, 0.05f, 1.0f, COL_XMB_COLUMN, _caption, 1.04f, 0.0f, _menu_font, 1.0f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 1);
 
 			for(int n=first; (n<(first+_max_entries-1) && n<_max); n++)
 			{
 				if(_centered)
 				{
 					if(n==sel)
-						print_label_ex( 0.5f, ((float)((n-first+3)*line_h)/(float)_height)-0.011f, 1.4f, 0xffe0e0e0, list[n].label, 1.04f, 0.0f, 15, 1.0f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 1);
+						print_label_ex( 0.5f, ((float)((n-first+3)*line_h)/(float)_height)-0.011f, 1.4f, 0xffe0e0e0, list[n].label, 1.04f, 0.0f, _menu_font, 1.0f/((float)(_width/1920.f)), _y_scale/((float)(_height/1080.f)), 1);
 					else
-						print_label_ex( 0.5f, ((float)((n-first+3)*line_h)/(float)_height), 1.0f, COL_XMB_SUBTITLE, list[n].label, 1.00f, 0.0f, 15, 1.0f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 1 );
+						print_label_ex( 0.5f, ((float)((n-first+3)*line_h)/(float)_height), 1.0f, COL_XMB_SUBTITLE, list[n].label, 1.00f, 0.0f, _menu_font, 1.0f/((float)(_width/1920.f)), _y_scale/((float)(_height/1080.f)), 1 );
 				}
 				else
 				{
 					if(n==sel)
-						print_label_ex( 0.05f, ((float)((n-first+3)*line_h)/(float)_height)-0.011f, 1.4f, 0xf0e0e0e0, list[n].label, 1.04f, 0.0f, 15, 0.8f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 0);
+						print_label_ex( 0.05f, ((float)((n-first+3)*line_h)/(float)_height)-0.011f, 1.4f, 0xf0e0e0e0, list[n].label, 1.04f, 0.0f, _menu_font, 0.8f/((float)(_width/1920.f)), _y_scale/((float)(_height/1080.f)), 0);
 					else
-						print_label_ex( 0.05f, ((float)((n-first+3)*line_h)/(float)_height), 1.0f, COL_XMB_SUBTITLE, list[n].label, 1.00f, 0.0f, 15, 0.8f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 0 );
+						print_label_ex( 0.05f, ((float)((n-first+3)*line_h)/(float)_height), 1.0f, COL_XMB_SUBTITLE, list[n].label, 1.00f, 0.0f, _menu_font, 0.8f/((float)(_width/1920.f)), _y_scale/((float)(_height/1080.f)), 0 );
 				}
 			}
 
-			print_label_ex( 0.8f, ((float)(_height-line_h*2)/(float)_height)+0.01f, 1.5f, 0xf0c0c0c0, (char*)"Apply", 1.00f, 0.0f, 15, 0.5f/((float)(_width/1920.f)), 0.5f/((float)(_height/1080.f)), 0);
+			print_label_ex( 0.8f, ((float)(_height-line_h*2)/(float)_height)+0.01f, 1.5f, 0xf0c0c0c0, (char*)"Apply", 1.00f, 0.0f, _menu_font, 0.5f/((float)(_width/1920.f)), 0.5f/((float)(_height/1080.f)), 0);
 			flush_ttf(text_LIST, _width, _height);
 			put_texture_with_alpha_gen( text_LIST, text_DOX+(dox_cross_x	*4 + dox_cross_y	* dox_width*4), dox_cross_w,	dox_cross_h,	dox_width, _width, (int)((0.8f*_width)-dox_cross_w-5), _height-line_h*2);
 			last_sel=sel;
@@ -18156,8 +18239,23 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 
 		ClearSurface();
 
-		set_texture( buffer, 1920, 1080);
-		display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+		if(cover_mode==8 && xmb_icon==2)
+		{
+			if(!use_drops && xmb_sparks!=0) draw_stars();
+
+			set_texture( text_bmp, 1920, 1080);
+			display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+			if(use_drops && xmb_sparks!=0) draw_stars();
+
+			draw_xmb_clock(xmb_clock, 0);
+			draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
+		}
+
+		else
+		{
+			set_texture( buffer, 1920, 1080);
+			display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+		}
 
 		set_texture(text_LIST, _width, _height);
 		display_img((int)(mouseX*1920.f), (int)(mouseY*1080.f), _width, _height, _width, _height, 0.0f, _width, _height);
@@ -18965,6 +19063,7 @@ void save_options()
 		fprintf(fpA, "scan_for_apps=%i\r\n", scan_for_apps);
 		fprintf(fpA, "fullpng=%i\r\n", initial_cover_mode);
 		fprintf(fpA, "user_font=%i\r\n", user_font);
+		fprintf(fpA, "mm_locale=%i\r\n", mm_locale);
 		fprintf(fpA, "lock_display_mode=%i\r\n", lock_display_mode);
 		fprintf(fpA, "lock_fileman=%i\r\n", lock_fileman);
 		
@@ -18973,6 +19072,7 @@ void save_options()
 		fprintf(fpA, "showdir=%i\r\n", dir_mode);
 		fprintf(fpA, "game_details=%i\r\n", game_details);
 		fprintf(fpA, "bd_emulator=%i\r\n", bd_emulator);
+		
 		fprintf(fpA, "animation=%i\r\n", animation);
 		fprintf(fpA, "game_bg_overlay=%i\r\n", game_bg_overlay);
 		fprintf(fpA, "progress_bar=%i\r\n", progress_bar);
@@ -19029,7 +19129,9 @@ void parse_settings()
 		else if(!strcmp(oini, "scan_for_apps"))		scan_for_apps	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "full_png"))			initial_cover_mode	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "user_font"))			user_font		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+
 		else if(!strcmp(oini, "theme_sound"))		theme_sound		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+
 		else if(!strcmp(oini, "lock_display_mode"))	lock_display_mode	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "lock_fileman"))		lock_fileman	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "overscan"))			overscan		=(float)((float)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10)/100.f);
@@ -19078,6 +19180,9 @@ void add_settings_column()
 		xmb[2].size=0;
 
 		add_xmb_member(xmb[2].member, &xmb[2].size, (char*)"System Information", (char*)"Displays information about your PS3\xE2\x84\xA2 system.",
+				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_tool, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
+
+		add_xmb_member(xmb[2].member, &xmb[2].size, (char*)"Interface Language", (char*)"Changes multiMAN interface language.",
 				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_tool, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
 
 		add_xmb_member(xmb[2].member, &xmb[2].size, (char*)"Clear Game Cache Data", (char*)"Removes cache files for selected title.",
@@ -19998,7 +20103,7 @@ err_web:
 		www_running = 0;
 		status_info[0]=0;
 //		sprintf(string1, "Browser disabled during Remote Play!\n\nNot enough memory to launch web browser!\n\nRequired memory: %.2f MB (allocated %.2f MB)", (double) mc_size/1024/1024, (double) MEMORY_CONTAINER_SIZE_ACTIVE/1024/1024);dialog_ret=0;		cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
-		dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, "Not enough memory to launch web browser!\n\nPlease restart multiMAN and try again.", dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
+		dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_NOMEM_WEB, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 	}
 }
 
@@ -20448,13 +20553,11 @@ int main(int argc, char **argv)
 
 	char string1x[512], string2x[512], string3x[512], string1[1024], filename[1024];
 
+	MM_LocaleSet (0);
+
 	sprintf(disclaimer,  "%s/DISCLM.BIN", app_usrdir);
 	sprintf(string1  ,  "%s/DISACC.BIN", app_usrdir);
 	cellMsgDialogAbort();
-
-	MM_LocaleSet (0);
-
-	sprintf(string1  ,  "%s/DISACC.BIN", app_usrdir);
 
 	if(!exist(disclaimer) || exist(string1)) 
 	{
@@ -20815,6 +20918,10 @@ int main(int argc, char **argv)
 	sprintf(string1, "%s/lang", app_usrdir);
 	mkdir(string1, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); 
 
+	sprintf(string1, "%s/LICDIR/LIC.DAT", app_homedir);	remove(string1);
+	sprintf(string1, "%s/LICDIR", app_homedir);	rmdir(string1);
+	sprintf(string1, "%s/TROPDIR", app_homedir); my_game_delete(string1); rmdir(string1);
+
 	pad_read();pad_read();
 	debug_mode = ( (new_pad | old_pad) & (BUTTON_R2 | BUTTON_L2) );
 	new_pad=0; old_pad=0;
@@ -20832,7 +20939,7 @@ int main(int argc, char **argv)
 		if(fpA!=NULL)
 		{
 			fputs ( "\xEF\xBB\xBF",  fpA ); // set text file header to UTF-8
-			fprintf(fpA, "###############################################################################\x0d\x0a#\x0d\x0a# multiMAN ver %s GUI Base File [English]\x0d\x0a# Do not edit or modify the contents of this file\x0d\x0a# It is provided as start point for translating multiMAN into another language\x0d\x0a# This file contains all editable GUI lables for current multiMAN version\x0d\x0a# If you decide to use it as template,\x0d\x0a# remove all lines starting with # including this and the next two lines!\x0d\x0a#\x0d\x0a###############################################################################\x0d\x0a", current_version_NULL);
+			fprintf(fpA, "###############################################################################\x0d\x0a#\x0d\x0a# multiMAN ver %s GUI Base File [English]\x0d\x0a# Do not edit or modify the contents of this file\x0d\x0a# It is provided as a start point for translating multiMAN to another language\x0d\x0a# This file contains all editable GUI lables for current multiMAN version\x0d\x0a# If you decide to use it as template,\x0d\x0a# remove all lines starting with # including this and the next two lines!\x0d\x0a#\x0d\x0a###############################################################################\x0d\x0a", current_version_NULL);
 			for(int n=0; n<STR_LAST_ID; n++)
 			{
 				fwrite ( g_MMString[n].m_pStr, g_MMString[n].m_Len, 1, fpA ); 
@@ -20844,14 +20951,7 @@ int main(int argc, char **argv)
 
 	parse_ini(options_ini,0);
 
-	mm_locale=0;
-	if(mm_locale) 
-	{
-		char lfile[128];
-		sprintf(lfile, "%s/lang/%s", app_usrdir, locales[mm_locale]);
-		if(MM_LocaleInit ( lfile )) MM_LocaleSet (1);
-	}
-
+	load_localization(mm_locale);
 
 	for(usb_loop=0;usb_loop<8;usb_loop++)
 	{
@@ -21237,7 +21337,7 @@ int main(int argc, char **argv)
 
 	if (meminfo.avail<16777216) // Quit if less than 16MB RAM available (at least 12 required for copy operations + 4 to be on the safe side)
 	{
-			dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, "Please restart multiMAN from PS3 XMB\xE2\x84\xA2", dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
+			dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_NOMEM, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 			unload_modules(); sys_process_exit(1);
 	}
 
@@ -22876,7 +22976,7 @@ retry_showtime_mm:
 	if ((old_pad & BUTTON_R1) && c_firmware!=3.41f && 0) 
 		{
 setperm_title:
-			dialog_ret=0; cellMsgDialogOpen2( type_dialog_back, "Setting access permissions, please wait...", dialog_fun2, (void*)0x0000aaab, NULL );	flipc(62);
+			dialog_ret=0; cellMsgDialogOpen2( type_dialog_back, (const char*) STR_SET_ACCESS, dialog_fun2, (void*)0x0000aaab, NULL );	flipc(62);
 			sprintf(filename, "%s", menu_list[game_sel].path);
 			abort_rec=0;
 			fix_perm_recursive(filename);
@@ -23569,9 +23669,29 @@ cancel_theme_exit:
 			if(xmb[1].first==8 && net_used_ignore()) {unload_modules(); sys_process_exit(1);}
 		}
 
-		if(xmb_icon==2 && (xmb[2].member[xmb[2].first].option_size || xmb[2].first<2) ) //settings
+		if(xmb_icon==2 && (xmb[2].member[xmb[2].first].option_size || xmb[2].first<3) ) //settings
 		{
-			if(xmb[2].first==1)  // clear game cache
+
+			if(xmb[2].first==0) // system information
+			{
+				is_any_xmb_column=xmb_icon;
+				parse_ini(options_ini,1);
+				show_sysinfo();
+				is_any_xmb_column=0; 
+				pad_read(); new_pad=0; 
+				goto xmb_cancel_option;
+			}
+
+			if(xmb[2].first==1)  // select interface language
+			{
+				is_any_xmb_column=xmb_icon;
+				select_language();
+				pad_read(); new_pad=0; 
+				is_any_xmb_column=0;
+				goto xmb_cancel_option;
+			}
+
+			if(xmb[2].first==2)  // clear game cache
 			{
 				if(delete_game_cache()!=-1)
 				{
@@ -23579,15 +23699,6 @@ cancel_theme_exit:
 					dialog_ret=0; cellMsgDialogOpen2( type_dialog_back, "Game Cache Data cleared!", dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 					wait_dialog();
 				}
-			}
-
-			if(xmb[2].first==0) 
-			{
-				is_any_xmb_column=xmb_icon;
-				parse_ini(options_ini,1);
-				show_sysinfo();
-				is_any_xmb_column=0; 
-				pad_read(); new_pad=0; 
 				goto xmb_cancel_option;
 			}
 
@@ -23689,6 +23800,7 @@ xmb_pin_ok2:
 			}
 
 			parse_settings();
+
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "xmb_cover_column")) {free_all_buffers(); xmb[6].init=0; xmb[7].init=0; init_xmb_icons(menu_list, max_menu_list, game_sel );}
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "confirm_with_x")) {set_xo();xmb_legend_drawn=0;}
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "display_mode") || !strcmp(xmb[2].member[xmb[2].first].optionini, "hide_bd")) forcedevices=(1<<11);//0x0800;
@@ -24610,7 +24722,7 @@ again_sc8:
 							dialog_ret=0; 
 							if(reprocess==1)
 							{
-								cellMsgDialogOpen2( type_dialog_yes_no, "Pre-processing required for this title.\n\nDo you want to install required data to internal HDD?", dialog_fun1, (void*)0x0000aaaa, NULL );
+								cellMsgDialogOpen2( type_dialog_yes_no, (const char*) STR_PREPROCESS, dialog_fun1, (void*)0x0000aaaa, NULL );
 								wait_dialog();
 								if(!menu_list[game_sel].split) { game_last_page=-1; old_fi=-1; };
 								menu_list[game_sel].split=1;
@@ -24630,7 +24742,7 @@ again_sc8:
 								freeSpace = ( (uint64_t) (blockSize * freeSize) );
 								if((uint64_t)global_device_bytes>(uint64_t)freeSpace && freeSpace!=0)
 								{
-									sprintf(string1, "Not enough space to complete cache operation! (Available: %.2fMB)\n\nAdditional %.2fMB of free space required!", (double) ((freeSpace)/1048576.00f), (double) ((global_device_bytes-freeSpace)/1048576.00f) );	dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
+									sprintf(string1, (const char*) STR_ERR_NOSPACE0, (double) ((freeSpace)/1048576.00f), (double) ((global_device_bytes-freeSpace)/1048576.00f) );	dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 									goto cancel_mount2;
 								}
 
@@ -24648,7 +24760,7 @@ again_sc8:
 								}
 
 								//dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );	wait_dialog();
-								dialog_ret=0; cellMsgDialogOpen2( type_dialog_back, "Setting access permissions, please wait!\n\nThis operation will be performed only once.", dialog_fun2, (void*)0x0000aaab, NULL );	flipc(62);
+								dialog_ret=0; cellMsgDialogOpen2( type_dialog_back, (const char*) STR_SET_ACCESS1, dialog_fun2, (void*)0x0000aaab, NULL );	flipc(62);
 								sprintf(tb_name, "%s", menu_list[game_sel].path);
 								//sys8_perm_mode(1);
 								abort_rec=0;
@@ -24874,6 +24986,21 @@ cancel_mount2:
 						menu_list[game_sel].user|=IS_DBOOT;
 						set_game_flags(game_sel);
 						write_last_play( filename2, menu_list[game_sel].path, menu_list[game_sel].title, menu_list[game_sel].title_id, 1);
+						char s_source[512];
+						char s_destination[512];
+						sprintf(s_source, "%s/PS3_GAME/TROPDIR", menu_list[game_sel].path);
+						sprintf(s_destination, "%s/TROPDIR", app_usrdir);
+						mkdir(s_destination, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); cellFsChmod(s_destination, 0777);
+						sprintf(s_destination, "%s/TROPDIR", app_homedir);
+						my_game_copy((char*)s_source, (char*)s_destination); 
+
+						sprintf(s_source, "%s/PS3_GAME/LICDIR/LIC.DAT", menu_list[game_sel].path);
+						sprintf(s_destination, "%s/LICDIR", app_homedir);
+						mkdir(s_destination, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); cellFsChmod(s_destination, 0777);
+						sprintf(s_destination, "%s/LICDIR/LIC.DAT", app_homedir);
+						file_copy((char*)s_source, (char*)s_destination, 0); 
+
+
 						unload_modules();
 
 						sprintf(filename2, "%s/PS3_GAME/USRDIR/EBOOT.BIN", menu_list[game_sel].path);

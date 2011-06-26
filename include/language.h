@@ -29,31 +29,50 @@
 #define STR_NETCOPY1	MM_STRING(  24 )
 #define STR_NETCOPY2	MM_STRING(  25 )
 #define STR_NETCOPY3	MM_STRING(  26 )
+#define STR_NETCOPY4	MM_STRING(  27 )
 
-#define STR_MOVE0		MM_STRING(  27 )
-#define STR_MOVE1		MM_STRING(  28 )
-#define STR_MOVE2		MM_STRING(  29 )
-#define STR_MOVE3		MM_STRING(  30 )
-#define STR_MOVE4		MM_STRING(  31 )
+#define STR_MOVE0		MM_STRING(  28 )
+#define STR_MOVE1		MM_STRING(  29 )
+#define STR_MOVE2		MM_STRING(  30 )
+#define STR_MOVE3		MM_STRING(  31 )
+#define STR_MOVE4		MM_STRING(  32 )
 
-#define STR_WARN_INET	MM_STRING(  32 )
-#define STR_ERR_SRV0	MM_STRING(  33 )
-#define STR_ERR_UPD0	MM_STRING(  34 )
-#define STR_ERR_UPD1	MM_STRING(  35 )
+#define STR_WARN_INET	MM_STRING(  33 )
+#define STR_ERR_SRV0	MM_STRING(  34 )
+#define STR_ERR_UPD0	MM_STRING(  35 )
+#define STR_ERR_UPD1	MM_STRING(  36 )
 
-#define STR_ERR_MNT		MM_STRING(  36 )
-#define STR_ERR_MVGAME	MM_STRING(  37 )
-#define STR_ERR_MVAV	MM_STRING(  38 )
+#define STR_ERR_MNT		MM_STRING(  37 )
+#define STR_ERR_MVGAME	MM_STRING(  38 )
+#define STR_ERR_MVAV	MM_STRING(  39 )
+
+#define STR_DOWN_UPD	MM_STRING(  40 )
+#define STR_DOWN_COVER	MM_STRING(  41 )
+#define STR_DOWN_FILE	MM_STRING(  42 )
+#define STR_DOWN_THM	MM_STRING(  43 )
+
+#define STR_DOWN_MSG0	MM_STRING(  44 )
+#define STR_DOWN_MSG1	MM_STRING(  45 )
+#define STR_DOWN_MSG2	MM_STRING(  46 )
+
+#define STR_PARAM_VER	MM_STRING(  47 )
+#define STR_LP_DATA		MM_STRING(  48 )
+
+#define STR_SET_ACCESS	MM_STRING(  49 )
+#define STR_SET_ACCESS1	MM_STRING(  50 )
+
+#define STR_PREPROCESS	MM_STRING(  51 )
+
+#define STR_ERR_NOSPACE0	MM_STRING(  52 )
+#define STR_ERR_NOSPACE1	MM_STRING(  53 )
+
+#define STR_ERR_NOMEM_WEB	MM_STRING(  54 )
+#define STR_ERR_NOMEM	MM_STRING(  55 )
 
 
 
 
-
-#define	STR_LAST_ID 39
-
-
-
-
+#define	STR_LAST_ID 56
 
 // ***********************************************************************************
 

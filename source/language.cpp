@@ -43,6 +43,7 @@ static unsigned char s_pNetCopy0	[]	= "Copying network folder (%i files in %i fo
 static unsigned char s_pNetCopy1	[]	= "Copying file to network host [%s], please wait!";
 static unsigned char s_pNetCopy2	[]	= "Copying network file from [%s], please wait!";
 static unsigned char s_pNetCopy3	[]	= "Copying local folder (%i files in %i folders) to network host [%s], please wait!";
+static unsigned char s_pNetCopy4	[]	= "Transferred %.2f of %.2f MB. Remaining: %imin %2.2isec";
 
 static unsigned char s_pMove0		[]	= "Do you want to move the selected folders?\n\nSource: [%s]\n\nDestination: [%s]";
 static unsigned char s_pMove1		[]	= "Do you want to move the selected file?\n\nSource: [%s]\n\nDestination: [%s/%s]";
@@ -59,6 +60,29 @@ static unsigned char s_pErrMNT		[]	= "Error occured while parsing device mount t
 static unsigned char s_pErrMVGAME	[]	= "Error occured while moving game to new location!";
 
 static unsigned char s_pErrMVAV		[]	= "Error (%08X) occured while setting active AVCHD folder.\n\nCannot rename [%s] to [%s]";
+
+static unsigned char s_pDownUpdate	[]	= "Downloading update data, please wait!";
+static unsigned char s_pDownCover	[]	= "Downloading cover, please wait!";
+static unsigned char s_pDownFile	[]	= "Downloading file, please wait!";
+static unsigned char s_pDownTheme	[]	= "Downloading theme, please wait!";
+
+static unsigned char s_pDownMSG0	[]	= "\nDownloaded %.1f of %.3f MB. Remaining: %imin %2.2isec (/\\ to cancel)\nSave path: %s";
+static unsigned char s_pDownMSG1	[]	= "Downloaded %1.2f of %1.2f KB. Remaining: %imin %2.2isec\n\nPress /\\ to cancel download";
+static unsigned char s_pDownMSG2	[]	= "Downloaded %1.2f of %1.2f KB. Remaining: %imin %2.2isec";
+
+static unsigned char s_pParamVer	[]	= "Game requires PS3 firmware version %.2f.\n\nDo you want to change PARAM.SFO version to %.2f?";
+
+static unsigned char s_pLastPlay	[]	= "Setting data for last played game, please wait...";
+static unsigned char s_pSetAccess	[]	= "Setting access permissions, please wait...";
+static unsigned char s_pSetAccess1	[]	= "Setting access permissions, please wait!\n\nThis operation will be performed only once.";
+
+static unsigned char s_pPreProcess	[]	= "Pre-processing required for this title.\n\nDo you want to install required data to internal HDD?";
+
+static unsigned char s_pNoSpace0	[]	= "Not enough space to complete cache operation! (Available: %.2fMB)\n\nAdditional %.2fMB of free space required!";
+static unsigned char s_pNoSpace1	[]	= "Not enough space on destination drive! (Available: %.2fMB)\n\nAdditional %.2fMB of free space required!";
+
+static unsigned char s_pErrNoMemWeb	[]	= "Not enough memory to launch web browser!\n\nPlease restart multiMAN and try again.";
+static unsigned char s_pErrNoMem	[]	= "Please restart multiMAN from PS3 XMB\xE2\x84\xA2";
 
 /*
 static unsigned char s_p		[]		= 
@@ -104,21 +128,45 @@ static MMString s_MMStringDef[] = {
  { sizeof ( s_pNetCopy1	  ) - 1, s_pNetCopy1	},
  { sizeof ( s_pNetCopy2	  ) - 1, s_pNetCopy2	},
  { sizeof ( s_pNetCopy3	  ) - 1, s_pNetCopy3	},
+ { sizeof ( s_pNetCopy4	  ) - 1, s_pNetCopy4	}, //27
 
- { sizeof ( s_pMove0	  ) - 1, s_pMove0		}, //27 
+ { sizeof ( s_pMove0	  ) - 1, s_pMove0		}, //28 
  { sizeof ( s_pMove1	  ) - 1, s_pMove1		}, 
  { sizeof ( s_pMove2	  ) - 1, s_pMove2		}, 
  { sizeof ( s_pMove3	  ) - 1, s_pMove3		}, 
- { sizeof ( s_pMove4	  ) - 1, s_pMove4		}, //31
+ { sizeof ( s_pMove4	  ) - 1, s_pMove4		}, //32
 
- { sizeof ( s_pWarnINET	  ) - 1, s_pWarnINET	}, //32
+ { sizeof ( s_pWarnINET	  ) - 1, s_pWarnINET	}, //33
  { sizeof ( s_pErrSRV0	  ) - 1, s_pErrSRV0		},
  { sizeof ( s_pErrUPD0	  ) - 1, s_pErrUPD0		},
- { sizeof ( s_pErrUPD1	  ) - 1, s_pErrUPD1		}, //35
+ { sizeof ( s_pErrUPD1	  ) - 1, s_pErrUPD1		}, //36
 
- { sizeof ( s_pErrMNT	  ) - 1, s_pErrMNT		}, //36
+ { sizeof ( s_pErrMNT	  ) - 1, s_pErrMNT		}, //37
  { sizeof ( s_pErrMVGAME  ) - 1, s_pErrMVGAME	},
  { sizeof ( s_pErrMVAV	  ) - 1, s_pErrMVAV		},
+
+ { sizeof ( s_pDownUpdate	  ) - 1, s_pDownUpdate		}, //40
+ { sizeof ( s_pDownCover	  ) - 1, s_pDownCover		},
+ { sizeof ( s_pDownFile		  ) - 1, s_pDownFile		},
+ { sizeof ( s_pDownTheme	  ) - 1, s_pDownTheme		},
+
+ { sizeof ( s_pDownMSG0	  ) - 1, s_pDownMSG0		}, //44
+ { sizeof ( s_pDownMSG1	  ) - 1, s_pDownMSG1		},
+ { sizeof ( s_pDownMSG2	  ) - 1, s_pDownMSG2		},
+
+ { sizeof ( s_pParamVer	  ) - 1, s_pParamVer		}, //47
+ { sizeof ( s_pLastPlay	  ) - 1, s_pLastPlay		},
+ { sizeof ( s_pSetAccess  ) - 1, s_pSetAccess		},
+ { sizeof ( s_pSetAccess1 ) - 1, s_pSetAccess1		},
+
+ { sizeof ( s_pPreProcess ) - 1, s_pPreProcess		}, //51
+
+ { sizeof ( s_pNoSpace0	  ) - 1, s_pNoSpace0		}, //52
+ { sizeof ( s_pNoSpace0	  ) - 1, s_pNoSpace1		},
+
+ { sizeof ( s_pErrNoMemWeb	) - 1, s_pErrNoMemWeb	}, //54
+ { sizeof ( s_pErrNoMem		) - 1, s_pErrNoMem		},
+
 
  /*,
  { sizeof ( s_p	  ) - 1, s_p	},
