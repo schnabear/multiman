@@ -935,6 +935,8 @@ u8 dir_mode=2;
 u8 game_details=2;
 u8 bd_emulator=1;
 u8 mm_locale=0;
+u8 mui_font=2; // font for multilingual user interface
+
 int net_available=0;
 union CellNetCtlInfo net_info;
 int net_avail=1;
@@ -1018,7 +1020,7 @@ typedef struct {
 
 } _locales;
 
-#define MAX_LOCALES	16
+#define MAX_LOCALES	18
 static _locales locales[] = {
 	{	0, "EN",	"English",		"English"		},
 	{	1, "BG",	"Bulgarian",	"Български"		},
@@ -1036,6 +1038,8 @@ static _locales locales[] = {
 	{  13, "UA",	"Ukrainian",	"Українська"	},
 	{  14, "HU",	"Hungarian",	"Magyar"		},
 	{  15, "DK",	"Danish",		"Dansk"			},
+	{  16, "FI",	"Finnish",		"Suomi"			},
+	{  17, "XX",	"Other",		"Other"			},
 };
 
 #define CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF	(0<<7)
@@ -1268,11 +1272,12 @@ void set_xo()
 
 void load_localization(int id)
 {
+	MM_LocaleSet(0);
 	if(id) 
 	{
 		char lfile[128];
 		sprintf(lfile, "%s/lang/LANG_%s.TXT", app_usrdir, locales[id].id);
-		if(MM_LocaleInit ( lfile )) MM_LocaleSet (1);
+		if(MM_LocaleInit ( lfile )) MM_LocaleSet (1); else mm_locale=0;
 	}
 }
 
@@ -1793,7 +1798,7 @@ void screen_saver()
 
 void slide_screen_left(uint8_t *buffer)
 {
-		int slide; char string1[64];
+		int slide;
 		for(slide=0;slide>-2048;slide-=128) {
 
 			ClearSurface();
@@ -1804,8 +1809,7 @@ void slide_screen_left(uint8_t *buffer)
 			
 		}
 			max_ttf_label=0; memset(buffer, 0, FB(1)); //0x505050
-			sprintf(string1, "%s", "Please wait...");
-			print_label_ex( 0.5f, 0.50f, 1.0f, 0xffffffff, string1, 1.04f, 0.0f, 15, 1.0f, 1.0f, 1);
+			print_label_ex( 0.5f, 0.50f, 1.0f, 0xffffffff, (char*)STR_PLEASE_WAIT, 1.04f, 0.0f, mui_font, 1.0f, 1.0f, 1);
 			flush_ttf(buffer, 1920, 1080);
 			ClearSurface();
 			set_texture( buffer, 1920, 1080); 
@@ -1816,7 +1820,7 @@ void slide_screen_left(uint8_t *buffer)
 
 void slide_screen_right(uint8_t *buffer)
 {
-		int slide; char string1[64];
+		int slide;
 		for(slide=0;slide<2048;slide+=128) {
 
 			ClearSurface();
@@ -1830,8 +1834,7 @@ void slide_screen_right(uint8_t *buffer)
 //			if ( (new_pad || old_pad || c_opacity_delta==16)) { new_pad=0; old_pad=0; break;}
 		}
 			max_ttf_label=0; memset(buffer, 0, FB(1));
-			sprintf(string1, "%s", "Please wait...");
-			print_label_ex( 0.5f, 0.50f, 1.0f, 0xffffffff, string1, 1.04f, 0.0f, 15, 1.0f, 1.0f, 1);
+			print_label_ex( 0.5f, 0.50f, 1.0f, 0xffffffff, (char*)STR_PLEASE_WAIT, 1.04f, 0.0f, mui_font, 1.0f, 1.0f, 1);
 			flush_ttf(buffer, 1920, 1080);
 			ClearSurface();
 			set_texture( buffer, 1920, 1080); 
@@ -3443,10 +3446,10 @@ int download_file(const char *http_file, const char *save_path, int show_progres
 	char string1[256];
 	global_device_bytes=0x00UL;
 	int seconds2=0;
-	if(show_progress==1) sprintf(string1, (const char*) STR_DOWN_UPD);
-	if(show_progress==2) sprintf(string1, (const char*) STR_DOWN_COVER);
-	if(show_progress==3) sprintf(string1, (const char*) STR_DOWN_FILE);
-	if(show_progress==4) sprintf(string1, (const char*) STR_DOWN_THM);
+	if(show_progress==1) sprintf(string1, "%s", (const char*) STR_DOWN_UPD);
+	if(show_progress==2) sprintf(string1, "%s", (const char*) STR_DOWN_COVER);
+	if(show_progress==3) sprintf(string1, "%s", (const char*) STR_DOWN_FILE);
+	if(show_progress==4) sprintf(string1, "%s", (const char*) STR_DOWN_THM);
 	if(show_progress!=0){
 	ClearSurface();
 	cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string1);
@@ -7569,6 +7572,14 @@ int open_submenu(uint8_t *buffer, int *_game_sel)
 	xmb_bg_counter=200;
 	memcpy(text_FONT, buffer, FB(1));
 
+	u8 _menu_font=15;
+	float y_scale=0.5;
+	if(mm_locale) 
+	{
+		_menu_font=mui_font;
+		y_scale=0.4f;
+	}
+
 reload_submenu:
 	char label[256];
 	float x, y, top_o;
@@ -7683,40 +7694,117 @@ gs_cover:
 	int y_icon=(int) (top_o + 158.0f);
 	int option_number=0; // + (120.f * (option_number-1))
 
-	sprintf(label, "Backup / Copy");
 	if(disable_options==2 || disable_options==3) {title_color=0xd0808080;} else {title_color=0xffc0c0c0; put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y+3, 0, 0); oflags|=(1<<0); }
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_GM_COPY, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*2.f, 0);
 	put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y+3, 0, 0);
 	put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_w_x*4 + dox_arrow_w_y	* dox_width*4), dox_arrow_w_w,	dox_arrow_w_h, dox_width, (int)x-50, (int)y+3, 0, 0);
 
 	y+=120.0f;
 	if(is_locked || disable_options==1 || disable_options==3) title_color=0xd0808080; else {title_color=0xffc0c0c0; put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y+3, 0, 0); oflags|=(1<<1);}
-	sprintf(label, "Delete");
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_GM_DELETE, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*2.f, 0);
 
 	y+=120.0f;
 	if(is_locked || !is_game) title_color=0xd0808080; else {title_color=0xffc0c0c0; put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y+3, 0, 0);oflags|=(1<<2);}
-	sprintf(label, "Rename");
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_GM_RENAME, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*2.f, 0);
 
 	y+=120.0f;
 	if(!is_game) title_color=0xd0808080; else {title_color=0xffc0c0c0; put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y+3, 0, 0);oflags|=(1<<3);}
-	sprintf(label, "Update");
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0);
+
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_GM_UPDATE, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*2.f, 0);
 
 	title_color=0xffc0c0c0;
 	y+=120.0f;
-	sprintf(label, "Test"); oflags|=(1<<4);
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0);
+	oflags|=(1<<4);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_GM_TEST, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*2.f, 0);
 	put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y+3, 0, 0);
 
 //	title_color=0xd0808080;
 	y+=120.0f;
 	if(is_locked) title_color=0xd0808080; else {title_color=0xffc0c0c0; put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y+3, 0, 0);oflags|=(1<<5);}
-	sprintf(label, "Permissions");
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_GM_PERM, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*2.f, 0);
 
 	u32 info_color=0xffa0a0a0;
+
+	sprintf(label, " %s", (char*) STR_BUT_NAV);
+	print_label_ex( ((70.f+dox_pad_w)/1920.f), (981.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
+
+	sprintf(label, " %s", (char*) STR_BUT_SELECT);
+	print_label_ex( ((1140.f+dox_cross_w)/1920.f), (980.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
+
+	sprintf(label, " %s", (char*) STR_BUT_GENRE);
+	print_label_ex( ((1340.f+dox_square_w)/1920.f), (980.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
+
+	sprintf(label, " %s", (char*) STR_BUT_BACK);
+	print_label_ex( ((1540.f+dox_circle_w)/1920.f), (980.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
+
+	sprintf(label, " %s", (char*) STR_BUT_CANCEL);
+	print_label_ex( ((1700.f+dox_triangle_w)/1920.f), (980.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
+
+	info_color=0xffa0a0a0;
+	x+=20;
+
+	if(disable_options==2 || disable_options==3) info_color=0xc0707070; else info_color=0xffa0a0a0;
+	y=top_o+(120.0f * 1.0f) + 77.0f;
+	sprintf(label, (const char*) STR_GM_COPY_L1, game_title);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_COPY_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_COPY_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+
+	if(is_locked || disable_options==1 || disable_options==3) info_color=0xc0707070; else info_color=0xffa0a0a0;
+	y=top_o+(120.0f * 2.0f) + 77.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_DELETE_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_DELETE_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_DELETE_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+
+	if(is_locked || !is_game) info_color=0xc0707070; else info_color=0xffa0a0a0;
+	y=top_o+(120.0f * 3.0f) + 77.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_RENAME_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_RENAME_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_RENAME_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+
+	if(!is_game) info_color=0xc0707070; else info_color=0xffa0a0a0;
+	y=top_o+(120.0f * 4.0f) + 77.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_UPDATE_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_UPDATE_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_UPDATE_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+
+	info_color=0xffa0a0a0;
+	y=top_o+(120.0f * 5.0f) + 77.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_TEST_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_TEST_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_TEST_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+
+//	info_color=0xc0707070;
+	if(is_locked) info_color=0xc0707070; else info_color=0xffa0a0a0;
+	y=top_o+(120.0f * 6.0f) + 77.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_PERM_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_PERM_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_GM_PERM_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+
+	if((*_game_sel)) sprintf(label, "%s", (char*) STR_BUT_PREV); else sprintf(label, "%s", (char*) STR_BUT_LAST);
+	print_label_ex( ((750.f)/1920.f), (981.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 2);
+	put_texture_with_alpha( text_FONT, text_DOX+(dox_l1_x*4 + dox_l1_y	* dox_width*4), dox_l1_w,	dox_l1_h, dox_width, 770, 982, 0, 0);
+
+	if((*_game_sel)!=(max_menu_list-1)) sprintf(label, " %s", (char*) STR_BUT_NEXT); else sprintf(label, " %s", (char*) STR_BUT_FIRST);
+	print_label_ex( ((840.f+dox_r1_w)/1920.f), (981.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
+	put_texture_with_alpha( text_FONT, text_DOX+(dox_r1_x*4 + dox_r1_y	* dox_width*4), dox_r1_w,	dox_r1_h, dox_width, 840, 982, 0, 0);
+
+	if(!(menu_list[*_game_sel].split || menu_list[*_game_sel].title[0]=='_' || strstr(menu_list[*_game_sel].path, "/pvd_usb")!=NULL)) 
+	{
+		sprintf(label, " %s", (char*) STR_BUT_LOAD);
+		print_label_ex( ((375.f+dox_start_w)/1920.f), (981.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
+		put_texture_with_alpha( text_FONT, text_DOX+(dox_start_x*4 + dox_start_y	* dox_width*4), dox_start_w,	dox_start_h, dox_width, 375, 972, 0, 0);
+	}
+	else
+		put_texture_with_alpha( text_FONT, text_DOX+(dox_att_x*4 + dox_att_y	* dox_width*4), dox_att_w,	dox_att_h, dox_width, 400, 972, 0, 0);
+
+	sprintf(label, "%s: %s", (char*) STR_BUT_GENRE, genre[ (menu_list[*_game_sel].user>>16)&0x0f ]);
+	print_label_ex( (420.0f/1920.f), ((538.0f+top_o)/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 1);
+	put_texture_with_alpha( text_FONT, text_DOX+(dox_start_x*4 + dox_start_y	* dox_width*4), dox_start_w,	dox_start_h, dox_width, 375, 972, 0, 0);
+
+	flush_ttf(text_FONT, 1920, 1080);
+
+	info_color=0xffa0a0a0;
 	u32 dev_color=0xffe0e0e0;
 	if(is_game)
 	{
@@ -7750,82 +7838,6 @@ gs_cover:
 
 	if(strstr(menu_list[*_game_sel].path, "/dev_usb")!=NULL || strstr(menu_list[*_game_sel].path, "/pvd_usb")!=NULL) dev_color=0xffe0e0e0; else dev_color=0xc0808080;
 	print_label_ex( (1600.f/1920.f), ((top_o+50.f)/1080.f), 1.5f, dev_color, (char*)"Usb", 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
-
-	sprintf(label, "%s", " Navigate");
-	print_label_ex( ((70.f+dox_pad_w)/1920.f), (981.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
-
-	sprintf(label, "%s", " Select");
-	print_label_ex( ((1140.f+dox_cross_w)/1920.f), (980.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
-
-	sprintf(label, "%s", " Genre");
-	print_label_ex( ((1340.f+dox_square_w)/1920.f), (980.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
-
-	sprintf(label, "%s", " Back");
-	print_label_ex( ((1540.f+dox_circle_w)/1920.f), (980.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
-
-	sprintf(label, "%s", " Cancel");
-	print_label_ex( ((1700.f+dox_triangle_w)/1920.f), (980.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
-
-	info_color=0xffa0a0a0;
-	x+=20;
-
-	if(disable_options==2 || disable_options==3) info_color=0xc0707070; else info_color=0xffa0a0a0;
-	y=top_o+(120.0f * 1.0f) + 77.0f;
-	sprintf(label, "Create a backup copy of \x22%s\x22.", game_title); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "To protect your Playstation\xC2\xAE\x33 Blu-ray\xE2\x84\xA2 game disc,"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "transfer its contents to internal or external hard disk drive."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-
-	if(is_locked || disable_options==1 || disable_options==3) info_color=0xc0707070; else info_color=0xffa0a0a0;
-	y=top_o+(120.0f * 2.0f) + 77.0f;
-	sprintf(label, "Permanently delete game files."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "If you are running low on disk space, delete the game from your"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "hard disk drive. Use this option with caution!"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-
-	if(is_locked || !is_game) info_color=0xc0707070; else info_color=0xffa0a0a0;
-	y=top_o+(120.0f * 3.0f) + 77.0f;
-	sprintf(label, "Pick a name of your choice for the game."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "You can use the on-screen keyboard or external USB keyboard"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "for input. Use (TM), (R) and (C) to enter \xE2\x84\xA2, \xC2\xAE and \xC2\xA9 symbols."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-
-	if(!is_game) info_color=0xc0707070; else info_color=0xffa0a0a0;
-	y=top_o+(120.0f * 4.0f) + 77.0f;
-	sprintf(label, "Check for game updates."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "This feature allows you to download all available updates"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "or only the latest. Internet connection required."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-
-	info_color=0xffa0a0a0;
-	y=top_o+(120.0f * 5.0f) + 77.0f;
-	sprintf(label, "Verify all files and folders of the game."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "Testing will report various data as Total Size, Number of files,"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "Big files (over 4GB) and if game contains split (.666##) files."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-
-//	info_color=0xc0707070;
-	if(is_locked) info_color=0xc0707070; else info_color=0xffa0a0a0;
-	y=top_o+(120.0f * 6.0f) + 77.0f;
-	sprintf(label, "Re-apply file and folder access permissions."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "On rare occasions it may be required to perform resetting of"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "ownership and execution flags of game contents."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-
-	if((*_game_sel)) sprintf(label, "%s", "Prev Title"); else sprintf(label, "%s", "Last Title");
-	print_label_ex( ((750.f)/1920.f), (981.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, 15, 0.5f, 0.5f, 2);
-	put_texture_with_alpha( text_FONT, text_DOX+(dox_l1_x*4 + dox_l1_y	* dox_width*4), dox_l1_w,	dox_l1_h, dox_width, 770, 982, 0, 0);
-
-	if((*_game_sel)!=(max_menu_list-1)) sprintf(label, "%s", " Next Title"); else sprintf(label, "%s", " First Title");
-	print_label_ex( ((840.f+dox_r1_w)/1920.f), (981.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
-	put_texture_with_alpha( text_FONT, text_DOX+(dox_r1_x*4 + dox_r1_y	* dox_width*4), dox_r1_w,	dox_r1_h, dox_width, 840, 982, 0, 0);
-
-	if(!(menu_list[*_game_sel].split || menu_list[*_game_sel].title[0]=='_' || strstr(menu_list[*_game_sel].path, "/pvd_usb")!=NULL)) 
-	{
-		sprintf(label, "%s", " Load");
-		print_label_ex( ((375.f+dox_start_w)/1920.f), (981.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
-		put_texture_with_alpha( text_FONT, text_DOX+(dox_start_x*4 + dox_start_y	* dox_width*4), dox_start_w,	dox_start_h, dox_width, 375, 972, 0, 0);
-	}
-	else
-		put_texture_with_alpha( text_FONT, text_DOX+(dox_att_x*4 + dox_att_y	* dox_width*4), dox_att_w,	dox_att_h, dox_width, 400, 972, 0, 0);
-
-	sprintf(label, "Genre: %s", genre[ (menu_list[*_game_sel].user>>16)&0x0f ]);
-	print_label_ex( (420.0f/1920.f), ((538.0f+top_o)/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, 15, 0.5f, 0.5f, 1);
-	put_texture_with_alpha( text_FONT, text_DOX+(dox_start_x*4 + dox_start_y	* dox_width*4), dox_start_w,	dox_start_h, dox_width, 375, 972, 0, 0);
 
 	flush_ttf(text_FONT, 1920, 1080);
 
@@ -7905,7 +7917,7 @@ gs_cover:
 				sprintf(opt_list[n].value, "%i", n);
 			}
 			opt_list_max=16;
-			int ret_f=open_select_menu((char*) "Select Genre", 600, opt_list, opt_list_max, text_FONT, 16, 1);
+			int ret_f=open_select_menu((char*) STR_SEL_GENRE, 600, opt_list, opt_list_max, text_FONT, 16, 1);
 			use_analog=0;
 			mouseX=b_mX;
 			mouseY=b_mY;
@@ -8090,28 +8102,24 @@ gs_cover:
 	return result;
 }
 
-int open_mm_submenu(uint8_t *buffer) //, int *_game_sel
+int open_mm_submenu(uint8_t *buffer) // system settings menu
 {
 	xmb_bg_show=0;
 	xmb_bg_counter=200;
 	char label[256];
 	float x, y, top_o;
 	int m;
-
-//	get_game_flags(*_game_sel);
-//	if(menu_list[*_game_sel].user & IS_BDMIRROR) {menu_list[*_game_sel].user &= ~(IS_HDD | IS_DBOOT); menu_list[*_game_sel].user|= IS_USB;}
-//	u32 gflags=menu_list[*_game_sel].user;
-//	set_game_flags(*_game_sel);
+	u8 _menu_font=15;
+	float y_scale=0.5;
+	if(mm_locale) 
+	{
+		_menu_font=mui_font;
+		y_scale=0.4f;
+	}
 
 	u32 oflags=1;
-//	bool is_locked = (gflags & IS_LOCKED) || (gflags & IS_PROTECTED) || (strstr(menu_list[*_game_sel].path,"/pvd_usb")!=NULL || strstr(menu_list[*_game_sel].path,"/dev_bdvd")!=NULL);
-//  bool is_game = (strstr(menu_list[*_game_sel].content,"PS3")!=NULL); //(gflags & IS_PS3) || 
-
 	top_o=40.0f;
 
-	//sub_menu_open=1;
-
-	//blur_texture(text_FONT, 1920, 1080, 46, 52, 1828, 976,  35, 0, 1, 2);
 	if(cover_mode!=8) 
 	{
 		memcpy(text_FONT, buffer, 0x7E9000);
@@ -8140,172 +8148,148 @@ int open_mm_submenu(uint8_t *buffer) //, int *_game_sel
 	y=top_o+95.0f;
 	u32 title_color=0xffc0c0c0;
 
-	sprintf(label, "Update");
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0);
-	put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y+3, 0, 0);
-	put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_w_x*4 + dox_arrow_w_y	* dox_width*4), dox_arrow_w_w,	dox_arrow_w_h, dox_width, (int)x-50, (int)y+3, 0, 0);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_UPDATE, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0);
+	put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y, 0, 0);
+	put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_w_x*4 + dox_arrow_w_y	* dox_width*4), dox_arrow_w_w,	dox_arrow_w_h, dox_width, (int)x-50, (int)y, 0, 0);
 
-		sprintf(label, "Refresh List");
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0); oflags|=(1<<6);
-		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y+3, 0, 0);
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_REFRESH, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0); oflags|=(1<<6);
+		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y, 0, 0);
 
 	y+=135.0f;
-	if(lock_fileman) title_color=0xd0808080; else {title_color=0xffc0c0c0;oflags|=(1<<1);put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y+3, 0, 0); }
-//	title_color=0xffc0c0c0; put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y+3, 0, 0); if(!lock_fileman) oflags|=(1<<1);
-	sprintf(label, "File Manager");
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0);
+	if(lock_fileman) title_color=0xd0808080; else {title_color=0xffc0c0c0;oflags|=(1<<1);put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y, 0, 0); }
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_FILEMAN, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0);
 
 		title_color=0xffc0c0c0;
-		sprintf(label, "Launch Showtime");
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0); oflags|=(1<<7);
-		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y+3, 0, 0);
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_SHOW_ST, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0); oflags|=(1<<7);
+		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y, 0, 0);
 
 	y+=135.0f;
-	title_color=0xffc0c0c0; put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y+3, 0, 0); oflags|=(1<<2);
-	sprintf(label, "PFS / NTFS driver");
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0);
+	title_color=0xffc0c0c0; put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y, 0, 0); oflags|=(1<<2);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_NTFS, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0);
 
-		sprintf(label, "Link VIDEO to Showtime");
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0); oflags|=(1<<8);
-		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y+3, 0, 0);
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_SHOW_LK, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0); oflags|=(1<<8);
+		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y, 0, 0);
 
 	y+=135.0f;
-	sprintf(label, "Screenshot");
-	if(cover_mode==3 or cover_mode==4) title_color=0xd0808080; else {title_color=0xffc0c0c0;oflags|=(1<<3);put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y+3, 0, 0); }
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0);
+	if(cover_mode==3 or cover_mode==4) title_color=0xd0808080; else {title_color=0xffc0c0c0;oflags|=(1<<3);put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y, 0, 0); }
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_SCRSHOT, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0);
 
 		title_color=0xffc0c0c0;
-		sprintf(label, "Screensaver");
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0); oflags|=(1<<9);
-		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y+3, 0, 0);	
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_SCRSAVE, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0); oflags|=(1<<9);
+		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y, 0, 0);	
 
 	title_color=0xffc0c0c0;
 	y+=135.0f;
-	sprintf(label, "Restart"); oflags|=(1<<4);
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0);
-	put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y+3, 0, 0);
+	oflags|=(1<<4);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_RESTART, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0);
+	put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y, 0, 0);
 
-		sprintf(label, "multiMAN Setup");
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0); oflags|=(1<<10);
-		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y+3, 0, 0);	
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_SETUP, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0); oflags|=(1<<10);
+		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y, 0, 0);	
 
 //	title_color=0xd0808080;
 	y+=135.0f;
-	title_color=0xffc0c0c0; put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y+3, 0, 0); oflags|=(1<<5);
-	sprintf(label, "Quit");
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0);
+	title_color=0xffc0c0c0; put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y, 0, 0); oflags|=(1<<5);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_QUIT, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0);
 
-		sprintf(label, "Help");
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0); oflags|=(1<<11);
-		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y+3, 0, 0);	
-
-//	y+=120.0f;
-//	sprintf(label, "Add to favorites");
-//	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, label, 1.04f, 0.0f, 15, 1.0f, 1.0f, 0);
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_HELP, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0); oflags|=(1<<11);
+		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y, 0, 0);	
 
 	u32 info_color=0xffa0a0a0;
 
 	time ( &rawtime ); timeinfo = localtime ( &rawtime );
 	if(date_format==0)	sprintf(label,"%d/%d %s:%02d", timeinfo->tm_mday, timeinfo->tm_mon+1, tmhour(timeinfo->tm_hour), timeinfo->tm_min);
 	else sprintf(label,"%d/%d %s:%02d", timeinfo->tm_mon+1, timeinfo->tm_mday, tmhour(timeinfo->tm_hour), timeinfo->tm_min);
-	print_label_ex( (1690.f/1920.f), ((top_o+50.f)/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
+	print_label_ex( (1690.f/1920.f), ((top_o+50.f)/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
 
 	sprintf(label, "multiMAN %s", current_version); label[17]=0;	
-	print_label_ex( (70.f/1920.f), ((top_o+50.f)/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
+	print_label_ex( (70.f/1920.f), ((top_o+50.f)/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
 
-/*	if(strstr(menu_list[*_game_sel].path, "/dev_bdvd")!=NULL) dev_color=0xffe0e0e0; else dev_color=0xc0808080;
-	print_label_ex( (1460.f/1920.f), ((top_o+50.f)/1080.f), 1.5f, dev_color, (char*)"Blu", 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
 
-	if(strstr(menu_list[*_game_sel].path, "/dev_hdd")!=NULL) dev_color=0xffe0e0e0; else dev_color=0xc0808080;
-	print_label_ex( (1530.f/1920.f), ((top_o+50.f)/1080.f), 1.5f, dev_color, (char*)"Hdd", 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
+	sprintf(label, " %s", (char*) STR_BUT_NAV);
+	print_label_ex( ((70.f+dox_pad_w)/1920.f), (981.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
 
-	if(strstr(menu_list[*_game_sel].path, "/dev_usb")!=NULL || strstr(menu_list[*_game_sel].path, "/pvd_usb")!=NULL) dev_color=0xffe0e0e0; else dev_color=0xc0808080;
-	print_label_ex( (1600.f/1920.f), ((top_o+50.f)/1080.f), 1.5f, dev_color, (char*)"Usb", 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
-*/
-	sprintf(label, "%s", " Navigate");
-	print_label_ex( ((70.f+dox_pad_w)/1920.f), (981.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
+	sprintf(label, " %s", (char*) STR_BUT_SELECT);
+	print_label_ex( ((1520.f+dox_cross_w)/1920.f), (980.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
 
-	sprintf(label, "%s", " Select");
-	print_label_ex( ((1520.f+dox_cross_w)/1920.f), (980.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
-
-	sprintf(label, "%s", " Back");
-	print_label_ex( ((1700.f+dox_circle_w)/1920.f), (980.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, 15, 0.5f, 0.5f, 0);
+	sprintf(label, " %s", (char*) STR_BUT_BACK);
+	print_label_ex( ((1700.f+dox_circle_w)/1920.f), (980.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
 
 	info_color=0xffa0a0a0;
 	x+=20;
 
 	info_color=0xffa0a0a0;
 	y=top_o+(135.0f * 1.0f);
-	sprintf(label, "Check for available program updates."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "multiMAN is being updated constantly, so make sure"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "to check for new versions regularly."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "Internet connection required."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y-=60.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_UPDATE_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_UPDATE_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_UPDATE_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_UPDATE_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y-=60.0f;
 
-		sprintf(label, "Re-scan internal and external hard disk drives."); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "Force multiMAN to refresh and re-detect content"); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "(games, video, other). Use this option if you"); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "transfer content via FTP. Shortcut is SELECT+L3."); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_REFRESH_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_REFRESH_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_REFRESH_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_REFRESH_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
 
 	y=top_o+(135.0f * 2.0f);
 	if(lock_fileman) info_color=0xc0707070; else info_color=0xffa0a0a0;
-	sprintf(label, "Switch to File Manager mode. Shortcut is SELECT+START."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "Use file manager to manage your files and folders, to copy,"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "move or rename them, to view images and play music and video."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "SHOWTIME may be required to play some content."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y-=60.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_FILEMAN_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_FILEMAN_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_FILEMAN_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_FILEMAN_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y-=60.0f;
 
 	info_color=0xffa0a0a0;
-		sprintf(label, "Quit multiMAN and launch Showtime Player."); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "Showtime Media Player is a feature rich"); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "application, which allows you to play"); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "various video, audio and graphic formats."); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_ST_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_ST_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_ST_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_ST_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
 
 	y=top_o+(135.0f * 3.0f);
-	sprintf(label, "Switch between FAT32 and NTFS drivers."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "To use this option you must connect external USB HDD,"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "formatted with FAT32 or NTFS file system."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "Proper USB.CFG required. Shortcut is START+TRIANGLE."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y-=60.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_NTFS_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_NTFS_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_NTFS_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_NTFS_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y-=60.0f;
 
-		sprintf(label, "Create links of your XMB\xE2\x84\xA2 video files to"); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "a special folder for Showtime Media Player"); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "to find them. When linking completes, multiMAN"); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "will launch Showtime."); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_LK_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_LK_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_LK_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_LK_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
 
 	y=top_o+(135.0f * 4.0f);
 	if(cover_mode==3 or cover_mode==4) info_color=0xc0707070; else info_color=0xffa0a0a0;
-	sprintf(label, "Take a screenshot of your game list."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "Current screen will be saved as RGB raw file to /dev_hdd0"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "or in the root folder of connected USB device."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "Shortcut is START+R2."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y-=60.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SCRSHOT_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SCRSHOT_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SCRSHOT_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SCRSHOT_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y-=60.0f;
 
 		info_color=0xffa0a0a0;
- 		sprintf(label, "Turn on multiMAN's screensaver."); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "A screen with falling 'stars' will appear on"); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "your display. Press a button to quit"); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "the screensaver mode."); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
+ 		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SCRSAVE_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SCRSAVE_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SCRSAVE_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SCRSAVE_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
 
 	info_color=0xffa0a0a0;
 	y=top_o+(135.0f * 5.0f);
-	sprintf(label, "Restart multiMAN. Shortcut is START+SELECT."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "You can remotely restart multiMAN by connecting to your"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "Playstation\xC2\xAE\x33 system via telnet to port 8080"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "and type 'restart'."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y-=60.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_RESTART_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_RESTART_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_RESTART_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_RESTART_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y-=60.0f;
 
- 		sprintf(label, "Switch to XMMB Settings column."); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "You can edit all multiMAN options in XMMB mode."); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "If you select this option, the current display"); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "mode will be changed."); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
+ 		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SETUP_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SETUP_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SETUP_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SETUP_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
 
 //	info_color=0xc0707070;
 	y=top_o+(135.0f * 6.0f);
-	sprintf(label, "Quit multiMAN and return to XMB\xE2\x84\xA2 home screen."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "You can remotely quit multiMAN by connecting to your"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "Playstation\xC2\xAE\x33 system via telnet to port 8080"); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-	sprintf(label, "and type 'quit'."); print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y-=60.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_QUIT_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_QUIT_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_QUIT_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_QUIT_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y-=60.0f;
 
- 		sprintf(label, "Start the HELP application."); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "This option will execute external"); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "help.MME application and quit multiMAN."); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
-		sprintf(label, "Avoid using it during FTP transfers."); print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, label, 1.00f, 0.05f, 15, 0.5f, 0.5f, 0); y+=20.0f;
+ 		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_HELP_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_HELP_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_HELP_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_HELP_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
 
 	flush_ttf(text_FONT, 1920, 1080);
 
@@ -8324,14 +8308,10 @@ int open_mm_submenu(uint8_t *buffer) //, int *_game_sel
 	int result=0;
 	int main_options=1; //1-main 2-gameboot, 3-gamereq
 	int x_icon=(int)(100);
-	int y_icon=(int) (top_o + 98.0f);
+	int y_icon=(int) (top_o + 95.0f);
 	int option_number=0;
 	int c_option_number=0;
 
-//	int options_req=1;
-//	int options_boot=1;
-
-//	u32 b_color = 0x0080ffff;
 	while (1) {
 		
 		pad_read();
@@ -8407,36 +8387,16 @@ int open_mm_submenu(uint8_t *buffer) //, int *_game_sel
 
 		if ( (new_pad & BUTTON_CROSS)){
 			result=option_number+1;
-			//if(!is_locked && is_game) {	menu_list[*_game_sel].user=gflags;set_game_flags(*_game_sel); }
-			//save changed options on main options activation
 			break;
 		}
 
-
-
 		ClearSurface();
-
-/*		mouseX+=mouseXD; mouseY+=mouseYD;
-		if(mouseX>0.995f) {mouseX=0.995f;mouseXD=0.0f;} if(mouseX<0.0f) {mouseX=0.0f;mouseXD=0.0f;}
-		if(mouseY>0.990f) {mouseY=0.990f;mouseYD=0.0f;} if(mouseY<0.0f) {mouseY=0.0f;mouseYD=0.0f;}
-*/
-//		b_box_opaq+=b_box_step;
-//		if(b_box_opaq>0xfe) b_box_step=-1;
-//		if(b_box_opaq<0x20) b_box_step= 2;
-//		b_color = (b_color & 0xffffff00) | (b_box_opaq);
-//		draw_square(((0.054f-0.5f)*2.0f)-0.005f, ((0.5f-(120.f+top_o)/1080.f)+0.005f)*2.0f , 0.675f, 0.68f, -0.4f, b_color);
-		cellDbgFontPrintf( 0.99f, 0.98f, 0.5f,0x60606040, payloadT); 
 		set_texture( text_FONT, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, -0.5f, 1920, 1080);
-
-		//setRenderColor();
-		//cellDbgFontDrawGcm();
-//		draw_mouse_pointer(0);
 		flip();
 	}
 	old_fi=-1; game_last_page=-1;
 	new_pad=0; 
 	counter_png=0;
-	//sub_menu_open=0;
 
 	if(result==4) //take screenshot
 	{
@@ -13487,9 +13447,9 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 				if(m_copy_total>1)
 				{
 					if(list[e].type==0)
-						fmret=context_menu((char*) "Multiple folders", list[e].type, this_pane, other_pane);
+						fmret=context_menu((char*) STR_CM_MULDIR, list[e].type, this_pane, other_pane);
 					else
-						fmret=context_menu((char*) "Multiple files", list[e].type, this_pane, other_pane);
+						fmret=context_menu((char*) STR_CM_MULFILE, list[e].type, this_pane, other_pane);
 				}
 				else
 					fmret=context_menu(list[e].name, list[e].type, this_pane, other_pane);
@@ -16191,7 +16151,7 @@ void check_for_update()
 			return;
 		}
 
-		dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, "Please wait...", dialog_fun2, (void*)0x0000aaab, NULL );
+		dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, (const char*) STR_PLEASE_WAIT, dialog_fun2, (void*)0x0000aaab, NULL );
 		flipc(60);
 
 		char filename[1024];
@@ -16272,7 +16232,7 @@ void check_for_update()
 						remove(local_file);
 
 					whatsnew[511]=0;
-					sprintf(filename, "What's new in multiMAN %s:\n\n%s", new_version, whatsnew); 
+					sprintf(filename, (const char*)STR_WHATS_NEW, new_version, whatsnew); 
 					dialog_ret=0;
 					ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );					
 					wait_dialog();
@@ -16290,7 +16250,7 @@ void check_for_update()
 //				if(c_firmware>3.30f) sprintf(filename, "New version found (FW 3.40-3.42): %s\n\nYour current version: %s\n\nDo you want to download the update?", new_version, current_version); 
 //				if(c_firmware<3.40f) sprintf(filename, "New version found: %s\n\nYour current version: %s\n\nDo you want to download the update?", new_version, current_version); 
 //				if(c_firmware>3.30f) 
-				sprintf(filename, "New version found: %s\n\nYour current version: %s\n\nDo you want to download the update?", new_version, current_version); 
+				sprintf(filename, (const char*)STR_NEW_VER, new_version, current_version); 
 
 				dialog_ret=0;
 				ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
@@ -16308,7 +16268,7 @@ void check_for_update()
 					if(ret==1) 
 						{
 							if(strstr(local_file, "USRDIR/TEMP")!=NULL) sprintf(local_file, "/app_home/multiMAN_%s.pkg", new_version);
-							sprintf(filename, "Download completed successfully!\n\nInstall the update from [* Install Package Files] XMB\xE2\x84\xA2 tab.\n\nUpdate file saved as: %s\n\n%s?", local_file, STR_QUIT); 
+							sprintf(filename, (const char*)STR_NEW_VER_DL, local_file, STR_QUIT); 
 							ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );					
 							wait_dialog();
 							if(dialog_ret==1)
@@ -16327,7 +16287,7 @@ void check_for_update()
 			}
 			else
 			{
-				sprintf(filename, "You already have the latest version: %s\n\n            There is no need to update.", current_version); 
+				sprintf(filename, (const char*)STR_NEW_VER_NN, current_version); 
 				dialog_ret=0;
 				ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );					
 				wait_dialog();
@@ -16336,9 +16296,8 @@ void check_for_update()
 		} 
 	else //no usb/card connected
 			{
-				sprintf(filename, "Please attach USB storage device to save update data and try again!"); 
 				dialog_ret=0;
-				ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );					
+				ret = cellMsgDialogOpen2( type_dialog_ok, (const char*)STR_NEW_VER_USB, dialog_fun2, (void*)0x0000aaab, NULL );					
 				wait_dialog();
 			} 
 
@@ -16363,7 +16322,7 @@ void check_for_game_update(char *game_id, char *game_title)
 		{
 			dialog_ret=0;
 			net_avail=-1;
-			ret = cellMsgDialogOpen2( type_dialog_ok, "Please enable [Internet Connection] from XMB\xE2\x84\xA2 [Settings] tab!", dialog_fun2, (void*)0x0000aaab, NULL );					
+			ret = cellMsgDialogOpen2( type_dialog_ok, (const char*)STR_WARN_INET, dialog_fun2, (void*)0x0000aaab, NULL );					
 			wait_dialog();
 			return;
 		}
@@ -16454,9 +16413,9 @@ if(get_param_sfo_field((char *)game_param_sfo, (char *)"APP_VER", (char *)temp_v
 			if(param_ver>=strtof(pkg_list[max_pkg-1].pkg_ver, NULL)) first_pkg=max_pkg;
 			if(param_ver==0.0f) first_pkg=-1;
 			if(max_pkg==1)
-				sprintf(filename, "%s\n\nVersion: %s (%i update)\nUpdate size: %.2fMB\n\nDownload update now?", g_title, pkg_list[0].pkg_ver, max_pkg, (double)(all_pkg/1024/1024)); 
+				sprintf(filename, (const char*) STR_GAME_UPD1, g_title, pkg_list[0].pkg_ver, max_pkg, (double)(all_pkg/1024/1024)); 
 			else
-				sprintf(filename, "%s\n\nVersions: %s - %s (%i updates)\nTotal update size: %.2fMB\n\nDownload updates now?", g_title, pkg_list[0].pkg_ver, pkg_list[max_pkg-1].pkg_ver, max_pkg, (double)(all_pkg/1024/1024)); 
+				sprintf(filename, (const char*) STR_GAME_UPD2, g_title, pkg_list[0].pkg_ver, pkg_list[max_pkg-1].pkg_ver, max_pkg, (double)(all_pkg/1024/1024)); 
 
 				dialog_ret=0;
 				ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
@@ -16465,7 +16424,7 @@ if(get_param_sfo_field((char *)game_param_sfo, (char *)"APP_VER", (char *)temp_v
 		if( (first_pkg!=-1) && dialog_ret==1)
 		{
 
-				sprintf(filename, "%s\n\nYou already have version %.2f installed.\n\nDo you want to download newer updates only?", g_title, param_ver ); 
+				sprintf(filename, (const char*) STR_GAME_UPD3, g_title, param_ver ); 
 				dialog_ret=0;
 				ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
 				wait_dialog();
@@ -16495,9 +16454,9 @@ if(get_param_sfo_field((char *)game_param_sfo, (char *)"APP_VER", (char *)temp_v
 					if(ret==1) 
 						{
 						if(max_pkg==1)
-							sprintf(filename, "Download completed successfully!\n\nInstall the update from [* Install Package Files] XMB\xE2\x84\xA2 tab.\n\nUpdate file saved as: %s\n\n%s?", local_file, STR_QUIT); 
+							sprintf(filename, (const char*) STR_NEW_VER_DL, local_file, STR_QUIT); 
 						else
-							sprintf(filename, "Download completed successfully!\n\nUpdate files saved in: %s\n\n%s?", usb_save, STR_QUIT); 
+							sprintf(filename, (const char*) STR_GAME_UPD5, usb_save, STR_QUIT); 
 							ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );					
 							wait_dialog();
 							if(dialog_ret==1) 
@@ -16510,7 +16469,7 @@ if(get_param_sfo_field((char *)game_param_sfo, (char *)"APP_VER", (char *)temp_v
 					else
 						{
 							if(first_pkg>=max_pkg)
-								ret = cellMsgDialogOpen2( type_dialog_ok, "You already have the latest version of the game.", dialog_fun2, (void*)0x0000aaab, NULL );					
+								ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_GAME_UPD6, dialog_fun2, (void*)0x0000aaab, NULL );					
 							else
 								ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_UPD0, dialog_fun2, (void*)0x0000aaab, NULL );					
 							wait_dialog();
@@ -16519,7 +16478,7 @@ if(get_param_sfo_field((char *)game_param_sfo, (char *)"APP_VER", (char *)temp_v
 			else //no usb/card connected
 			{
 				dialog_ret=0;
-				ret = cellMsgDialogOpen2( type_dialog_ok, "Please attach USB storage device to save update data and try again!", dialog_fun2, (void*)0x0000aaab, NULL );					
+				ret = cellMsgDialogOpen2( type_dialog_ok, (const char*)STR_NEW_VER_USB, dialog_fun2, (void*)0x0000aaab, NULL );					
 				wait_dialog();
 			} 
 
@@ -16529,7 +16488,7 @@ if(get_param_sfo_field((char *)game_param_sfo, (char *)"APP_VER", (char *)temp_v
 		else
 		 {
 				dialog_ret=0;
-				ret = cellMsgDialogOpen2( type_dialog_ok, "Cannot find update information for this title!", dialog_fun2, (void*)0x0000aaab, NULL );					
+				ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_GAME_UPD7, dialog_fun2, (void*)0x0000aaab, NULL );					
 				wait_dialog();
 		 }
 just_quit:
@@ -16634,7 +16593,7 @@ void select_theme()
 			mouseX=660.f/1920.f;
 			mouseY=225.f/1080.f;
 			is_any_xmb_column=xmb_icon;
-			int ret_f=open_list_menu((char*) "Select Theme", 600, opt_list, opt_list_max, 660, 225, 16, 1);
+			int ret_f=open_list_menu((char*) STR_SEL_THEME, 600, opt_list, opt_list_max, 660, 225, 16, 1);
 			is_any_xmb_column=0;
 			use_analog=0;
 			mouseX=b_mX;
@@ -16675,7 +16634,7 @@ int select_language()
 		sprintf(opt_list[n].value, "%i", locales[n].val);
 	}
 	opt_list_max=MAX_LOCALES;
-	int ret_f=open_select_menu((char*) "Select Language", 600, opt_list, opt_list_max, text_FONT, 16, 1);
+	int ret_f=open_select_menu((char*) STR_SEL_LANG, 600, opt_list, opt_list_max, text_FONT, 16, 1);
 	use_analog=0;
 	mouseX=b_mX;
 	mouseY=b_mY;
@@ -16740,7 +16699,7 @@ int delete_game_cache()
 			mouseX=660.f/1920.f;
 			mouseY=225.f/1080.f;
 			is_any_xmb_column=xmb_icon;
-			ret_f=open_list_menu((char*) "Delete Game Cache", 600, opt_list, opt_list_max, 660, 225, 16, 0);
+			ret_f=open_list_menu((char*) STR_DEL_GAME_CACHE, 600, opt_list, opt_list_max, 660, 225, 16, 0);
 			is_any_xmb_column=0;
 			use_analog=0;
 			mouseX=b_mX;
@@ -16769,11 +16728,11 @@ void update_fm_stripe()
 	memcpy(text_FMS+737280, text_FMS, 368640);
 
 	max_ttf_label=0;
-	print_label_ex( 0.104f, 0.13f, 1.0f, (fm_sel&1  ? 0xffc0c0c0 : COL_FMFILE), (char*)"Games",  1.04f, 0.0f, 0, (fm_sel&1  ? 1.4f : 1.1f), 21.f, 1);
-	print_label_ex( 0.230f, 0.13f, 1.0f, (fm_sel&2  ? 0xffc0c0c0 : COL_FMFILE), (char*)"Update", 1.04f, 0.0f, 0, (fm_sel&2  ? 1.4f : 1.1f), 21.f, 1);
-	print_label_ex( 0.359f, 0.13f, 1.0f, (fm_sel&4  ? 0xffc0c0c0 : COL_FMFILE), (char*)"About",  1.04f, 0.0f, 0, (fm_sel&4  ? 1.4f : 1.1f), 21.f, 1);
-	print_label_ex( 0.479f, 0.13f, 1.0f, (fm_sel&8  ? 0xffc0c0c0 : COL_FMFILE), (char*)"Help",   1.04f, 0.0f, 0, (fm_sel&8  ? 1.4f : 1.1f), 21.f, 1);
-	print_label_ex( 0.609f, 0.13f, 1.0f, (fm_sel&16 ? 0xffc0c0c0 : COL_FMFILE), (char*)"Themes", 1.04f, 0.0f, 0, (fm_sel&16 ? 1.4f : 1.1f), 21.f, 1);
+	print_label_ex( 0.104f, 0.13f, 1.0f, (fm_sel&1  ? 0xffc0c0c0 : COL_FMFILE), (char*)STR_FM_GAMES,  1.04f, 0.0f, 0, (fm_sel&1  ? 1.4f : 1.1f), 21.f, 1);
+	print_label_ex( 0.230f, 0.13f, 1.0f, (fm_sel&2  ? 0xffc0c0c0 : COL_FMFILE), (char*)STR_FM_UPDATE, 1.04f, 0.0f, 0, (fm_sel&2  ? 1.4f : 1.1f), 21.f, 1);
+	print_label_ex( 0.359f, 0.13f, 1.0f, (fm_sel&4  ? 0xffc0c0c0 : COL_FMFILE), (char*)STR_FM_ABOUT,  1.04f, 0.0f, 0, (fm_sel&4  ? 1.4f : 1.1f), 21.f, 1);
+	print_label_ex( 0.479f, 0.13f, 1.0f, (fm_sel&8  ? 0xffc0c0c0 : COL_FMFILE), (char*)STR_FM_HELP,   1.04f, 0.0f, 0, (fm_sel&8  ? 1.4f : 1.1f), 21.f, 1);
+	print_label_ex( 0.609f, 0.13f, 1.0f, (fm_sel&16 ? 0xffc0c0c0 : COL_FMFILE), (char*)STR_FM_THEMES, 1.04f, 0.0f, 0, (fm_sel&16 ? 1.4f : 1.1f), 21.f, 1);
 	flush_ttf(text_FMS+737280, 1920, 48);
 }
 
@@ -16811,20 +16770,20 @@ int context_menu(char *_capt, int _type, char *c_pane, char *o_pane)
 			opt_list_max=0;
 			u8 multiple_entries=0;
 			if(!strcmp(_cap, "..")) goto skip_dd;
-			if(!strcmp(_cap, "Multiple folders") || !strcmp(_cap, "Multiple files")) multiple_entries=1;
+			if(!strcmp(_cap, (const char*) STR_CM_MULDIR) || !strcmp(_cap, (const char*) STR_CM_MULFILE)) multiple_entries=1;
 
 			if(strstr(o_pane, "/dev_bdvd")==NULL && strstr(o_pane, "/pvd_usb")==NULL && strstr(o_pane, "/app_home")==NULL && strlen(o_pane)>1 && strstr(_cap, "net_host")==NULL && strcmp(c_pane, o_pane))
 			{
 				if( (strstr(c_pane, "/dev_bdvd")==NULL && strcmp(_cap, "dev_bdvd")) || (strstr(c_pane, "/dev_bdvd")!=NULL && exist((char*)"/dev_bdvd/PS3_GAME")))
 				{
-					sprintf(opt_list[opt_list_max].label, "%s", "Copy");
+					sprintf(opt_list[opt_list_max].label, "%s", STR_CM_COPY);
 					sprintf(opt_list[opt_list_max].value, "%s", "copy"); opt_list_max++;
 				}
 
 				if(strstr(c_pane, "/dev_bdvd")==NULL && strstr(c_pane, "/pvd_usb")==NULL && strstr(c_pane, "/app_home")==NULL && strstr(c_pane, "/ps3_home")==NULL && strlen(c_pane)>1  && strlen(o_pane)>1 
 					&& !(!strcmp(c_pane, "/dev_hdd0") && (!strcmp(_cap, "game") || !strcmp(_cap, "vsh") || !strcmp(_cap, "home") || !strcmp(_cap, "mms") || !strcmp(_cap, "vm") || !strcmp(_cap, "etc") || !strcmp(_cap, "drm"))) )
 				{
-					sprintf(opt_list[opt_list_max].label, "%s", "Move");
+					sprintf(opt_list[opt_list_max].label, "%s", STR_CM_MOVE);
 					sprintf(opt_list[opt_list_max].value, "%s", "move"); opt_list_max++;
 				}
 			}
@@ -16834,20 +16793,20 @@ int context_menu(char *_capt, int _type, char *c_pane, char *o_pane)
 			{
 				if(strstr(c_pane, "/net_host")==NULL && !multiple_entries)
 				{
-					sprintf(opt_list[opt_list_max].label, "%s", "Rename");
+					sprintf(opt_list[opt_list_max].label, "%s", STR_CM_RENAME);
 					sprintf(opt_list[opt_list_max].value, "%s", "rename"); opt_list_max++;
 				}
 
 				if(strstr(c_pane, "/net_host")==NULL || (strstr(c_pane, "/net_host")!=NULL && _type==1))
 				{
-					sprintf(opt_list[opt_list_max].label, "%s", "Delete");
+					sprintf(opt_list[opt_list_max].label, "%s", STR_CM_DELETE);
 					sprintf(opt_list[opt_list_max].value, "%s", "delete"); opt_list_max++;
 				}
 			}
 
 			if(strcmp(c_pane, o_pane) && strstr(c_pane, "/dev_hdd0")!=NULL && strstr(o_pane, "/dev_hdd0")!=NULL && !multiple_entries)
 			{
-				sprintf(opt_list[opt_list_max].label, "%s", "Create Shortcut");
+				sprintf(opt_list[opt_list_max].label, "%s", STR_CM_SHORTCUT);
 				sprintf(opt_list[opt_list_max].value, "%s", "shortcut"); opt_list_max++;
 			}
 
@@ -16855,31 +16814,31 @@ int context_menu(char *_capt, int _type, char *c_pane, char *o_pane)
 			{
 				if(strstr(c_pane, "/dev_hdd0")!=NULL)
 				{
-					sprintf(opt_list[opt_list_max].label, "%s", "Shadow for PKG game");
+					sprintf(opt_list[opt_list_max].label, "%s", STR_CM_SHADOWPKG);
 					sprintf(opt_list[opt_list_max].value, "%s", "pkgshortcut"); opt_list_max++;
 				}
 				if(strstr(c_pane, "/dev_usb")!=NULL)
 				{
-					sprintf(opt_list[opt_list_max].label, "%s", "Activate BD-Mirror");
+					sprintf(opt_list[opt_list_max].label, "%s", STR_CM_BDMIRROR);
 					sprintf(opt_list[opt_list_max].value, "%s", "bdmirror"); opt_list_max++;
 				}
 			}
 
 			if(strstr(c_pane, "/net_host")!=NULL || strstr(_cap, "net_host")!=NULL)
 			{
-				sprintf(opt_list[opt_list_max].label, "%s", "Refresh Net Host");
+				sprintf(opt_list[opt_list_max].label, "%s", STR_CM_NETHOST);
 				sprintf(opt_list[opt_list_max].value, "%s", "nethost"); opt_list_max++;
 			}
 
 			if(_type==1 && !multiple_entries)
 			{
-				sprintf(opt_list[opt_list_max].label, "%s", "Open in HEX Viewer");
+				sprintf(opt_list[opt_list_max].label, "%s", STR_CM_HEXVIEW);
 				sprintf(opt_list[opt_list_max].value, "%s", "view"); opt_list_max++;
 			}
 
 			if(_type==0 && strstr(c_pane, "/ps3_home")==NULL && strstr(c_pane, "/net_host")==NULL && !multiple_entries)
 			{
-				sprintf(opt_list[opt_list_max].label, "%s", "Properties");
+				sprintf(opt_list[opt_list_max].label, "%s", STR_CM_PROPS);
 				sprintf(opt_list[opt_list_max].value, "%s", "test"); opt_list_max++;
 			}
 
@@ -16887,7 +16846,7 @@ skip_dd:
 
 			if(strstr(c_pane, "/dev_bdvd")==NULL && strstr(c_pane, "/pvd_usb")==NULL && strstr(c_pane, "/app_home")==NULL && strstr(c_pane, "/ps3_home")==NULL && strlen(c_pane)>1)
 			{
-				sprintf(opt_list[opt_list_max].label, "%s", "Create New Folder");
+				sprintf(opt_list[opt_list_max].label, "%s", STR_CM_NEWDIR);
 				sprintf(opt_list[opt_list_max].value, "%s", "newfolder"); opt_list_max++;
 			}
 
@@ -16921,7 +16880,7 @@ void apply_theme (const char *theme_file, const char *theme_path)
 	char temp_text[512];
 	char filename[1024];
 
-	sprintf(temp_text, "Applying \x22%s\x22 theme, please wait...", pathpos+(pathpos[1]=='_' ? 2 : 1));
+	sprintf(temp_text, (const char*) STR_APPLY_THEME, pathpos+(pathpos[1]=='_' ? 2 : 1));
 
 	dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, temp_text, dialog_fun2, (void*)0x0000aaab, NULL );
 	flipc(60);
@@ -18054,7 +18013,8 @@ int open_theme_menu(char *_caption, int _width, theme_def *list, int _max, int _
 			memcpy(text_LIST, text_LIST+1512000, 1512000);
 			memcpy(text_LIST2, text_LIST2+1713600, 1713600);
 			max_ttf_label=0;
-			print_label_ex( 0.5f, 0.05f, 1.0f, COL_XMB_COLUMN, _caption, 1.04f, 0.0f, 15, 1.0f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 1);
+			print_label_ex( 0.5f, 0.05f, 1.0f, COL_XMB_COLUMN, _caption, 1.04f, 0.0f, (mm_locale ? mui_font : 15), 1.0f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 1);
+			flush_ttf(text_LIST, _width, _height);
 
 			for(int n=first; (n<(first+_max_entries-1) && n<_max); n++)
 			{
@@ -18072,10 +18032,10 @@ int open_theme_menu(char *_caption, int _width, theme_def *list, int _max, int _
 					else
 						print_label_ex( 0.05f, ((float)((n-first+3)*line_h)/(float)_height), 1.0f, COL_XMB_SUBTITLE, list[n].name, 1.00f, 0.0f, 15, 0.8f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 0 );
 				}
+				flush_ttf(text_LIST, _width, _height);
 
 			}
-
-			print_label_ex( 0.7f, ((float)(_height-line_h*2)/(float)_height)+0.01f, 1.5f, 0xf0c0c0c0, (char*)"Download", 1.00f, 0.0f, 15, 0.5f/((float)(_width/1920.f)), 0.5f/((float)(_height/1080.f)), 0);
+			print_label_ex( 0.7f, ((float)(_height-line_h*2)/(float)_height)+0.01f, 1.5f, 0xf0c0c0c0, (char*)STR_BUT_DOWNLOAD, 1.00f, 0.0f, mui_font, 0.5f/((float)(_width/1920.f)), 0.5f/((float)(_height/1080.f)), 0);
 			flush_ttf(text_LIST, _width, _height);
 			put_texture_with_alpha_gen( text_LIST, text_DOX+(dox_cross_x	*4 + dox_cross_y	* dox_width*4), dox_cross_w,	dox_cross_h,	dox_width, _width, (int)((0.7f*_width)-dox_cross_w-5), _height-line_h*2);
 
@@ -18170,7 +18130,7 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 	char filename[1024];
 	int _menu_font = 15;
 	float _y_scale=1.0f;
-	if(strstr(_caption, "Language")!=NULL) 
+	if(strstr(_caption, (const char*) STR_SEL_LANG)!=NULL) 
 	{
 		sel=mm_locale;
 		first=sel-_max_entries+2;
@@ -18231,7 +18191,7 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 				}
 			}
 
-			print_label_ex( 0.8f, ((float)(_height-line_h*2)/(float)_height)+0.01f, 1.5f, 0xf0c0c0c0, (char*)"Apply", 1.00f, 0.0f, _menu_font, 0.5f/((float)(_width/1920.f)), 0.5f/((float)(_height/1080.f)), 0);
+			print_label_ex( 0.8f, ((float)(_height-line_h*2)/(float)_height)+0.01f, 1.5f, 0xf0c0c0c0, (char*) STR_BUT_APPLY, 1.00f, 0.0f, _menu_font, 0.5f/((float)(_width/1920.f)), 0.5f/((float)(_height/1080.f)), 0);
 			flush_ttf(text_LIST, _width, _height);
 			put_texture_with_alpha_gen( text_LIST, text_DOX+(dox_cross_x	*4 + dox_cross_y	* dox_width*4), dox_cross_w,	dox_cross_h,	dox_width, _width, (int)((0.8f*_width)-dox_cross_w-5), _height-line_h*2);
 			last_sel=sel;
@@ -18290,6 +18250,14 @@ int open_list_menu(char *_caption, int _width, t_opt_list *list, int _max, int _
 	sprintf(filename, "%s/LBOX.PNG", app_usrdir);
 	load_texture(text_LIST+1512000, filename, 600);
 	change_opacity(text_LIST+1512000, 50, 600*630*4);
+	float y_scale=1.0f;
+	u8 _menu_font=15;
+	if(mm_locale) 
+	{
+		_menu_font=mui_font;
+		y_scale=0.8f;
+	}
+
 	while(1)
 	{
 
@@ -18319,27 +18287,27 @@ int open_list_menu(char *_caption, int _width, t_opt_list *list, int _max, int _
 //			for(int fsr=0; fsr<(_width*_height*4); fsr+=4) *(uint32_t*) ( (u8*)(text_LIST)+fsr )=0x222222a0;
 			memcpy(text_LIST, text_LIST+1512000, 1512000);
 			max_ttf_label=0;
-			print_label_ex( 0.5f, 0.05f, 1.0f, COL_XMB_COLUMN, _caption, 1.04f, 0.0f, 15, 1.0f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 1);
+			print_label_ex( 0.5f, 0.05f, 1.0f, COL_XMB_COLUMN, _caption, 1.04f, 0.0f, _menu_font, 1.0f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 1);
 
 			for(int n=first; (n<(first+_max_entries-1) && n<_max); n++)
 			{
 				if(_centered)
 				{
 					if(n==sel)
-						print_label_ex( 0.5f, ((float)((n-first+3)*line_h)/(float)_height)-0.011f, 1.4f, 0xf0e0e0e0, list[n].label, 1.04f, 0.0f, 15, 1.0f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 1);
+						print_label_ex( 0.5f, ((float)((n-first+3)*line_h)/(float)_height)-0.011f, 1.4f, 0xf0e0e0e0, list[n].label, 1.04f, 0.0f, _menu_font, 1.0f/((float)(_width/1920.f)), y_scale/((float)(_height/1080.f)), 1);
 					else
-						print_label_ex( 0.5f, ((float)((n-first+3)*line_h)/(float)_height), 1.0f, COL_XMB_SUBTITLE, list[n].label, 1.00f, 0.0f, 15, 1.0f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 1 );
+						print_label_ex( 0.5f, ((float)((n-first+3)*line_h)/(float)_height), 1.0f, COL_XMB_SUBTITLE, list[n].label, 1.00f, 0.0f, _menu_font, 1.0f/((float)(_width/1920.f)), y_scale/((float)(_height/1080.f)), 1 );
 				}
 				else
 				{
 					if(n==sel)
-						print_label_ex( 0.05f, ((float)((n-first+3)*line_h)/(float)_height)-0.011f, 1.4f, 0xf0e0e0e0, list[n].label, 1.04f, 0.0f, 15, 0.8f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 0);
+						print_label_ex( 0.05f, ((float)((n-first+3)*line_h)/(float)_height)-0.011f, 1.4f, 0xf0e0e0e0, list[n].label, 1.04f, 0.0f, _menu_font, 0.8f/((float)(_width/1920.f)), y_scale/((float)(_height/1080.f)), 0);
 					else
-						print_label_ex( 0.05f, ((float)((n-first+3)*line_h)/(float)_height), 1.0f, COL_XMB_SUBTITLE, list[n].label, 1.00f, 0.0f, 15, 0.8f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 0 );
+						print_label_ex( 0.05f, ((float)((n-first+3)*line_h)/(float)_height), 1.0f, COL_XMB_SUBTITLE, list[n].label, 1.00f, 0.0f, _menu_font, 0.8f/((float)(_width/1920.f)), y_scale/((float)(_height/1080.f)), 0 );
 				}
 			}
 
-			print_label_ex( 0.8f, ((float)(_height-line_h*2)/(float)_height)+0.01f, 1.5f, 0xf0c0c0c0, (char*)"Apply", 1.00f, 0.0f, 15, 0.5f/((float)(_width/1920.f)), 0.5f/((float)(_height/1080.f)), 0);
+			print_label_ex( 0.8f, ((float)(_height-line_h*2)/(float)_height)+0.01f, 1.5f, 0xf0c0c0c0, (char*) STR_BUT_APPLY, 1.00f, 0.0f, _menu_font, 0.5f/((float)(_width/1920.f)), (y_scale/2.f)/((float)(_height/1080.f)), 0);
 			flush_ttf(text_LIST, _width, _height);
 			put_texture_with_alpha_gen( text_LIST, text_DOX+(dox_cross_x	*4 + dox_cross_y	* dox_width*4), dox_cross_w,	dox_cross_h,	dox_width, _width, (int)((0.8f*_width)-dox_cross_w-5), _height-line_h*2);
 			last_sel=sel;
@@ -18376,6 +18344,10 @@ int open_dd_menu(char *_caption, int _width, t_opt_list *list, int _max, int _x,
 {
 	(void) _x;
 	(void) _y;
+
+	u8 _menu_font=17;
+	float y_scale=0.85f;
+	if(mm_locale) {_menu_font=mui_font; y_scale=0.7f;}
 
 	if(_max_entries>16) _max_entries=16;
 	u8 *text_LIST = NULL;
@@ -18428,13 +18400,13 @@ int open_dd_menu(char *_caption, int _width, t_opt_list *list, int _max, int _x,
 			for(int n=first; (n<(first+_max_entries-1) && n<_max); n++)
 			{
 				if(n==sel)
-					print_label_ex( 0.055f, ((float)((n-first+2.2f)*line_h)/(float)_height)-0.007f, 1.2f, 0xf0e0e0e0, list[n].label, 1.04f, 0.0f, 17, 0.68f/((float)(_width/1920.f)), 0.85f/((float)(_height/1080.f)), 0);
+					print_label_ex( 0.055f, ((float)((n-first+2.2f)*line_h)/(float)_height)-0.007f, 1.2f, 0xf0e0e0e0, list[n].label, 1.04f, 0.0f, _menu_font, 0.68f/((float)(_width/1920.f)), (y_scale)/((float)(_height/1080.f)), 0);
 				else
-					print_label_ex( 0.120f, ((float)((n-first+2.2f)*line_h)/(float)_height), 0.85f, COL_XMB_SUBTITLE, list[n].label, 1.04f, 0.0f, 17, 0.8f/((float)(_width/1920.f)), 0.95f/((float)(_height/1080.f)), 0 );
+					print_label_ex( 0.120f, ((float)((n-first+2.2f)*line_h)/(float)_height), 0.85f, COL_XMB_SUBTITLE, list[n].label, 1.04f, 0.0f, _menu_font, 0.8f/((float)(_width/1920.f)), (y_scale+0.1f)/((float)(_height/1080.f)), 0 );
 				flush_ttf(text_LIST, _width, _height);
 			}
 
-			print_label_ex( 0.6f, ((float)(_height-line_h*2)/(float)_height)+0.0326f, 1.5f, 0xf0c0c0c0, (char*)"Confirm", 1.04f, 0.0f, 15, 0.5f/((float)(_width/1920.f)), 0.5f/((float)(_height/1080.f)), 0);
+			print_label_ex( 0.6f, ((float)(_height-line_h*2)/(float)_height)+0.0326f, 1.5f, 0xf0c0c0c0, (char*) STR_BUT_CONFIRM, 1.04f, 0.0f, _menu_font, 0.5f/((float)(_width/1920.f)), 0.5f/((float)(_height/1080.f)), 0);
 			flush_ttf(text_LIST, _width, _height);
 			put_texture_with_alpha_gen( text_LIST, text_DOX+(dox_cross_x	*4 + dox_cross_y	* dox_width*4), dox_cross_w,	dox_cross_h,	dox_width, _width, (int)((0.6f*_width)-dox_cross_w-5), _height-line_h*2+4);
 			last_sel=sel;
@@ -20927,23 +20899,24 @@ int main(int argc, char **argv)
 	new_pad=0; old_pad=0;
 
 	if(debug_mode) 
-					// Save default English GUI labels (for debug purposes, not intended for translation!)
-					// \n is missing in the output label strings and must be replaced manually
-					// after removing all header lines (the ones starting with #).
-					// Use HEX+TEXT editor to change single byte 0x0a to 2 bytes -> 0x5c 0x6e (\n)
+					// Save default English GUI labels
+					// New line characters are marked with "|" symbol, do not remove!
 	{
-		sprintf(string1, "%s/lang/LANG_DEBUG.TXT", app_usrdir);
+		sprintf(string1, "%s/lang/LANG_DEFAULT.TXT", app_usrdir);
 		remove(string1);
 		FILE *fpA;
 		fpA = fopen ( string1, "wb" );
 		if(fpA!=NULL)
 		{
+			char lab[512];
 			fputs ( "\xEF\xBB\xBF",  fpA ); // set text file header to UTF-8
-			fprintf(fpA, "###############################################################################\x0d\x0a#\x0d\x0a# multiMAN ver %s GUI Base File [English]\x0d\x0a# Do not edit or modify the contents of this file\x0d\x0a# It is provided as a start point for translating multiMAN to another language\x0d\x0a# This file contains all editable GUI lables for current multiMAN version\x0d\x0a# If you decide to use it as template,\x0d\x0a# remove all lines starting with # including this and the next two lines!\x0d\x0a#\x0d\x0a###############################################################################\x0d\x0a", current_version_NULL);
+			//fprintf(fpA, "###############################################################################\x0d\x0a#\x0d\x0a# multiMAN ver %s GUI Base File [English]\x0d\x0a# Do not edit or modify the contents of this file\x0d\x0a# It is provided as a start point for translating multiMAN to another language\x0d\x0a# This file contains all editable GUI lables for current multiMAN version\x0d\x0a# If you decide to use it as template,\x0d\x0a# remove all lines starting with # including this and the next two lines!\x0d\x0a#\x0d\x0a###############################################################################\x0d\x0a", current_version_NULL);
 			for(int n=0; n<STR_LAST_ID; n++)
 			{
-				fwrite ( g_MMString[n].m_pStr, g_MMString[n].m_Len, 1, fpA ); 
-				fputs ( (char*)"\r\n",  fpA );
+				sprintf(lab, "%s", (const char*)g_MMString[n].m_pStr);
+				for(u16 m=0; m<strlen(lab); m++) if(lab[m]=='\n') lab[m]='|';
+				fwrite ( lab, g_MMString[n].m_Len, 1, fpA );  //g_MMString[n].m_pStr
+				fputs ( (char*)"\r",  fpA );
 			}
 			fclose( fpA);
 		}
@@ -22492,7 +22465,7 @@ switch_ntfs:
 			wait_dialog();
 			if(dialog_ret==1) {
 				pfs_mode(1);
-				dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, "Please wait...", dialog_fun2, (void*)0x0000aaab, NULL );
+				dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, (const char*) STR_PLEASE_WAIT, dialog_fun2, (void*)0x0000aaab, NULL );
 				flipc(60); sys_timer_usleep(6000*1000);
 				cellMsgDialogAbort();
 				forcedevices=0xFFFE;
@@ -22502,7 +22475,7 @@ switch_ntfs:
 		else
 		{
 			pfs_mode(0);
-			dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, "Please wait...", dialog_fun2, (void*)0x0000aaab, NULL );
+			dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, (const char*) STR_PLEASE_WAIT, dialog_fun2, (void*)0x0000aaab, NULL );
 			flipc(60); sys_timer_usleep(6000*1000);
 			cellMsgDialogAbort();
 			forcedevices=0xFFFE;
@@ -23614,7 +23587,7 @@ overwrite_cancel_bdvd:
 					mouseX=480.f/1920.f;
 					mouseY=225.f/1080.f;
 					is_any_xmb_column=xmb_icon;
-					int ret_f=open_theme_menu((char*) "Download Theme", 600, www_theme, max_theme, 320, 225, 16, 1);
+					int ret_f=open_theme_menu((char*) STR_BUT_DOWN_THM, 600, www_theme, max_theme, 320, 225, 16, 1);
 					is_any_xmb_column=0;
 					use_analog=0;
 					mouseX=b_mX;
