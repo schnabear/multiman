@@ -1014,37 +1014,36 @@ static unsigned char genre[][48] = {
 
 typedef struct {
 	u8				val;
+	u8				font_id;
 	char			id[4];
 	unsigned char	eng_name[32];
 	unsigned char	loc_name[32];
 
 } _locales;
 
-#define MAX_LOCALES	18
+#define MAX_LOCALES	20
 static _locales locales[] = {
-	{	0, "EN",	"English",		"English"		},
-	{	1, "BG",	"Bulgarian",	"Български"		},
-	{	2, "RU",	"Russian",		"Русский"		},
-	{	3, "RO",	"Romanian",		"Român"			},
-	{	4, "TR",	"Turkish",		"Türkçe"		},
-	{	5, "ES",	"Spanish",		"Español"		},
-	{	6, "DE",	"German",		"Deutsch"		},
-	{	7, "FR",	"French",		"Français"		},
-	{	8, "IT",	"Italian",		"Italiano"		},
-	{	9, "BR",	"Brazilian",	"Português BR"	},
-	{  10, "PR",	"Portuguese",	"Português"		},
-	{  11, "NL",	"Dutch",		"Nederlands"	},
-	{  12, "PL",	"Polish",		"Polski"		},
-	{  13, "UA",	"Ukrainian",	"Українська"	},
-	{  14, "HU",	"Hungarian",	"Magyar"		},
-	{  15, "DK",	"Danish",		"Dansk"			},
-	{  16, "FI",	"Finnish",		"Suomi"			},
-	{  17, "XX",	"Other",		"Other"			},
+	{	0,	2,	 "EN",	"English",		"English"		},
+	{	1,	2,	 "BG",	"Bulgarian",	"Български"		},
+	{	2,	2,	 "RU",	"Russian",		"Русский"		},
+	{	3,	2,	 "RO",	"Romanian",		"Român"			},
+	{	4,	5,	 "TR",	"Turkish",		"Türkçe"		},
+	{	5,	2,	 "ES",	"Spanish",		"Español"		},
+	{	6,	2,	 "DE",	"German",		"Deutsch"		},
+	{	7,	2,	 "FR",	"French",		"Français"		},
+	{	8,	2,	 "IT",	"Italian",		"Italiano"		},
+	{	9,	2,	 "BR",	"Brazilian",	"Português BR"	},
+	{  10,	2,	 "PR",	"Portuguese",	"Português"		},
+	{  11,	2,	 "NL",	"Dutch",		"Nederlands"	},
+	{  12,	2,	 "PL",	"Polish",		"Polski"		},
+	{  13,	2,	 "UA",	"Ukrainian",	"Українська"	},
+	{  14,	2,	 "HU",	"Hungarian",	"Magyar"		},
+	{  15,	2,	 "DK",	"Danish",		"Dansk"			},
+	{  16,	2,	 "FI",	"Finnish",		"Suomi"			},
+	{  17,	2,	 "SE",	"Swedish",		"Svenska"		},
+	{  18,	2,	 "MY",	"Malaysian",	"Melayu"		},
+	{  19,	2,	 "XX",	"Other",		"Other"			}
 };
-
-#define CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF	(0<<7)
-#define CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_ON	(1<<7)
-#define CELL_MSGDIALOG_TYPE_PROGRESSBAR_DOUBLE	(2<<12)
 
 uint8_t padLYstick=0, padLXstick=0, padRYstick=0, padRXstick=0;
 
@@ -1273,12 +1272,20 @@ void set_xo()
 void load_localization(int id)
 {
 	MM_LocaleSet(0);
+	mui_font = locales[0].font_id;
 	if(id) 
 	{
 		char lfile[128];
 		sprintf(lfile, "%s/lang/LANG_%s.TXT", app_usrdir, locales[id].id);
-		if(MM_LocaleInit ( lfile )) MM_LocaleSet (1); else mm_locale=0;
+		if(MM_LocaleInit ( lfile )) 
+		{
+			MM_LocaleSet (1); 
+			mui_font = locales[id].font_id;
+			user_font = locales[id].font_id;
+		}
+		else mm_locale=0;
 	}
+	if (mui_font>4 && mui_font<10) mui_font+=5;
 }
 
 int exist(char *path)
@@ -1848,6 +1855,9 @@ void slide_screen_right(uint8_t *buffer)
 /*****************************************************/
 /* DIALOG                                            */
 /*****************************************************/
+#define CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF	(0<<7)
+#define CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_ON	(1<<7)
+#define CELL_MSGDIALOG_TYPE_PROGRESSBAR_DOUBLE	(2<<12)
 
 volatile int no_video=0;
 int osk_dialog=0;
@@ -11068,20 +11078,22 @@ void write_last_play( const char *gamebin, const char *path, const char *tname, 
 		sprintf( ICON1_PAM, "%s/PS3_GAME/ICON1.PAM", path);
 		sprintf (sldir, "%s/PS3_GAME/USRDIR", path);
 
-		char s_source[512];
-		char s_destination[512];
-		sprintf(s_source, "%s/PS3_GAME/TROPDIR", path);
-		sprintf(s_destination, "%s/TROPDIR", last_play_dir);
-		mkdir(s_destination, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); cellFsChmod(s_destination, 0777);
-		sprintf(s_destination, "%s/TROPDIR", last_play_dir);
-		my_game_copy((char*)s_source, (char*)s_destination); 
+		if(dboot&1)
+		{
+			char s_source[512];
+			char s_destination[512];
+			sprintf(s_source, "%s/PS3_GAME/TROPDIR", path);
+			sprintf(s_destination, "%s/TROPDIR", last_play_dir);
+			mkdir(s_destination, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); cellFsChmod(s_destination, 0777);
+			sprintf(s_destination, "%s/TROPDIR", last_play_dir);
+			my_game_copy((char*)s_source, (char*)s_destination); 
 
-		sprintf(s_source, "%s/PS3_GAME/LICDIR/LIC.DAT", path);
-		sprintf(s_destination, "%s/LICDIR", last_play_dir);
-		mkdir(s_destination, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); cellFsChmod(s_destination, 0777);
-		sprintf(s_destination, "%s/LICDIR/LIC.DAT", last_play_dir);
-		file_copy((char*)s_source, (char*)s_destination, 0); 
-
+			sprintf(s_source, "%s/PS3_GAME/LICDIR/LIC.DAT", path);
+			sprintf(s_destination, "%s/LICDIR", last_play_dir);
+			mkdir(s_destination, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); cellFsChmod(s_destination, 0777);
+			sprintf(s_destination, "%s/LICDIR/LIC.DAT", last_play_dir);
+			file_copy((char*)s_source, (char*)s_destination, 0); 
+		}
 	}
 	else
 	{
@@ -16643,6 +16655,8 @@ int select_language()
 		mm_locale = (int)(strtod(opt_list[ret_f].value, NULL));
 		load_localization(mm_locale);
 		redraw_column_texts(xmb_icon);
+		xmb_legend_drawn=0;
+		xmb_info_drawn=0;
 	}
 	slide_xmb_right();
 	return mm_locale;
@@ -18128,15 +18142,14 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 	int first=0;
 	int sel=0;
 	char filename[1024];
-	int _menu_font = 15;
-	float _y_scale=1.0f;
+	int _menu_font = mui_font;		//15;
+	float _y_scale = 0.7f;	//1.0f;
+
 	if(strstr(_caption, (const char*) STR_SEL_LANG)!=NULL) 
 	{
 		sel=mm_locale;
 		first=sel-_max_entries+2;
 		if(first<0) first=0;
-		_menu_font = 2;
-		_y_scale=0.7f;
 	}
 
 	sprintf(filename, "%s/LBOX.PNG", app_usrdir);
@@ -18191,9 +18204,9 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 				}
 			}
 
-			print_label_ex( 0.8f, ((float)(_height-line_h*2)/(float)_height)+0.01f, 1.5f, 0xf0c0c0c0, (char*) STR_BUT_APPLY, 1.00f, 0.0f, _menu_font, 0.5f/((float)(_width/1920.f)), 0.5f/((float)(_height/1080.f)), 0);
+			print_label_ex( 0.7f, ((float)(_height-line_h*2)/(float)_height)+0.01f, 1.5f, 0xf0c0c0c0, (char*) STR_BUT_APPLY, 1.00f, 0.0f, _menu_font, 0.5f/((float)(_width/1920.f)), 0.5f/((float)(_height/1080.f)), 0);
 			flush_ttf(text_LIST, _width, _height);
-			put_texture_with_alpha_gen( text_LIST, text_DOX+(dox_cross_x	*4 + dox_cross_y	* dox_width*4), dox_cross_w,	dox_cross_h,	dox_width, _width, (int)((0.8f*_width)-dox_cross_w-5), _height-line_h*2);
+			put_texture_with_alpha_gen( text_LIST, text_DOX+(dox_cross_x	*4 + dox_cross_y	* dox_width*4), dox_cross_w,	dox_cross_h,	dox_width, _width, (int)((0.7f*_width)-dox_cross_w-5), _height-line_h*2);
 			last_sel=sel;
 		}
 
@@ -18307,9 +18320,9 @@ int open_list_menu(char *_caption, int _width, t_opt_list *list, int _max, int _
 				}
 			}
 
-			print_label_ex( 0.8f, ((float)(_height-line_h*2)/(float)_height)+0.01f, 1.5f, 0xf0c0c0c0, (char*) STR_BUT_APPLY, 1.00f, 0.0f, _menu_font, 0.5f/((float)(_width/1920.f)), (y_scale/2.f)/((float)(_height/1080.f)), 0);
+			print_label_ex( 0.7f, ((float)(_height-line_h*2)/(float)_height)+0.01f, 1.5f, 0xf0c0c0c0, (char*) STR_BUT_APPLY, 1.00f, 0.0f, _menu_font, 0.5f/((float)(_width/1920.f)), (y_scale/2.f)/((float)(_height/1080.f)), 0);
 			flush_ttf(text_LIST, _width, _height);
-			put_texture_with_alpha_gen( text_LIST, text_DOX+(dox_cross_x	*4 + dox_cross_y	* dox_width*4), dox_cross_w,	dox_cross_h,	dox_width, _width, (int)((0.8f*_width)-dox_cross_w-5), _height-line_h*2);
+			put_texture_with_alpha_gen( text_LIST, text_DOX+(dox_cross_x	*4 + dox_cross_y	* dox_width*4), dox_cross_w,	dox_cross_h,	dox_width, _width, (int)((0.7f*_width)-dox_cross_w-5), _height-line_h*2);
 			last_sel=sel;
 		}
 
@@ -19880,30 +19893,35 @@ clock_text:
 void draw_xmb_legend(const int _xmb_icon)
 {
 	if(xmb_bg_counter>30 || _xmb_icon==1 || _xmb_icon==9 || c_opacity2<=0x40 || xmb_slide_step!=0 || xmb_slide_step_y!=0 || xmb_popup==0 || key_repeat) return;
+
 	if(!xmb_legend_drawn)
 	{
+		u8 _menu_font=2;
+		if(mm_locale) _menu_font=mui_font;
+
 		xmb_legend_drawn=1;
 		char xmb_text[32]; xmb_text[0]=0;
 		for(int fsr=0; fsr<84000; fsr+=4) *(uint32_t*) ((uint8_t*)(text_MSG)+fsr)=0x22222280;
 
 		if( (_xmb_icon==6 && xmb[_xmb_icon].first) || _xmb_icon==7) 
 		{
-			sprintf(xmb_text, (char*) ": Game Settings");
+			sprintf(xmb_text, "%s", (char*) STR_POP_GS);
 			put_texture_with_alpha_gen( text_MSG, text_DOX+(dox_triangle_x*4 + dox_triangle_y	* dox_width*4), dox_triangle_w,	dox_triangle_h, dox_width, 300, 8, 5);
 		}
 
 		if((_xmb_icon>1 &&_xmb_icon<6) || (_xmb_icon==6 && xmb[_xmb_icon].first==0) || _xmb_icon==8) 
 		{
-			if(_xmb_icon==2 && xmb[_xmb_icon].first>1) sprintf(xmb_text, (char*) ": Change Setting");
-			else if(_xmb_icon==2 && xmb[_xmb_icon].first==0) sprintf(xmb_text, (char*) ": View System Information");
-			else if(_xmb_icon==2 && xmb[_xmb_icon].first==1) sprintf(xmb_text, (char*) ": Clear Cached Files");
-			else if(_xmb_icon==3) sprintf(xmb_text, (char*) ": View Photo");
-			else if(_xmb_icon==4) sprintf(xmb_text, (char*) ": Play Music");
-			else if(_xmb_icon==5 && xmb[_xmb_icon].first<2) sprintf(xmb_text, (char*) ": Launch Showtime");
-			else if(_xmb_icon==5 && xmb[_xmb_icon].first>1) sprintf(xmb_text, (char*) ": Play Video");
-			else if(_xmb_icon==6 && xmb[_xmb_icon].first==0) sprintf(xmb_text, (char*) ": Refresh List");
-			else if(_xmb_icon==8 && xmb[_xmb_icon].first==0) sprintf(xmb_text, (char*) ": Refresh ROMs");
-			else if(_xmb_icon==8 && xmb[_xmb_icon].first) sprintf(xmb_text, (char*) ": Load Game ROM");
+			if(_xmb_icon==2 && xmb[_xmb_icon].first>1)		 sprintf(xmb_text, "%s", (char*) STR_POP_CHANGE_S);
+			else if(_xmb_icon==2 && xmb[_xmb_icon].first==0) sprintf(xmb_text, "%s", (char*) STR_POP_VIEW_SYSINF);
+			else if(_xmb_icon==2 && xmb[_xmb_icon].first==1) sprintf(xmb_text, "%s", (char*) STR_POP_LANGUAGE);
+			else if(_xmb_icon==2 && xmb[_xmb_icon].first==2) sprintf(xmb_text, "%s", (char*) STR_POP_CACHE);
+			else if(_xmb_icon==3)							 sprintf(xmb_text, "%s", (char*) STR_POP_PHOTO);
+			else if(_xmb_icon==4)							 sprintf(xmb_text, "%s", (char*) STR_POP_MUSIC);
+			else if(_xmb_icon==5 && xmb[_xmb_icon].first<2)  sprintf(xmb_text, "%s", (char*) STR_POP_ST);
+			else if(_xmb_icon==5 && xmb[_xmb_icon].first>1)  sprintf(xmb_text, "%s", (char*) STR_POP_VIDEO);
+			else if(_xmb_icon==6 && xmb[_xmb_icon].first==0) sprintf(xmb_text, "%s", (char*) STR_POP_REF_GAMES);
+			else if(_xmb_icon==8 && xmb[_xmb_icon].first==0) sprintf(xmb_text, "%s", (char*) STR_POP_REF_ROMS);
+			else if(_xmb_icon==8 && xmb[_xmb_icon].first)	 sprintf(xmb_text, "%s", (char*) STR_POP_ROM);
 			
 			put_texture_with_alpha_gen( text_MSG, text_DOX+(dox_cross_x	*4 + dox_cross_y	* dox_width*4), dox_cross_w,	dox_cross_h,	dox_width, 300, 8, 5);
 		}
@@ -19911,20 +19929,20 @@ void draw_xmb_legend(const int _xmb_icon)
 		if(_xmb_icon==4 || _xmb_icon==6 || _xmb_icon==8)
 		{
 			if(_xmb_icon==6)
-				print_label_ex( 0.17f, 0.55f, 0.6f, 0xffd0d0d0, (char*)": Group Titles by Genre", 1.00f, 0.0f, 2, 6.40f, 18.0f, 0);
+				print_label_ex( 0.17f, 0.55f, 0.6f, 0xffd0d0d0, (char*)STR_POP_GRP_GENRE, 1.00f, 0.0f, _menu_font, 6.40f, 18.0f, 0);
 			else if(_xmb_icon==8)
-				print_label_ex( 0.17f, 0.55f, 0.6f, 0xffd0d0d0, (char*)": Group ROMs by Emulator", 1.00f, 0.0f, 2, 6.40f, 18.0f, 0);
+				print_label_ex( 0.17f, 0.55f, 0.6f, 0xffd0d0d0, (char*)STR_POP_GRP_EMU, 1.00f, 0.0f, _menu_font, 6.40f, 18.0f, 0);
 			else if(_xmb_icon==4)
-				print_label_ex( 0.17f, 0.55f, 0.6f, 0xffd0d0d0, (char*)": Group Titles by Name", 1.00f, 0.0f, 2, 6.40f, 18.0f, 0);
+				print_label_ex( 0.17f, 0.55f, 0.6f, 0xffd0d0d0, (char*)STR_POP_GRP_NAME, 1.00f, 0.0f, _menu_font, 6.40f, 18.0f, 0);
 			put_texture_with_alpha_gen( text_MSG, text_DOX+(dox_square_x	*4 + dox_square_y	* dox_width*4), dox_square_w,	dox_square_h,	dox_width, 300, 8, 36);
 		}
 		else
 		{
 			put_texture_with_alpha_gen( text_MSG, text_DOX+(dox_l1_x*4 + dox_l1_y	* dox_width*4), dox_l1_w,	dox_l1_h, dox_width, 300, 8, 42);
 			put_texture_with_alpha_gen( text_MSG, text_DOX+(dox_r1_x*4 + dox_r1_y	* dox_width*4), dox_r1_w,	dox_r1_h, dox_width, 300, 8+dox_l1_w+5, 42);
-			print_label_ex( 0.475f, 0.55f, 0.6f, 0xffd0d0d0, (char*) ": Switch Display", 1.00f, 0.0f, 2, 6.40f, 18.0f, 0);
+			print_label_ex( 0.475f, 0.55f, 0.6f, 0xffd0d0d0, (char*) STR_POP_SWITCH, 1.00f, 0.0f, _menu_font, 6.40f, 18.0f, 0);
 		}
-		print_label_ex( 0.17f, 0.10f, 0.6f, 0xffd0d0d0, xmb_text, 1.00f, 0.0f, 2, 6.40f, 18.0f, 0);
+		print_label_ex( 0.17f, 0.10f, 0.6f, 0xffd0d0d0, xmb_text, 1.00f, 0.0f, _menu_font, 6.40f, 18.0f, 0);
 		flush_ttf(text_MSG, 300, 70);
 	}
 	if(c_opacity2<=0x80) change_opacity(text_MSG, -95, 84000);
@@ -19941,6 +19959,9 @@ void draw_xmb_info()
 
 	if(!xmb_info_drawn)
 	{
+
+		u8 _menu_font=2;
+		if(mm_locale) _menu_font=mui_font;
 		xmb_info_drawn=1;
 		char xmb_text[512]; xmb_text[0]=0;
 		char mp3_tmp[512];
@@ -19950,11 +19971,11 @@ void draw_xmb_info()
 		for(int fsr=0; fsr<106400; fsr+=4) *(uint32_t*) ((uint8_t*)(text_INFO)+fsr)=0x22222260;
 
 		sprintf(xmb_text, "%s", mp3_tmp); xmb_text[46]='.'; xmb_text[47]='.'; xmb_text[48]='.'; xmb_text[49]=0;
-		print_label_ex( 0.04f, 0.10f, 0.6f, 0xffb0b0b0, xmb_text, 1.00f, 0.0f, 2, 5.05f, 18.0f, 0);
-		sprintf(xmb_text, "%s: %i of %i", (update_ms? ((char*)"Playing") : ((char*)"Paused") ), current_mp3, max_mp3);
-		print_label_ex( 0.04f, 0.55f, 0.6f, 0xffb0b0b0, xmb_text, 1.00f, 0.0f, 2, 5.05f, 18.0f, 0);
-		sprintf(xmb_text, "[Volume: %i]",(int) (mp3_volume*100));
-		print_label_ex( 0.96f, 0.55f, 0.6f, 0xffb0b0b0, xmb_text, 1.00f, 0.0f, 2, 5.05f, 18.0f, 2);
+		print_label_ex( 0.04f, 0.10f, 0.6f, 0xffb0b0b0, xmb_text, 1.00f, 0.0f, _menu_font, 5.05f, 18.0f, 0);
+		sprintf(xmb_text, (const char*)STR_POP_1OF1, (update_ms? ((char*)STR_POP_PLAYING) : ((char*)STR_POP_PAUSED) ), current_mp3, max_mp3);
+		print_label_ex( 0.04f, 0.55f, 0.6f, 0xffb0b0b0, xmb_text, 1.00f, 0.0f, _menu_font, 5.05f, 18.0f, 0);
+		sprintf(xmb_text, (const char*)STR_POP_VOL,(int) (mp3_volume*100));
+		print_label_ex( 0.96f, 0.55f, 0.6f, 0xffb0b0b0, xmb_text, 1.00f, 0.0f, _menu_font, 5.05f, 18.0f, 2);
 
 		flush_ttf(text_INFO, 380, 70);
 	}
@@ -20910,12 +20931,11 @@ int main(int argc, char **argv)
 		{
 			char lab[512];
 			fputs ( "\xEF\xBB\xBF",  fpA ); // set text file header to UTF-8
-			//fprintf(fpA, "###############################################################################\x0d\x0a#\x0d\x0a# multiMAN ver %s GUI Base File [English]\x0d\x0a# Do not edit or modify the contents of this file\x0d\x0a# It is provided as a start point for translating multiMAN to another language\x0d\x0a# This file contains all editable GUI lables for current multiMAN version\x0d\x0a# If you decide to use it as template,\x0d\x0a# remove all lines starting with # including this and the next two lines!\x0d\x0a#\x0d\x0a###############################################################################\x0d\x0a", current_version_NULL);
 			for(int n=0; n<STR_LAST_ID; n++)
 			{
 				sprintf(lab, "%s", (const char*)g_MMString[n].m_pStr);
 				for(u16 m=0; m<strlen(lab); m++) if(lab[m]=='\n') lab[m]='|';
-				fwrite ( lab, g_MMString[n].m_Len, 1, fpA );  //g_MMString[n].m_pStr
+				fwrite ( lab, strlen(lab), 1, fpA );  //g_MMString[n].m_pStr
 				fputs ( (char*)"\r",  fpA );
 			}
 			fclose( fpA);

@@ -238,7 +238,33 @@ extern MMString g_MMString [];
 #define STR_GM_PERM_L2		MM_STRING( 187 )
 #define STR_GM_PERM_L3		MM_STRING( 188 )
 
-#define	STR_LAST_ID 189
+//XMMB Info pop-up
+#define STR_POP_GS			MM_STRING( 189 )
+#define STR_POP_CHANGE_S	MM_STRING( 190 )
+#define STR_POP_VIEW_SYSINF	MM_STRING( 191 )
+#define STR_POP_LANGUAGE	MM_STRING( 192 )
+#define STR_POP_CACHE		MM_STRING( 193 )
+#define STR_POP_PHOTO		MM_STRING( 194 )
+#define STR_POP_MUSIC		MM_STRING( 195 )
+#define STR_POP_ST			MM_STRING( 196 )
+#define STR_POP_VIDEO		MM_STRING( 197 )
+#define STR_POP_REF_GAMES	MM_STRING( 198 )
+#define STR_POP_REF_ROMS	MM_STRING( 199 )
+#define STR_POP_ROM			MM_STRING( 200 )
+
+#define STR_POP_GRP_GENRE	MM_STRING( 201 )
+#define STR_POP_GRP_EMU		MM_STRING( 202 )
+#define STR_POP_GRP_NAME	MM_STRING( 203 )
+#define STR_POP_SWITCH		MM_STRING( 204 )
+
+#define STR_POP_1OF1		MM_STRING( 205 )
+#define STR_POP_PLAYING		MM_STRING( 206 )
+#define STR_POP_PAUSED		MM_STRING( 207 )
+#define STR_POP_VOL			MM_STRING( 208 )
+
+
+
+#define	STR_LAST_ID 209
 
 // ***********************************************************************************
 
@@ -252,4 +278,5 @@ void MM_LocaleSet  ( bool mm_language );
 		#ifdef __cplusplus
 		}
 		#endif  /* __cplusplus */
+
 

@@ -251,6 +251,28 @@ static unsigned char s_pGMPermL1	[]	= "Re-apply file and folder access permissio
 static unsigned char s_pGMPermL2	[]	= "On rare occasions it may be required to perform resetting of";
 static unsigned char s_pGMPermL3	[]	= "ownership and execution flags of game contents.";
 
+static unsigned char s_pPOPGS		[]	= ": Game Settings";
+static unsigned char s_pPOPChangeS	[]	= ": Change Setting";
+static unsigned char s_pPOPSysInfo	[]	= ": View System Information";
+static unsigned char s_pPOPLang		[]	= ": Change Display Language";
+static unsigned char s_pPOPCache	[]	= ": Clear Cached Files";
+static unsigned char s_pPOPPhoto	[]	= ": View Photo";
+static unsigned char s_pPOPMusic	[]	= ": Play Music";
+static unsigned char s_pPOPST		[]	= ": Launch Showtime";
+static unsigned char s_pPOPVideo	[]	= ": Play Video";
+static unsigned char s_pPOPRefGames	[]	= ": Refresh List";
+static unsigned char s_pPOPRefRoms	[]	= ": Refresh ROMs";
+static unsigned char s_pPOPRom		[]	= ": Load Game ROM";
+
+static unsigned char s_pPOPGrpGenre	[]	= ": Group Titles by Genre";
+static unsigned char s_pPOPGrpEmu	[]	= ": Group ROMs by Emulator";
+static unsigned char s_pPOPGrpName	[]	= ": Group Titles by Name";
+static unsigned char s_pPOPSwitch	[]	= ": Switch Display";
+
+static unsigned char s_pPOP1of1		[]	= "%s: %i of %i";
+static unsigned char s_pPOPPlaying	[]	= "Playing";
+static unsigned char s_pPOPPaused	[]	= "Paused";
+static unsigned char s_pPOPVol		[]	= "[Volume: %i]";
 
 /*
 static unsigned char s_p		[]		= 
@@ -490,6 +512,29 @@ static MMString s_MMStringDef[] = {
  { sizeof ( s_pGMPermL1		) - 1, s_pGMPermL1		},
  { sizeof ( s_pGMPermL2		) - 1, s_pGMPermL2		},
  { sizeof ( s_pGMPermL3		) - 1, s_pGMPermL3		}, //188
+
+ { sizeof ( s_pPOPGS		) - 1, s_pPOPGS			}, //189
+ { sizeof ( s_pPOPChangeS	) - 1, s_pPOPChangeS	},
+ { sizeof ( s_pPOPSysInfo	) - 1, s_pPOPSysInfo	},
+ { sizeof ( s_pPOPLang		) - 1, s_pPOPLang		},
+ { sizeof ( s_pPOPCache		) - 1, s_pPOPCache		},
+ { sizeof ( s_pPOPPhoto		) - 1, s_pPOPPhoto		},
+ { sizeof ( s_pPOPMusic		) - 1, s_pPOPMusic		},
+ { sizeof ( s_pPOPST		) - 1, s_pPOPST			},
+ { sizeof ( s_pPOPVideo		) - 1, s_pPOPVideo		},
+ { sizeof ( s_pPOPRefGames	) - 1, s_pPOPRefGames	},
+ { sizeof ( s_pPOPRefRoms	) - 1, s_pPOPRefRoms	},
+ { sizeof ( s_pPOPRom		) - 1, s_pPOPRom		}, //200
+
+ { sizeof ( s_pPOPGrpGenre	) - 1, s_pPOPGrpGenre	}, //201
+ { sizeof ( s_pPOPGrpEmu	) - 1, s_pPOPGrpEmu		},
+ { sizeof ( s_pPOPGrpName	) - 1, s_pPOPGrpName	},
+ { sizeof ( s_pPOPSwitch	) - 1, s_pPOPSwitch		},
+
+ { sizeof ( s_pPOP1of1		) - 1, s_pPOP1of1		}, //205
+ { sizeof ( s_pPOPPlaying	) - 1, s_pPOPPlaying	},
+ { sizeof ( s_pPOPPaused	) - 1, s_pPOPPaused		},
+ { sizeof ( s_pPOPVol		) - 1, s_pPOPVol		}, //208
 
 
  /*,
