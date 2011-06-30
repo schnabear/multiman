@@ -119,6 +119,7 @@ extern MMString g_MMString [];
 
 #define STR_APPLY_THEME		MM_STRING(  89 )
 
+// System Settings Menu
 #define STR_MM_UPDATE		MM_STRING(  90 )
 #define STR_MM_UPDATE_L1	MM_STRING(  91 )
 #define STR_MM_UPDATE_L2	MM_STRING(  92 )
@@ -191,6 +192,7 @@ extern MMString g_MMString [];
 #define STR_MM_HELP_L3		MM_STRING( 148 )
 #define STR_MM_HELP_L4		MM_STRING( 149 )
 
+// Button labels
 #define STR_BUT_NAV			MM_STRING( 150 )
 #define STR_BUT_SELECT		MM_STRING( 151 )
 #define STR_BUT_BACK		MM_STRING( 152 )
@@ -208,6 +210,7 @@ extern MMString g_MMString [];
 #define STR_SEL_GENRE		MM_STRING( 163 )
 #define STR_BUT_DOWN_THM	MM_STRING( 164 )
 
+// Game Settings Menu
 #define STR_GM_COPY			MM_STRING( 165 )
 #define STR_GM_COPY_L1		MM_STRING( 166 )
 #define STR_GM_COPY_L2		MM_STRING( 167 )
@@ -238,7 +241,7 @@ extern MMString g_MMString [];
 #define STR_GM_PERM_L2		MM_STRING( 187 )
 #define STR_GM_PERM_L3		MM_STRING( 188 )
 
-//XMMB Info pop-up
+//XMMB Context Info pop-up
 #define STR_POP_GS			MM_STRING( 189 )
 #define STR_POP_CHANGE_S	MM_STRING( 190 )
 #define STR_POP_VIEW_SYSINF	MM_STRING( 191 )
@@ -252,6 +255,8 @@ extern MMString g_MMString [];
 #define STR_POP_REF_ROMS	MM_STRING( 199 )
 #define STR_POP_ROM			MM_STRING( 200 )
 
+
+// MP3 Info pop-up
 #define STR_POP_GRP_GENRE	MM_STRING( 201 )
 #define STR_POP_GRP_EMU		MM_STRING( 202 )
 #define STR_POP_GRP_NAME	MM_STRING( 203 )
@@ -262,9 +267,46 @@ extern MMString g_MMString [];
 #define STR_POP_PAUSED		MM_STRING( 207 )
 #define STR_POP_VOL			MM_STRING( 208 )
 
+#define STR_OTHER			MM_STRING( 209 )
+
+// Genres
+#define STR_GEN_OTHER		MM_STRING( 210 )
+#define STR_GEN_ACT			MM_STRING( 210 )
+#define STR_GEN_ADV			MM_STRING( 212 )
+#define STR_GEN_FAM			MM_STRING( 213 )
+#define STR_GEN_FIGHT		MM_STRING( 214 )
+#define STR_GEN_PARTY		MM_STRING( 215 )
+#define STR_GEN_PLAT		MM_STRING( 216 )
+#define STR_GEN_PUZZ		MM_STRING( 217 )
+#define STR_GEN_ROLE		MM_STRING( 218 )
+#define STR_GEN_RACE		MM_STRING( 219 )
+#define STR_GEN_SHOOT		MM_STRING( 220 )
+#define STR_GEN_SIM			MM_STRING( 221 )
+#define STR_GEN_SPORT		MM_STRING( 222 )
+#define STR_GEN_STAT		MM_STRING( 223 )
+#define STR_GEN_TRIV		MM_STRING( 224 )
+#define STR_GEN_3D			MM_STRING( 225 )
+
+// Retro Groups
+#define STR_GRP_RETRO		MM_STRING( 226 )
+#define STR_GRP_SNES		MM_STRING( 227 )
+#define STR_GRP_FCEU		MM_STRING( 228 )
+#define STR_GRP_VBA			MM_STRING( 229 )
+#define STR_GRP_GEN			MM_STRING( 230 )
+#define STR_GRP_FBA			MM_STRING( 231 )
+
+// XMMB Column Names
+#define STR_XC_SET			MM_STRING( 232 )
+#define STR_XC_PHO			MM_STRING( 233 )
+#define STR_XC_MUS			MM_STRING( 234 )
+#define STR_XC_VID			MM_STRING( 235 )
+#define STR_XC_GAM			MM_STRING( 236 )
+#define STR_XC_FAV			MM_STRING( 237 )
+#define STR_XC_WEB			MM_STRING( 238 )
 
 
-#define	STR_LAST_ID 209
+
+#define	STR_LAST_ID 239
 
 // ***********************************************************************************
 

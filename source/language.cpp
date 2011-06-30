@@ -274,6 +274,45 @@ static unsigned char s_pPOPPlaying	[]	= "Playing";
 static unsigned char s_pPOPPaused	[]	= "Paused";
 static unsigned char s_pPOPVol		[]	= "[Volume: %i]";
 
+// Alpha group "Other"
+static unsigned char s_pOther		[]	= "Other";
+
+// Genres
+static unsigned char s_pGENOther	[]	= "Other";
+static unsigned char s_pGENAct		[]	= "Action";
+static unsigned char s_pGENAdv		[]	= "Adventure";
+static unsigned char s_pGENFam		[]	= "Family";
+static unsigned char s_pGENFight	[]	= "Fighting";
+static unsigned char s_pGENParty	[]	= "Party";
+static unsigned char s_pGENPlat		[]	= "Platform";
+static unsigned char s_pGENPuzz		[]	= "Puzzle";
+static unsigned char s_pGENRole		[]	= "Role Playing";
+static unsigned char s_pGENRace		[]	= "Racing";
+static unsigned char s_pGENShoot	[]	= "Shooter";
+static unsigned char s_pGENSim		[]	= "Sim";
+static unsigned char s_pGENSport	[]	= "Sports";
+static unsigned char s_pGENStrat	[]	= "Strategy";
+static unsigned char s_pGENTriv		[]	= "Trivia";
+static unsigned char s_pGEN3D		[]	= "3D Support";
+
+// Retro Groups
+static unsigned char s_pRETRO		[]	= "Retro";
+static unsigned char s_pRETSNES		[]	= "SNES";
+static unsigned char s_pRETFCEU		[]	= "FCEU";
+static unsigned char s_pRETVBA		[]	= "VBA";
+static unsigned char s_pRETGEN		[]	= "GEN+";
+static unsigned char s_pRETFBA		[]	= "FBANext";
+
+// XMMB Column names ("Empty", "multiMAN", ... Retro, ...)
+static unsigned char s_pXCS		[]		= "Settings";	// 2
+static unsigned char s_pXCP		[]		= "Photo";		// 3
+static unsigned char s_pXCM		[]		= "Music";		// 4
+static unsigned char s_pXCV		[]		= "Video";		// 5
+static unsigned char s_pXCG		[]		= "Game";		// 6
+static unsigned char s_pXCF		[]		= "Favorites";	// 7
+static unsigned char s_pXCW		[]		= "Web";		// 9
+
+
 /*
 static unsigned char s_p		[]		= 
 static unsigned char s_p		[]		= 
@@ -466,22 +505,22 @@ static MMString s_MMStringDef[] = {
  { sizeof ( s_pMMHelpL3		) - 1, s_pMMHelpL3		},
  { sizeof ( s_pMMHelpL4		) - 1, s_pMMHelpL4		}, 
 
- { sizeof ( s_pButNavigate	  ) - 1, s_pButNavigate	}, //150
- { sizeof ( s_pButSelect	  ) - 1, s_pButSelect	},
- { sizeof ( s_pButBack		  ) - 1, s_pButBack		},
- { sizeof ( s_pButCancel	  ) - 1, s_pButCancel	},
- { sizeof ( s_pButApply		  ) - 1, s_pButApply	},
- { sizeof ( s_pButConfirm	  ) - 1, s_pButConfirm	},
- { sizeof ( s_pButGenre		  ) - 1, s_pButGenre	},
- { sizeof ( s_pButDownload	  ) - 1, s_pButDownload	},
- { sizeof ( s_pButLoad		  ) - 1, s_pButLoad		},
- { sizeof ( s_pButPrev		  ) - 1, s_pButPrev		},
- { sizeof ( s_pButNext		  ) - 1, s_pButNext		}, //160
- { sizeof ( s_pButLast		  ) - 1, s_pButLast		},
- { sizeof ( s_pButFirst		  ) - 1, s_pButFirst	},
+ { sizeof ( s_pButNavigate	) - 1, s_pButNavigate	}, //150
+ { sizeof ( s_pButSelect	) - 1, s_pButSelect		},
+ { sizeof ( s_pButBack		) - 1, s_pButBack		},
+ { sizeof ( s_pButCancel	) - 1, s_pButCancel		},
+ { sizeof ( s_pButApply		) - 1, s_pButApply		},
+ { sizeof ( s_pButConfirm	) - 1, s_pButConfirm	},
+ { sizeof ( s_pButGenre		) - 1, s_pButGenre		},
+ { sizeof ( s_pButDownload	) - 1, s_pButDownload	},
+ { sizeof ( s_pButLoad		) - 1, s_pButLoad		},
+ { sizeof ( s_pButPrev		) - 1, s_pButPrev		},
+ { sizeof ( s_pButNext		) - 1, s_pButNext		}, //160
+ { sizeof ( s_pButLast		) - 1, s_pButLast		},
+ { sizeof ( s_pButFirst		) - 1, s_pButFirst		},
 
- { sizeof ( s_pSelGenre		  ) - 1, s_pSelGenre	}, //163
- { sizeof ( s_pButDownTheme	  ) - 1, s_pButDownTheme},
+ { sizeof ( s_pSelGenre		) - 1, s_pSelGenre		}, //163
+ { sizeof ( s_pButDownTheme	) - 1, s_pButDownTheme	},
 
  { sizeof ( s_pGMCopy		) - 1, s_pGMCopy		}, //165
  { sizeof ( s_pGMCopyL1		) - 1, s_pGMCopyL1		},
@@ -536,6 +575,39 @@ static MMString s_MMStringDef[] = {
  { sizeof ( s_pPOPPaused	) - 1, s_pPOPPaused		},
  { sizeof ( s_pPOPVol		) - 1, s_pPOPVol		}, //208
 
+ { sizeof ( s_pOther		) - 1, s_pOther			}, //209
+
+ { sizeof ( s_pGENOther		) - 1, s_pGENOther		}, //210
+ { sizeof ( s_pGENAct		) - 1, s_pGENAct		},
+ { sizeof ( s_pGENAdv		) - 1, s_pGENAdv		},
+ { sizeof ( s_pGENFam		) - 1, s_pGENFam		},
+ { sizeof ( s_pGENFight		) - 1, s_pGENFight		},
+ { sizeof ( s_pGENParty		) - 1, s_pGENParty		},
+ { sizeof ( s_pGENPlat		) - 1, s_pGENPlat		},
+ { sizeof ( s_pGENPuzz		) - 1, s_pGENPuzz		},
+ { sizeof ( s_pGENRole		) - 1, s_pGENRole		},
+ { sizeof ( s_pGENRace		) - 1, s_pGENRace		},
+ { sizeof ( s_pGENShoot		) - 1, s_pGENShoot		}, //220
+ { sizeof ( s_pGENSim		) - 1, s_pGENSim		},
+ { sizeof ( s_pGENSport		) - 1, s_pGENSport		},
+ { sizeof ( s_pGENStrat		) - 1, s_pGENStrat		},
+ { sizeof ( s_pGENTriv		) - 1, s_pGENTriv		},
+ { sizeof ( s_pGEN3D		) - 1, s_pGEN3D			}, //225
+
+ { sizeof ( s_pRETRO		) - 1, s_pRETRO			}, //226
+ { sizeof ( s_pRETSNES		) - 1, s_pRETSNES		},
+ { sizeof ( s_pRETFCEU		) - 1, s_pRETFCEU		},
+ { sizeof ( s_pRETVBA		) - 1, s_pRETVBA		},
+ { sizeof ( s_pRETGEN		) - 1, s_pRETGEN		},
+ { sizeof ( s_pRETFBA		) - 1, s_pRETFBA		}, //231
+
+ { sizeof ( s_pXCS			) - 1, s_pXCS			}, //232
+ { sizeof ( s_pXCP			) - 1, s_pXCP			},
+ { sizeof ( s_pXCM			) - 1, s_pXCM			},
+ { sizeof ( s_pXCV			) - 1, s_pXCV			},
+ { sizeof ( s_pXCG			) - 1, s_pXCG			},
+ { sizeof ( s_pXCF			) - 1, s_pXCF			},
+ { sizeof ( s_pXCW			) - 1, s_pXCW			}, //238
 
  /*,
  { sizeof ( s_p	  ) - 1, s_p	},

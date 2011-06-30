@@ -989,28 +989,12 @@ using namespace cell::Gcm;
 #define IS_GENRE_MASK	 (15<<16)
 //#define IS_GENRE_CLEAR  ~(IS_GENRE_MASK) // user&= ~IS_GENRE_MASK
 
-static unsigned char retro_groups[][24] = { "Retro", "SNES", "FCEU", "VBA", "GEN+", "FBANext" };
-static unsigned char alpha_groups[][16] = { "All", "A-B", "C-D", "E-F", "G-H", "I-J", "K-L", "M-N", "O-P", "Q-R", "S-T", "U-V", "W-X", "Y-Z", "Other" };
-static unsigned char xmb_columns[][32] = { "Empty", "multiMAN", "Settings", "Photo", "Music", "Video", "Game", "Favorites", "Retro", "Web" };
+static char genre		[16] [48];
+static char retro_groups[ 6] [24];// = { "Retro", "SNES", "FCEU", "VBA", "GEN+", "FBANext" };
+static char alpha_groups[15] [16] = { "All", "A-B", "C-D", "E-F", "G-H", "I-J", "K-L", "M-N", "O-P", "Q-R", "S-T", "U-V", "W-X", "Y-Z", "Other" };
+static char xmb_columns [10] [32];// = { "Empty", "multiMAN", "Settings", "Photo", "Music", "Video", "Game", "Favorites", "Retro", "Web" };
 
-static unsigned char genre[][48] = { 
-"Other",
-"Action",
-"Adventure",
-"Family",
-"Fighting",
-"Party",
-"Platform",
-"Puzzle",
-"Role Playing",
-"Racing",
-"Shooter",
-"Sim",
-"Sports",
-"Strategy",
-"Trivia",
-"3D Support"
-};
+
 
 typedef struct {
 	u8				val;
@@ -1026,7 +1010,7 @@ static _locales locales[] = {
 	{	0,	2,	 "EN",	"English",		"English"		},
 	{	1,	2,	 "BG",	"Bulgarian",	"Български"		},
 	{	2,	2,	 "RU",	"Russian",		"Русский"		},
-	{	3,	2,	 "RO",	"Romanian",		"Român"			},
+	{	3,	2,	 "RO",	"Romanian",		"Română"		},
 	{	4,	5,	 "TR",	"Turkish",		"Türkçe"		},
 	{	5,	2,	 "ES",	"Spanish",		"Español"		},
 	{	6,	2,	 "DE",	"German",		"Deutsch"		},
@@ -1286,6 +1270,18 @@ void load_localization(int id)
 		else mm_locale=0;
 	}
 	if (mui_font>4 && mui_font<10) mui_font+=5;
+
+	for(int n=0; n<16; n++) sprintf(genre[n],		  "%s", (const char*)MM_STRING(210+n));
+	for(int n=0; n< 6; n++) sprintf(retro_groups[n],  "%s", (const char*)MM_STRING(226+n));
+							sprintf(alpha_groups[14], "%s", (const char*)STR_OTHER);
+
+							sprintf(xmb_columns[0], "Empty");
+							sprintf(xmb_columns[1], "multiMAN");
+	for(int n=2; n<8 ; n++) sprintf(xmb_columns[n], "%s", (const char*)MM_STRING(230+n));
+							sprintf(xmb_columns[8], "%s", (const char*)STR_GRP_RETRO);	// Retro
+							sprintf(xmb_columns[9], "%s", (const char*)MM_STRING(238));	// Web
+
+
 }
 
 int exist(char *path)
