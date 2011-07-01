@@ -304,14 +304,92 @@ static unsigned char s_pRETGEN		[]	= "GEN+";
 static unsigned char s_pRETFBA		[]	= "FBANext";
 
 // XMMB Column names ("Empty", "multiMAN", ... Retro, ...)
-static unsigned char s_pXCS		[]		= "Settings";	// 2
-static unsigned char s_pXCP		[]		= "Photo";		// 3
-static unsigned char s_pXCM		[]		= "Music";		// 4
-static unsigned char s_pXCV		[]		= "Video";		// 5
-static unsigned char s_pXCG		[]		= "Game";		// 6
-static unsigned char s_pXCF		[]		= "Favorites";	// 7
-static unsigned char s_pXCW		[]		= "Web";		// 9
+static unsigned char s_pXCS			[]	= "Settings";	// 2
+static unsigned char s_pXCP			[]	= "Photo";		// 3
+static unsigned char s_pXCM			[]	= "Music";		// 4
+static unsigned char s_pXCV			[]	= "Video";		// 5
+static unsigned char s_pXCG			[]	= "Game";		// 6
+static unsigned char s_pXCF			[]	= "Favorites";	// 7
+static unsigned char s_pXCW			[]	= "Web";		// 9
 
+static unsigned char s_pPS2			[]	= "multiMAN will now exit to XMB\xE2\x84\xA2 and you can start the game from the [PLAYSTATION\xC2\xAE\x32 Format Game] icon.";
+static unsigned char s_pPKG			[]	= "Do you want to exit to XMB\xE2\x84\xA2 to install selected package from [* Install package files] menu?";
+
+static unsigned char s_pNoSplit1	[]	= "You cannot launch games with split big files!\n\nTransfer the game to internal HDD and try again\nor use XMMB mode to launch the title.";
+static unsigned char s_pNoSplit2	[]	= "You cannot launch games with split big files!\n\nTransfer the game to internal HDD and try again\nor use [Hermes] option for BD-Emulator type in SETTINGS XMMB column\nand restart your PS3\xE2\x84\xA2 system.";
+static unsigned char s_pNoSplit3	[]	= "You cannot launch games with split big files!\n\nTransfer the game to internal HDD and try again\nor enable [Verify USB Games] option in SETTINGS XMMB column\nand restart your PS3\xE2\x84\xA2 system.";
+
+static unsigned char s_pVerifying	[]	= "Verifying game data, please wait...";
+static unsigned char s_pCanceled	[]	= "Operation failed or canceled.";
+
+static unsigned char s_pNotSupported[]	= "Your current configuration doesn't support this function!";
+static unsigned char s_pNotSupported2[]	= "Your current configuration doesn't support this function!\n\n                     (unable to create file cache)";
+
+static unsigned char s_pPS3DISC		[]	= "Please insert an original PLAYSTATION\xC2\xAE\x33 game disc before proceeding!";
+
+static unsigned char s_pThmInstall	[]	= "Do you want to exit to XMB\xE2\x84\xA2 to install \x22%s\x22 theme from [* Install package files] menu?";
+static unsigned char s_pToDBoot		[]	= "Do you want to start the game without exiting to XMB?\n\nWarning: Some games do not support such launch mode!";
+
+static unsigned char s_pDLST		[]	= "Showtime for multiMAN application is missing!\n\nDo you want to download it now?";
+
+static unsigned char s_pStartBD1	[]	= "multiMAN will now exit to XMB\xE2\x84\xA2 and you can start the game from the /app_home icon.";
+static unsigned char s_pStartBD2	[]	= "multiMAN will now exit to XMB\xE2\x84\xA2 and you can start the game from the Blu-ray\xE2\x84\xA2 Game Disc icon.";
+
+static unsigned char s_pOverwrite	[]	= "Destination already contains folder with the same name!\n\nContinue and overwrite?\n\n[%s]";
+
+static unsigned char s_pIncomplete	[]	= "WARNING:\n\nYour installation of multiMAN is incomplete!\nPlease install BASE or FULL version or you may experience graphics display problems!";
+
+static unsigned char s_pErrBDEMU1	[]	= "multiMAN cannot enable selected BD-ROM emulator type. Functionality may be restricted!\n\nError: BDEMU.BIN incorrect version";
+static unsigned char s_pErrBDEMU2	[]	= "multiMAN cannot enable BD-ROM emulator. Functionality may be restricted!\n\nError: BDEMU.BIN missing";
+static unsigned char s_pErrBDEMU3	[]	= "multiMAN cannot enable BD-ROM emulator. Functionality may be restricted!\n\nError: Unsupported system firmware or BDEMU.BIN incorrect version";
+
+static unsigned char s_pCritical	[]	= "CRITICAL ERROR:\n\nmultiMAN cannot access or create default backup folder!\nGame backup functions may not work properly.\n\nPlease use different payload if necessary!";
+
+static unsigned char s_pDelFile		[]	= "Do you want to delete the selected file?\n\n[%s]";
+static unsigned char s_pDelFiles	[]	= "Do you want to delete the selected %i files?";
+static unsigned char s_pDelDir		[]	= "Do you want to delete the selected folder and its contents?\n\n[%s]";
+static unsigned char s_pDelDirs		[]	= "Do you want to delete the selected %i folders and their contents?";
+
+static unsigned char s_pDelFromHDD	[]	= "Do you want to delete title from internal HDD?";
+static unsigned char s_pDelFromUSB	[]	= "Do you want to delete title from external USB00%c?";
+static unsigned char s_pDelFromCache[]	= "There is cached data for this title. Do you want to clear it?";
+
+static unsigned char s_pCpHdd2Usb	[]	= "Do you want to copy game from internal HDD to external USB00%c?";
+static unsigned char s_pCpUsb2Hdd	[]	= "Do you want to copy game from external USB00%c to internal HDD?\n\nSource: /dev_usb00%i/%s/%s\nDestination: %s/%s";
+static unsigned char s_pCpPfs2Hdd	[]	= "Do you want to copy game from external USB disk to internal HDD?\n\nSource: %s\nDestination: %s/%s";
+static unsigned char s_pCpUsb2Usb	[]	= "Do you want to copy game from external USB00%c to external USB00%c?\n\nSource: /dev_usb00%i/%s/%s\nDestination: /dev_usb00%i/%s/%s";
+static unsigned char s_pOverwriteNo	[]	= "Destination already contains folder with the same name!\n\nPlease use FILE MANAGER [SELECT+START] to rename or remove:\n\n[%s]";
+
+static unsigned char s_pDelPartHDD	[]	= "%s\n\nDelete partial copy from internal HDD?";
+static unsigned char s_pDelPartUSB	[]	= "%s\n\nDelete partial copy from USB00%c?";
+
+static unsigned char s_pDelCacheDone[]	= "Game Cache Data cleared!";
+
+static unsigned char s_pCpBD2Hdd	[]	= "Do you want to copy game from BD-ROM to internal HDD?";
+static unsigned char s_pCpBD2Usb	[]	= "Do you want to copy game from BD-ROM to external USB00%c?";
+
+static unsigned char s_pPinGame		[]	= "Game parental level: %i - Enter access PIN code:";
+static unsigned char s_pPinErr		[]	= "Entered PIN code is incorrect!";
+static unsigned char s_pPinEnter	[]	= "Enter access PIN code:";
+static unsigned char s_pPinNew		[]	= "Enter NEW access PIN code:";
+static unsigned char s_pPinErr2		[]	= "Entered PIN code is not accepted!\n\nPlease use four character alphanumeric PIN!";
+
+static unsigned char s_pBd2AVCHD	[]	= "::: %s :::\n\nDo you want to convert the Blu-ray\xE2\x84\xA2 disc structure to AVCHD\xE2\x84\xA2 format?\n\nNote: The action may improve playback compatibility!";
+static unsigned char s_pBd2AVCHD2	[]	= "Converting Blu-ray\xE2\x84\xA2 structure to AVCHD\xE2\x84\xA2, please wait...";
+static unsigned char s_pActAVCHD	[]	= "Activate currently selected AVCHD\xE2\x84\xA2 video folder?\n\n::: %s :::\n\nNote: You can start video playback from XMB\xE2\x84\xA2 [Video] tab";
+static unsigned char s_pActAVCHD2	[]	= "Activating AVCHD\xE2\x84\xA2 structure, please wait...";
+static unsigned char s_pBd2AVCHD3	[]	= "::: %s :::\n\n%s: %s\n\nDo you want to convert the Blu-ray\xE2\x84\xA2 disc structure to AVCHD\xE2\x84\xA2 format?\n\nNote: The action may improve playback compatibility!";
+static unsigned char s_pActBDMV		[]	= "Activate currently selected Blu-ray\xE2\x84\xA2 (BDMV) video folder?\n\n::: %s :::\n\n[%s: %s]\n\nNote: You can start video playback from XMB\xE2\x84\xA2 [Video] tab";
+
+static unsigned char s_pAttUSB		[]	= "Please attach USB, SDHC or MemoryStick\xE2\x84\xA2 storage device to activate AVCHD\xE2\x84\xA2 HDD playback!";
+static unsigned char s_pAttPFS		[]	= "Please attach USB storage device before you proceed!\n\nIs the disk connected to your PLAYSTATION\xC2\xAE\x33 system?";
+
+static unsigned char s_pCacheFile	[]	= "Caching file to internal temporary folder...";
+static unsigned char s_pHddErr		[]	= "This title cannot be loaded from internal HDD.\n\nTransfer to external USB HDD or change title options.";
+static unsigned char s_pUsbErr		[]	= "This title cannot be loaded from external USB HDD.\n\nTransfer to internal HDD or change title options.";
+
+static unsigned char s_pTitleLocked	[]	= "Options cannot be changed or title is locked!";
+static unsigned char s_pTitleRO		[]	= "Options cannot be changed for this title!";
 
 /*
 static unsigned char s_p		[]		= 
@@ -609,23 +687,96 @@ static MMString s_MMStringDef[] = {
  { sizeof ( s_pXCF			) - 1, s_pXCF			},
  { sizeof ( s_pXCW			) - 1, s_pXCW			}, //238
 
+ { sizeof ( s_pPS2			) - 1, s_pPS2			}, //239
+ { sizeof ( s_pPKG			) - 1, s_pPKG			},
+ { sizeof ( s_pNoSplit1		) - 1, s_pNoSplit1		},
+ { sizeof ( s_pNoSplit2		) - 1, s_pNoSplit2		},
+ { sizeof ( s_pNoSplit3		) - 1, s_pNoSplit3		},
+ { sizeof ( s_pVerifying	) - 1, s_pVerifying		}, //244
+ { sizeof ( s_pCanceled		) - 1, s_pCanceled		},
+ { sizeof ( s_pNotSupported	) - 1, s_pNotSupported	},
+ { sizeof ( s_pNotSupported2) - 1, s_pNotSupported2	},
+ { sizeof ( s_pPS3DISC		) - 1, s_pPS3DISC		},
+ { sizeof ( s_pThmInstall	) - 1, s_pThmInstall	},
+ { sizeof ( s_pToDBoot		) - 1, s_pToDBoot		},
+
+ { sizeof ( s_pDLST			) - 1, s_pDLST			}, //251
+ { sizeof ( s_pStartBD1		) - 1, s_pStartBD1		},
+ { sizeof ( s_pStartBD2		) - 1, s_pStartBD2		},
+ { sizeof ( s_pOverwrite	) - 1, s_pOverwrite		},
+
+ { sizeof ( s_pIncomplete	) - 1, s_pIncomplete	}, //255
+ { sizeof ( s_pErrBDEMU1	) - 1, s_pErrBDEMU1		},
+ { sizeof ( s_pErrBDEMU2	) - 1, s_pErrBDEMU2		},
+ { sizeof ( s_pErrBDEMU3	) - 1, s_pErrBDEMU3		},
+
+ { sizeof ( s_pCritical		) - 1, s_pCritical		}, //259
+
+ { sizeof ( s_pDelFile		) - 1, s_pDelFile		}, //260
+ { sizeof ( s_pDelFiles		) - 1, s_pDelFiles		},
+ { sizeof ( s_pDelDir		) - 1, s_pDelDir		},
+ { sizeof ( s_pDelDirs		) - 1, s_pDelDirs		},
+ 
+ { sizeof ( s_pDelFromHDD	) - 1, s_pDelFromHDD	},
+ { sizeof ( s_pDelFromUSB	) - 1, s_pDelFromUSB	},
+ { sizeof ( s_pDelFromCache	) - 1, s_pDelFromCache	},
+ 
+ { sizeof ( s_pCpHdd2Usb	) - 1, s_pCpHdd2Usb		}, //267
+ { sizeof ( s_pCpUsb2Hdd	) - 1, s_pCpUsb2Hdd		},
+ { sizeof ( s_pCpPfs2Hdd	) - 1, s_pCpPfs2Hdd		},
+ { sizeof ( s_pCpUsb2Usb	) - 1, s_pCpUsb2Usb		},
+
+ { sizeof ( s_pOverwriteNo	) - 1, s_pOverwriteNo	}, //271
+ { sizeof ( s_pDelPartHDD	) - 1, s_pDelPartHDD	},
+ { sizeof ( s_pDelPartUSB	) - 1, s_pDelPartUSB	},
+ { sizeof ( s_pDelCacheDone	) - 1, s_pDelCacheDone	},
+ 
+ { sizeof ( s_pCpBD2Hdd		) - 1, s_pCpBD2Hdd		}, //275
+ { sizeof ( s_pCpBD2Usb		) - 1, s_pCpBD2Usb		},
+
+ { sizeof ( s_pPinGame		) - 1, s_pPinGame		}, //277
+ { sizeof ( s_pPinErr		) - 1, s_pPinErr		},
+ { sizeof ( s_pPinEnter		) - 1, s_pPinEnter		},
+ { sizeof ( s_pPinNew		) - 1, s_pPinNew		},
+ { sizeof ( s_pPinErr2		) - 1, s_pPinErr2		}, //281
+
+ { sizeof ( s_pBd2AVCHD		) - 1, s_pBd2AVCHD		}, //282
+ { sizeof ( s_pBd2AVCHD2	) - 1, s_pBd2AVCHD2		},
+ { sizeof ( s_pActAVCHD		) - 1, s_pActAVCHD		},
+ { sizeof ( s_pActAVCHD2	) - 1, s_pActAVCHD2		}, //285
+ { sizeof ( s_pBd2AVCHD3	) - 1, s_pBd2AVCHD3		},
+ { sizeof ( s_pActBDMV		) - 1, s_pActBDMV		},
+ { sizeof ( s_pAttUSB		) - 1, s_pAttUSB		},
+ { sizeof ( s_pAttPFS		) - 1, s_pAttPFS		},
+ { sizeof ( s_pCacheFile	) - 1, s_pCacheFile		}, //290
+ { sizeof ( s_pHddErr		) - 1, s_pHddErr		},
+ { sizeof ( s_pUsbErr		) - 1, s_pUsbErr		},
+ { sizeof ( s_pTitleLocked	) - 1, s_pTitleLocked	},
+ { sizeof ( s_pTitleRO		) - 1, s_pTitleRO		}, //294
+
  /*,
- { sizeof ( s_p	  ) - 1, s_p	},
- { sizeof ( s_p	  ) - 1, s_p	},
- { sizeof ( s_p	  ) - 1, s_p	},
- { sizeof ( s_p	  ) - 1, s_p	},
- { sizeof ( s_p	  ) - 1, s_p	},
- { sizeof ( s_p	  ) - 1, s_p	},
- { sizeof ( s_p	  ) - 1, s_p	},
- { sizeof ( s_p	  ) - 1, s_p	},
- { sizeof ( s_p	  ) - 1, s_p	},
- { sizeof ( s_p	  ) - 1, s_p	},
- { sizeof ( s_p	  ) - 1, s_p	},
- { sizeof ( s_p	  ) - 1, s_p	},
- { sizeof ( s_p	  ) - 1, s_p	},
- { sizeof ( s_p	  ) - 1, s_p	},
- { sizeof ( s_p	  ) - 1, s_p	},
- { sizeof ( s_p	  ) - 1, s_p	},*/
+
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+ { sizeof ( s_p	) - 1, s_p		},
+*/
 
 };
 

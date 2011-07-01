@@ -1391,7 +1391,7 @@ void load_localization(int id)
 		{
 			mm_locale=0;
 			char errlang[512];
-			sprintf(errlang, "Localization file for %s (%s) is missing or incomplete!\n\n%s: %i lines read, but %i expected!\n\nRestart multiMAN while holding L2+R2 for \"Debug Mode\" to generate LANG_DEFAULT.TXT\nwith all required localization labels.", locales[id].eng_name, locales[id].loc_name, lfile, llines, STR_LAST_ID);
+			sprintf(errlang, "Localization file for %s (%s) language is missing or incomplete!\n\n%s: %i lines read, but %i expected!\n\nRestart multiMAN while holding L2+R2 for \"Debug Mode\" to generate LANG_DEFAULT.TXT\nwith all required localization labels.", locales[id].eng_name, locales[id].loc_name, lfile, llines, STR_LAST_ID);
 			dialog_ret=0;
 			cellMsgDialogOpen2( type_dialog_ok, errlang, dialog_fun2, (void*)0x0000aaab, NULL );
 			wait_dialog_simple();
@@ -7958,7 +7958,7 @@ gs_cover:
 			if(is_locked || !is_game)
 			{
 				dialog_ret=0;
-				cellMsgDialogOpen2( type_dialog_ok, "Options cannot be changed or title is locked!", dialog_fun2, (void*)0x0000aaab, NULL );
+				cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_TITLE_LOCKED, dialog_fun2, (void*)0x0000aaab, NULL );
 				wait_dialog_simple();
 			}
 			else
@@ -7967,7 +7967,7 @@ gs_cover:
 				if(!set_game_flags(*_game_sel))
 				{
 					dialog_ret=0;
-					cellMsgDialogOpen2( type_dialog_ok, "Options cannot be changed for this title!", dialog_fun2, (void*)0x0000aaab, NULL );
+					cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_TITLE_RO, dialog_fun2, (void*)0x0000aaab, NULL );
 					wait_dialog_simple();
 				}
 			}
@@ -14043,7 +14043,7 @@ quit_viewer:
 					strncpy(just_path, list[e].path, 11); just_path[11]=0;
 					mod_mount_table(just_path, 1);
 					dialog_ret=0;
-					cellMsgDialogOpen2( type_dialog_ok, "multiMAN will now exit to XMB\xE2\x84\xA2 and you can start the game from the [PLAYSTATION\xC2\xAE\x32 Format Game] icon.", dialog_fun2, (void*)0x0000aaab, NULL ); 
+					cellMsgDialogOpen2( type_dialog_ok, (const char*)STR_PS2DISC, dialog_fun2, (void*)0x0000aaab, NULL ); 
 					wait_dialog();
 					unload_modules(); sys_process_exit(1);
 				}
@@ -14053,8 +14053,7 @@ quit_viewer:
 					
 					syscall_mount(this_pane, mount_bdvd);
 					dialog_ret=0;
-					sprintf(string1, "Do you want to exit to XMB\xE2\x84\xA2 to install selected package from [* Install package files] menu?"); 
-					cellMsgDialogOpen2( type_dialog_yes_no, string1, dialog_fun1, (void*)0x0000aaaa, NULL );
+					cellMsgDialogOpen2( type_dialog_yes_no, (const char*)STR_PKGXMB, dialog_fun1, (void*)0x0000aaaa, NULL );
 					wait_dialog(); 
 					if(dialog_ret!=1) {reset_mount_points(); goto cancel_exit;}
 					unload_modules(); sys_process_exit(1);
@@ -14082,14 +14081,13 @@ quit_viewer:
 					num_files_split=0; abort_copy=0;
 					my_game_test(just_path, 2); 
 					if(num_files_split && payload!=1){
-						sprintf(filename, "You cannot launch games with split big files!\n\nTransfer the game to internal HDD and try again\nor use XMMB mode to launch the title.");
-						dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
+						dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, (const char*)STR_NOSPLIT1, dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
 						goto cancel_exit;
 					}
 
 		if(parental_level<plevel && parental_level>0)
 		{
-			sprintf(string1, "Game parental level: %i - Enter access PIN code:", plevel );
+			sprintf(string1, (const char*) STR_GAME_PIN, plevel );
 
 				OutputInfo.result = CELL_OSKDIALOG_INPUT_FIELD_RESULT_OK;
 				OutputInfo.numCharsResultString = 128;
@@ -14124,7 +14122,7 @@ quit_viewer:
 					}
 				}
 				dialog_ret=0;
-				cellMsgDialogOpen2( type_dialog_ok, "Entered PIN code is incorrect!", dialog_fun2, (void*)0x0000aaab, NULL );					
+				cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_PIN_ERR, dialog_fun2, (void*)0x0000aaab, NULL );					
 				wait_dialog();
 				goto cancel_exit;
 
@@ -14136,7 +14134,7 @@ pass_ok_2:
 					if(payload==0 && sc36_path_patch==0 && !exist((char*)"/dev_bdvd"))
 					{
 						dialog_ret=0;
-						cellMsgDialogOpen2( type_dialog_ok, "Please insert an original PLAYSTATION\xC2\xAE\x33 game disc before proceeding!", dialog_fun2, (void*)0x0000aaab, NULL );					
+						cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_PS3DISC, dialog_fun2, (void*)0x0000aaab, NULL );					
 						wait_dialog();
 					}
 					else
@@ -14149,8 +14147,8 @@ pass_ok_2:
 
 					dialog_ret=0;
 					if(direct_launch==1) 
-					{	sprintf(string1, "Do you want to start the game without exiting to XMB?\n\nWarning: Some games do not support such launch mode!"); 
-						cellMsgDialogOpen2( type_dialog_yes_no, string1, dialog_fun1, (void*)0x0000aaaa, NULL );
+					{	
+						cellMsgDialogOpen2( type_dialog_yes_no, (const char*) STR_TO_DBOOT, dialog_fun1, (void*)0x0000aaaa, NULL );
 						wait_dialog(); 
 					}
 					if(dialog_ret==3) {reset_mount_points(); goto cancel_exit;}
@@ -14189,13 +14187,13 @@ pass_ok_2:
 						pathpos=strstr(pch,"/BDMV/index.bdmv");	
 						just_path[pathpos-pch]=0;
 
-			sprintf(filename, "::: %s :::\n\nDo you want to convert the Blu-ray\xE2\x84\xA2 disc structure to AVCHD\xE2\x84\xA2 format?\n\nNote: The action may improve playback compatibility!", just_path);
+			sprintf(filename, (const char*) STR_BD2AVCHD, just_path);
 			dialog_ret=0;
 			cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaab, NULL );
 			wait_dialog();
 			if(dialog_ret==1)  
 			{	
-				dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, "Converting Blu-ray\xE2\x84\xA2 structure to AVCHD\xE2\x84\xA2, please wait...", dialog_fun2, (void*)0x0000aaab, NULL );
+				dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, (const char*) STR_BD2AVCHD2, dialog_fun2, (void*)0x0000aaab, NULL );
 				flipc(60);
 
 				DIR  *dir;
@@ -14231,13 +14229,13 @@ pass_ok_2:
 					}
 
 					dialog_ret=0;
-					sprintf(string1, "Activate currently selected AVCHD\xE2\x84\xA2 video folder?\n\n::: %s :::\n\nNote: You can start video playback from XMB\xE2\x84\xA2 [Video] tab", just_path);
+					sprintf(string1, (const char*) STR_ACT_AVCHD, just_path);
 					cellMsgDialogOpen2( type_dialog_yes_no, string1, dialog_fun1, (void*)0x0000aaaa, NULL );
 					wait_dialog(); 
 					if(dialog_ret==1)  
 					{
 
-		dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, "Activating AVCHD\xE2\x84\xA2 structure, please wait...", dialog_fun2, (void*)0x0000aaab, NULL );
+		dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, (const char*) STR_ACT_AVCHD2, dialog_fun2, (void*)0x0000aaab, NULL );
 		flipc(60);
 
 		char usb_save[32]="/none"; usb_save[5]=0;
@@ -14287,7 +14285,7 @@ pass_ok_2:
 	{
 		cellMsgDialogAbort();
 		dialog_ret=0;
-		cellMsgDialogOpen2( type_dialog_ok, "Please attach USB, SDHC or MemoryStick\xE2\x84\xA2 storage device to activate AVCHD\xE2\x84\xA2 HDD playback!", dialog_fun2, (void*)0x0000aaab, NULL );
+		cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ATT_USB, dialog_fun2, (void*)0x0000aaab, NULL );
 		wait_dialog();
 	}
 
@@ -14319,7 +14317,7 @@ retry_showtime:
 							cellFsGetFreeSize(app_usrdir, &blockSize, &freeSize);
 							freeSpace = ( ((uint64_t)blockSize * freeSize));
 							if(strstr(my_mp3_file,"/pvd_usb")!=NULL && (uint64_t)list[e].size<freeSpace) { // && stat((char*)"/dev_hdd1", &s3)>=0 && 
-								sprintf(string1, "%s", "Caching file to internal temporary folder...");
+								sprintf(string1, "%s", (const char*) STR_CACHE_FILE);
 								cellMsgDialogOpen2(	CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL	|CELL_MSGDIALOG_TYPE_BUTTON_TYPE_NONE|CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF|CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_NONE|CELL_MSGDIALOG_TYPE_PROGRESSBAR_SINGLE,string1,NULL,NULL,NULL);
 								cellFsGetFreeSize((char*)"/dev_hdd1", &blockSize, &freeSize); freeSpace = ( ((uint64_t)blockSize * freeSize));
 								if((uint64_t)list[e].size<freeSpace)
@@ -14367,7 +14365,7 @@ retry_showtime:
 							if(!exist(my_mp3_file))
 							{
 								cellMsgDialogAbort();
-								dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, "Your current configuration doesn't support this function!\n\n                     (unable to create file cache)", dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
+								dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_NOTSUPPORTED2, dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
 
 							}
 							else
@@ -14381,8 +14379,7 @@ retry_showtime:
 						{
 							cellMsgDialogAbort();
 							dialog_ret=0;
-							sprintf(filename, "Showtime for multiMAN application is missing!\n\nDo you want to download it now?");
-							cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
+							cellMsgDialogOpen2( type_dialog_yes_no, (const char*) STR_DL_ST, dialog_fun1, (void*)0x0000aaaa, NULL );
 							wait_dialog();
 							if(dialog_ret==1)
 							{
@@ -14853,9 +14850,9 @@ cancel_exit:
 
 				new_pad=0; old_pad=0;
 				if(m_copy_total==1)
-					sprintf(filename, "Do you want to delete the selected file?\n\n[%s]", list[e].path);
+					sprintf(filename, (const char*) STR_DEL_FILE, list[e].path);
 				else
-					sprintf(filename, "Do you want to delete the selected %i files?", m_copy_total);
+					sprintf(filename, (const char*) STR_DEL_FILES, m_copy_total);
 
 				dialog_ret=0;
 				cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
@@ -14897,9 +14894,9 @@ cancel_exit:
 				if (m_copy_total==0) {list[e].selected=1; m_copy_total=1;}
 
 				if(m_copy_total==1)
-					sprintf(filename, "Do you want to delete the selected folder and its contents?\n\n[%s]", list[e].path);
+					sprintf(filename, (const char*) STR_DEL_DIR, list[e].path);
 				else
-					sprintf(filename, "Do you want to delete the selected %i folders and their contents?", m_copy_total);
+					sprintf(filename, (const char*) STR_DEL_DIRS, m_copy_total);
 				dialog_ret=0;
 				cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
 				wait_dialog();
@@ -15005,15 +15002,9 @@ cancel_exit:
 
 					if(c_firmware!=3.55f && c_firmware!=3.41f &&  c_firmware!=3.15f)
 					{
-						dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, "Your current configuration doesn't support this function!", dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
+						dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_NOTSUPPORTED, dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
 						goto cancel_mount;
 					}
-
-//					if(stat((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", &s3)<0)
-//					{
-//						dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, "To use this feature you have to insert any original Playstation(R)3 game disc!", dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
-//						goto cancel_mount;
-//					}
 
 					char just_drive[32];
 					char usb_mount0[512], usb_mount1[512], usb_mount2[512];
@@ -15069,9 +15060,9 @@ cancel_exit:
 							fclose(fpA);
 							rename (usb_mount0, usb_mount1);
 							if(!exist((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO"))
-								sprintf(string1,"multiMAN will now exit to XMB\xE2\x84\xA2 and you can start the game from the /app_home icon.");
+								sprintf(string1, "%s", (const char*) STR_START_BD1);
 							else
-								sprintf(string1,"multiMAN will now exit to XMB\xE2\x84\xA2 and you can start the game from the Blu-ray\xE2\x84\xA2 Game Disc icon.");
+								sprintf(string1, "%s", (const char*) STR_START_BD2);
 							ret = mod_mount_table(just_drive, 1); //modify
 							if(ret)
 							{
@@ -15233,7 +15224,7 @@ cancel_mount:
 									if(exist(other_pane))
 									{
 										dialog_ret=0;
-										sprintf(filename, "Destination already contains folder with the same name!\n\nContinue and overwrite?\n\n[%s]", other_pane );
+										sprintf(filename, (const char*) STR_OVERWRITE, other_pane );
 										cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
 										wait_dialog();
 									}	
@@ -20659,11 +20650,6 @@ int main(int argc, char **argv)
 	text_DROPS = text_bmpS + buf_align2 * 12;
 
 
-//	ClearSurface(); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x000000ff);
-//	cellDbgFontPrintf( 0.30f, 0.85f, 1.0f, 0x90909090, "multiMAN is preparing environment...");
-//	cellDbgFontDrawGcm(); setRenderColor();	
-//	flip();
-
 	sprintf(avchdBG, "%s/BOOT.PNG",app_usrdir); 
 	load_texture(text_BOOT, avchdBG, 1920);
 	sprintf(string1, "%s/GLO.PNG", app_usrdir);
@@ -20704,8 +20690,6 @@ int main(int argc, char **argv)
 	pDataB = pData;
 
 	multiStreamStarted = StartMultiStream();
-
-
 
 	max_menu_list=0;
 
@@ -21017,7 +21001,7 @@ int main(int argc, char **argv)
 	sprintf(filename,  "%s/DROPS.PNG",app_usrdir);
 	if(!exist(filename) || !exist(xmbdevs)) {
 		dialog_ret=0;
-		ret = cellMsgDialogOpen2( type_dialog_ok, "WARNING:\n\nYour installation of multiMAN is incomplete!\nPlease install BASE or FULL version or you may experience graphics display problems!", dialog_fun2, (void*)0x0000aaab, NULL );					
+		ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_INCOMPLETE, dialog_fun2, (void*)0x0000aaab, NULL );					
 		wait_dialog();
 	}
 	ClearSurface();
@@ -21173,7 +21157,7 @@ int main(int argc, char **argv)
 		{
 			payload=-1; payloadT[0]=0x20; //NONE
 			fclose(fpV);
-			dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, "multiMAN cannot enable selected BD-ROM emulator type. Functionality may be restricted!\n\nError: BDEMU.BIN incorrect version", dialog_fun2, (void*)0x0000aaab, NULL );wait_dialog();
+			dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_BDEMU1, dialog_fun2, (void*)0x0000aaab, NULL );wait_dialog();
 		}
 	}
 
@@ -21208,7 +21192,7 @@ int main(int argc, char **argv)
 		{
 			payload=-1; payloadT[0]=0x20; //NONE
 			fclose(fpV);
-			dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, "multiMAN cannot enable selected BD-ROM emulator type. Functionality may be restricted!\n\nError: BDEMU.BIN incorrect version", dialog_fun2, (void*)0x0000aaab, NULL );wait_dialog();
+			dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_BDEMU1, dialog_fun2, (void*)0x0000aaab, NULL );wait_dialog();
 		}
 	}
 
@@ -21223,9 +21207,9 @@ int main(int argc, char **argv)
 			dialog_ret=0;
 			sprintf(filename, "%s/BDEMU.BIN", app_usrdir);
 			if(!exist(filename))
-				cellMsgDialogOpen2( type_dialog_ok, "multiMAN cannot enable BD-ROM emulator. Functionality may be restricted!\n\nError: BDEMU.BIN missing", dialog_fun2, (void*)0x0000aaab, NULL );
+				cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_BDEMU2, dialog_fun2, (void*)0x0000aaab, NULL );
 			else
-				cellMsgDialogOpen2( type_dialog_ok, "multiMAN cannot enable BD-ROM emulator. Functionality may be restricted!\n\nError: Unsupported system firmware or BDEMU.BIN incorrect version", dialog_fun2, (void*)0x0000aaab, NULL );
+				cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_BDEMU3, dialog_fun2, (void*)0x0000aaab, NULL );
 			wait_dialog();
 		}
 		if(c_firmware == 3.55f) psgroove_main(1);
@@ -21279,7 +21263,7 @@ int main(int argc, char **argv)
 	dir=opendir (ini_hdd_dir); 
 	if(!dir){
 		dialog_ret=0; force_disable_copy=1;
-		ret = cellMsgDialogOpen2( type_dialog_ok, "CRITICAL ERROR:\n\nmultiMAN cannot access or create default backup folder!\nGame backup functions may not work properly.\n\nPlease use different payload if necessary!", dialog_fun2, (void*)0x0000aaab, NULL );					
+		ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_CRITICAL, dialog_fun2, (void*)0x0000aaab, NULL );					
 		wait_dialog();
 	}
 	else closedir(dir);
@@ -22475,7 +22459,7 @@ switch_ntfs:
 		if(!pfs_enabled)
 		{
 			dialog_ret=0;
-			ret = cellMsgDialogOpen2( type_dialog_yes_no, "Please attach USB storage device before you proceed!\n\nIs the disk connected to your PLAYSTATION\xC2\xAE\x33 system?", dialog_fun1, (void*)0x0000aaaa, NULL );
+			ret = cellMsgDialogOpen2( type_dialog_yes_no, (const char*) STR_ATT_USB2, dialog_fun1, (void*)0x0000aaaa, NULL );
 			wait_dialog();
 			if(dialog_ret==1) {
 				pfs_mode(1);
@@ -22935,8 +22919,7 @@ retry_showtime_mm:
 						{
 							cellMsgDialogAbort();
 							dialog_ret=0;
-							sprintf(filename, "Showtime for multiMAN application is missing!\n\nDo you want to download it now?");
-							cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
+							cellMsgDialogOpen2( type_dialog_yes_no, (const char*) STR_DL_ST, dialog_fun1, (void*)0x0000aaaa, NULL );
 							wait_dialog();
 							if(dialog_ret==1)
 							{
@@ -23042,9 +23025,9 @@ delete_title:
 				}
 
 			if(n==0)
-				sprintf(filename, "Do you want to delete title from internal HDD?"); 
+				sprintf(filename, "%s", (const char*) STR_DEL_TITLE_HDD); 
 			else
-				sprintf(filename, "Do you want to delete title from external USB00%c?", 47+n); 
+				sprintf(filename, (const char*) STR_DEL_TITLE_USB, 47+n); 
 
 				dialog_ret=0;
 				ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
@@ -23056,7 +23039,7 @@ delete_title:
 				if(exist(filename))
 				{
 					dialog_ret=0;
-					ret = cellMsgDialogOpen2( type_dialog_yes_no, "There is cached data for this title. Do you want to clear it?", dialog_fun1, (void*)0x0000aaaa, NULL );
+					ret = cellMsgDialogOpen2( type_dialog_yes_no, (const char*) STR_DEL_GCACHE, dialog_fun1, (void*)0x0000aaaa, NULL );
 					wait_dialog();
 				}
 
@@ -23142,7 +23125,7 @@ copy_title:
 				if((fdevices>>n) & 1)
 					{
 
-					sprintf(filename, "Do you want to copy game from internal HDD to external USB00%c?", 47+n); 
+					sprintf(filename, (const char*) STR_COPY_HDD2USB, 47+n); 
 					ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
 					wait_dialog();
 
@@ -23167,7 +23150,7 @@ copy_title:
 
 				if(exist(name))
 				{
-					sprintf(string1, "Destination already contains folder with the same name!\n\nPlease use FILE MANAGER [SELECT+START] to rename or remove:\n\n[%s]", name );	dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
+					sprintf(string1, (const char*) STR_TITLE_EXISTS, name );	dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 					goto overwrite_cancel;
 				}
 
@@ -23200,9 +23183,9 @@ copy_title:
 				dialog_ret=0;
 				if(force_disable_copy==0) {
 					if(strstr(menu_list[game_sel].path,"/pvd_usb")==NULL)
-						sprintf(filename, "Do you want to copy game from external USB00%c to internal HDD?\n\nSource: /dev_usb00%i/%s/%s\nDestination: %s/%s", 47+n, n-1, ini_usb_dir, p, hdd_folder, p); 
+						sprintf(filename, (const char*) STR_COPY_USB2HDD, 47+n, n-1, ini_usb_dir, p, hdd_folder, p); 
 					else
-						sprintf(filename, "Do you want to copy game from external USB disk to internal HDD?\n\nSource: %s\nDestination: %s/%s", menu_list[game_sel].path, hdd_folder, p); 
+						sprintf(filename, (const char*) STR_COPY_PFS2HDD, menu_list[game_sel].path, hdd_folder, p); 
 					ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
 					wait_dialog();
 				}
@@ -23214,7 +23197,7 @@ copy_title:
 					sprintf(name, "%s/%s", hdd_folder, p);	
 					if(exist(name))
 					{
-						sprintf(string1, "Destination already contains folder with the same name!\n\nPlease use FILE MANAGER [SELECT+START] to rename or remove:\n\n[%s]", name );	dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
+						sprintf(string1, (const char*) STR_TITLE_EXISTS, name );	dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 						goto overwrite_cancel;
 					}
 					mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
@@ -23228,7 +23211,7 @@ copy_title:
 						dialog_ret=0;
 						if( ((fdevices>>n3) & 1) && n3!=n )
 						{
-							sprintf(filename, "Do you want to copy game from external USB00%c to external USB00%c?\n\nSource: /dev_usb00%i/%s/%s\nDestination: /dev_usb00%i/%s/%s", 47+n, 47+n3, n-1, ini_usb_dir, p, n3-1, ini_usb_dir, p); 
+							sprintf(filename, (const char*) STR_COPY_USB2USB, 47+n, 47+n3, n-1, ini_usb_dir, p, n3-1, ini_usb_dir, p); 
 							ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
 							wait_dialog();
 
@@ -23240,7 +23223,7 @@ copy_title:
 					sprintf(name, "/dev_usb00%c/%s/%s", 47+n3, ini_usb_dir, p);
 					if(exist(name))
 					{
-						sprintf(string1, "Destination already contains folder with the same name!\n\nPlease use FILE MANAGER [SELECT+START] to rename or remove:\n\n[%s]", name );	dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
+						sprintf(string1, (const char*) STR_TITLE_EXISTS, name );	dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 						goto overwrite_cancel;
 					}
 					mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
@@ -23343,8 +23326,8 @@ copy_title:
 		
 			if(abort_copy )
 				{
-					if(dest==0)   sprintf(filename, "%s\n\nDelete partial copy from internal HDD?", menu_list[game_sel].title);
-						else sprintf(filename, "%s\n\nDelete partial copy from USB00%c?", menu_list[game_sel].title, 47+dest);
+					if(dest==0)   sprintf(filename, (const char*) STR_DEL_PART_HDD, menu_list[game_sel].title);
+						else sprintf(filename, (const char*) STR_DEL_PART_USB, menu_list[game_sel].title, 47+dest);
 
 					dialog_ret=0;
 					ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
@@ -23408,8 +23391,8 @@ copy_from_bluray:
 			if((fdevices>>n) & 1)
 				{
 
-				if(n==0) sprintf(filename, "%s", "Do you want to copy game from BD-ROM to internal HDD?"); 
-				else sprintf(filename, "Do you want to copy game from BD-ROM to external USB00%c?", 47+n); 
+				if(n==0) sprintf(filename, "%s", (const char*) STR_COPY_BD2HDD); 
+				else sprintf(filename, (const char*) STR_COPY_BD2USB, 47+n); 
 
 				ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
 				
@@ -23454,7 +23437,7 @@ copy_from_bluray:
 
 						if(cellFsStat(name, &status)== CELL_FS_SUCCEEDED)
 						{
-							sprintf(string1, "Destination already contains folder with the same name!\n\nPlease use FILE MANAGER [SELECT+START] to rename or remove:\n\n[%s]", name );	dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
+							sprintf(string1, (const char*) STR_TITLE_EXISTS, name );	dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 							goto overwrite_cancel_bdvd;
 						}
 						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); 
@@ -23467,7 +23450,7 @@ copy_from_bluray:
 						sprintf(name, "/dev_usb00%c/%s/%s", 47+curr_device, ini_usb_dir, id);
 						if(cellFsStat(name, &status)== CELL_FS_SUCCEEDED)
 						{
-							sprintf(string1, "Destination already contains folder with the same name!\n\nPlease use FILE MANAGER [SELECT+START] to rename or remove:\n\n[%s]", name );	dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
+							sprintf(string1, (const char*) STR_TITLE_EXISTS, name );	dialog_ret=0;cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 							goto overwrite_cancel_bdvd;
 						}
 						mkdir(name, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
@@ -23533,8 +23516,8 @@ copy_from_bluray:
 			
 				if(abort_copy)
 					{
-						if(curr_device==0)   sprintf(filename, "%s\n\nDelete incomplete folder from internal HDD?", id);
-							else sprintf(filename, "%s\n\nDelete incomplete folder from USB00%c?", id, 47+curr_device);
+						if(curr_device==0)   sprintf(filename, (const char*) STR_DEL_PART_HDD, id);
+							else sprintf(filename, (const char*) STR_DEL_PART_USB, id, 47+curr_device);
 
 						dialog_ret=0;
 						ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
@@ -23614,7 +23597,7 @@ overwrite_cancel_bdvd:
 						{
 							syscall_mount(themes_web_dir, mount_bdvd);
 							dialog_ret=0;
-							sprintf(string1, "Do you want to exit to XMB\xE2\x84\xA2 to install \x22%s\x22 theme from [* Install package files] menu?", www_theme[ret_f].name); 
+							sprintf(string1, (const char*) STR_INSTALL_THEME, www_theme[ret_f].name); 
 							cellMsgDialogOpen2( type_dialog_yes_no, string1, dialog_fun1, (void*)0x0000aaaa, NULL );
 							wait_dialog(); 
 							if(dialog_ret!=1) {reset_mount_points(); goto cancel_theme_exit;}
@@ -23683,7 +23666,7 @@ cancel_theme_exit:
 				if(delete_game_cache()!=-1)
 				{
 					pad_read(); new_pad=0; 
-					dialog_ret=0; cellMsgDialogOpen2( type_dialog_back, "Game Cache Data cleared!", dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
+					dialog_ret=0; cellMsgDialogOpen2( type_dialog_back, (const char*) STR_DEL_CACHE_DONE, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 					wait_dialog();
 				}
 				goto xmb_cancel_option;
@@ -23696,7 +23679,7 @@ cancel_theme_exit:
 				if(parental_pin_entered && (!strcmp(xmb[2].member[xmb[2].first].optionini, "disable_options") || !strcmp(xmb[2].member[xmb[2].first].optionini, "parental_level") || !strcmp(xmb[2].member[xmb[2].first].optionini, "lock_fileman") )) goto xmb_pin_ok;
 
 				{
-					sprintf(string1, "%s", "Enter access PIN code:");
+					sprintf(string1, "%s", (const char*) STR_PIN_ENTER);
 
 						OutputInfo.result = CELL_OSKDIALOG_INPUT_FIELD_RESULT_OK;
 						OutputInfo.numCharsResultString = 128;
@@ -23727,7 +23710,7 @@ cancel_theme_exit:
 						}
 						dialog_ret=0;
 						parental_pin_entered=0;
-						cellMsgDialogOpen2( type_dialog_ok, "Entered PIN code is incorrect!", dialog_fun2, (void*)0x0000aaab, NULL );					
+						cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_PIN_ERR, dialog_fun2, (void*)0x0000aaab, NULL );					
 						wait_dialog();
 						goto xmb_cancel_option;
 				}
@@ -23739,7 +23722,7 @@ xmb_pin_ok:
 
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "parental_pass"))
 				{
-					sprintf(string1, "%s", "Enter NEW access PIN code:");
+					sprintf(string1, "%s", (const char*) STR_PIN_NEW);
 
 						OutputInfo.result = CELL_OSKDIALOG_INPUT_FIELD_RESULT_OK;
 						OutputInfo.numCharsResultString = 128;
@@ -23767,7 +23750,7 @@ xmb_pin_ok:
 							}
 						}
 						dialog_ret=0;
-						cellMsgDialogOpen2( type_dialog_ok, "Entered PIN code is not accepted!\n\nPlease use four character alphanumeric PIN!", dialog_fun2, (void*)0x0000aaab, NULL );					
+						cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_PIN_ERR2, dialog_fun2, (void*)0x0000aaab, NULL );					
 						wait_dialog();
 						goto xmb_cancel_option;
 				}
@@ -23941,8 +23924,7 @@ retry_showtime_xmb:
 			{
 				cellMsgDialogAbort();
 				dialog_ret=0;
-				sprintf(filename, "Showtime for multiMAN application is missing!\n\nDo you want to download it now?");
-				cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
+				cellMsgDialogOpen2( type_dialog_yes_no, (const char*) STR_DL_ST, dialog_fun1, (void*)0x0000aaaa, NULL );
 				wait_dialog();
 				if(dialog_ret==1)
 				{
@@ -24321,7 +24303,7 @@ start_title:
 
 		if(parental_level<menu_list[game_sel].plevel && parental_level>0)
 		{
-			sprintf(string1, "Game parental level: %i - Enter access PIN code:", menu_list[game_sel].plevel );
+			sprintf(string1, (const char*) STR_GAME_PIN, menu_list[game_sel].plevel );
 
 				OutputInfo.result = CELL_OSKDIALOG_INPUT_FIELD_RESULT_OK;
 				OutputInfo.numCharsResultString = 128;
@@ -24356,7 +24338,7 @@ start_title:
 					}
 				}
 				dialog_ret=0;
-				cellMsgDialogOpen2( type_dialog_ok, "Entered PIN code is incorrect!", dialog_fun2, (void*)0x0000aaab, NULL );					
+				cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_PIN_ERR, dialog_fun2, (void*)0x0000aaab, NULL );					
 				wait_dialog();
 				goto skip_1;
 
@@ -24382,7 +24364,7 @@ pass_ok:
 					if( ( (payload==0 && sc36_path_patch==0) || (menu_list[game_sel].user & IS_DISC) ) && !exist((char*)"/dev_bdvd"))
 					{
 						dialog_ret=0;
-						cellMsgDialogOpen2( type_dialog_yes_back, "Please insert an original PLAYSTATION\xC2\xAE\x33 game disc before proceeding!", dialog_fun1, (void*)0x0000aaaa, NULL );
+						cellMsgDialogOpen2( type_dialog_yes_back, (const char*) STR_PS3DISC, dialog_fun1, (void*)0x0000aaaa, NULL );
 						wait_dialog();
 						if(dialog_ret==3 || !exist((char*)"/dev_bdvd")) goto cancel_exit_2;
 					}
@@ -24433,13 +24415,13 @@ pass_ok:
 
 		if(strstr(menu_list[game_sel].content,"BDMV")!=NULL && strstr(menu_list[game_sel].path,"/dev_hdd0")!=NULL)
 		{
-			sprintf(filename, "::: %s :::\n\n%s: %s\n\nDo you want to convert the Blu-ray\xE2\x84\xA2 disc structure to AVCHD\xE2\x84\xA2 format?\n\nNote: The action may improve playback compatibility!", menu_list[game_sel].title, menu_list[game_sel].entry, menu_list[game_sel].details);
+			sprintf(filename, (const char*) STR_BD2AVCHD3, menu_list[game_sel].title, menu_list[game_sel].entry, menu_list[game_sel].details);
 			dialog_ret=0;
 			ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaab, NULL );
 			wait_dialog();
 			if(dialog_ret==1)  
 			{
-				dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, "Converting Blu-ray\xE2\x84\xA2 structure to AVCHD\xE2\x84\xA2, please wait...", dialog_fun2, (void*)0x0000aaab, NULL );
+				dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, (const char*) STR_BD2AVCHD2, dialog_fun2, (void*)0x0000aaab, NULL );
 				flipc(60);
 
 				char path[512], cfile[512], ffile[512], cfile0[16];
@@ -24471,7 +24453,7 @@ pass_ok:
 
 		if(strstr(menu_list[game_sel].content,"BDMV")!=NULL && payload!=0)
 		{	
-			sprintf(filename, "Activate currently selected Blu-ray\xE2\x84\xA2 (BDMV) video folder?\n\n::: %s :::\n\n[%s: %s]\n\nNote: You can start video playback from XMB\xE2\x84\xA2 [Video] tab", menu_list[game_sel].title, menu_list[game_sel].entry, menu_list[game_sel].details);
+			sprintf(filename, (const char*) STR_ACT_BDMV, menu_list[game_sel].title, menu_list[game_sel].entry, menu_list[game_sel].details);
 			dialog_ret=0;
 			ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaab, NULL );
 			wait_dialog();
@@ -24486,7 +24468,7 @@ pass_ok:
 
 		if(strstr(menu_list[game_sel].content,"AVCHD")!=NULL)
 		{
-			sprintf(filename, "Activate currently selected AVCHD\xE2\x84\xA2 video folder?\n\n::: %s :::\n\nNote: You can start video playback from XMB\xE2\x84\xA2 [Video] tab", menu_list[game_sel].title); //, menu_list[game_sel].entry, menu_list[game_sel].details
+			sprintf(filename, (const char*) STR_ACT_AVCHD, menu_list[game_sel].title); //, menu_list[game_sel].entry, menu_list[game_sel].details
 			dialog_ret=0;
 			ret = cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaab, NULL );
 			wait_dialog();
@@ -24497,7 +24479,7 @@ pass_ok:
 			if(strstr(menu_list[game_sel].path,"/dev_hdd0")!=NULL)  
 			{
 
-		dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, "Activating AVCHD\xE2\x84\xA2 structure, please wait...", dialog_fun2, (void*)0x0000aaab, NULL );
+		dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, (const char*) STR_ACT_AVCHD2, dialog_fun2, (void*)0x0000aaab, NULL );
 		flipc(60);
 
 		char usb_save[32]="/none"; usb_save[5]=0;
@@ -24548,7 +24530,7 @@ pass_ok:
 
 			{
 				dialog_ret=0; cellMsgDialogAbort();
-				ret = cellMsgDialogOpen2( type_dialog_ok, "Please attach USB, SDHC or MemoryStick\xE2\x84\xA2 storage device to activate AVCHD\xE2\x84\xA2 HDD playback!", dialog_fun2, (void*)0x0000aaab, NULL );					
+				ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ATT_USB, dialog_fun2, (void*)0x0000aaab, NULL );					
 				wait_dialog();
 				goto skip_1;
 
@@ -24643,11 +24625,10 @@ pass_ok:
 			int selx=0;
 			if((menu_list[game_sel].title[0]=='_' || menu_list[game_sel].split) && payload!=1)
 				{
-					sprintf(filename, "You cannot launch games with split big files!\n\nTransfer the game to internal HDD and try again\nor use [Hermes] option for BD-Emulator type in SETTINGS XMMB column\nand restart your PS3\xE2\x84\xA2 system.");
 					if(!menu_list[game_sel].split) { game_last_page=-1; old_fi=-1; };
 					menu_list[game_sel].split=1;
 					dialog_ret=0;
-					ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );
+					ret = cellMsgDialogOpen2( type_dialog_ok, (const char*)STR_NOSPLIT2, dialog_fun2, (void*)0x0000aaab, NULL );
 					wait_dialog();
 				}
 			else
@@ -24670,7 +24651,7 @@ again_sc8:
 					if(strstr(filename, "/dev_hdd0/")==NULL && strstr(filename, "/dev_bdvd/")==NULL && (verify_data==2 || (verify_data==1)) ) // && payload==1
 					{
 						abort_copy=0;
-						dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, "Verifying game data, please wait...", dialog_fun2, (void*)0x0000aaab, NULL ); flipc(60);
+						dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, (const char*) STR_VERIFYING, dialog_fun2, (void*)0x0000aaab, NULL ); flipc(60);
 						sprintf(s_tmp2, "%s/PS3_GAME/USRDIR", menu_list[game_sel].path);
 						join_copy= (payload==1 ? 1 : 0);
 						max_joined=0;
@@ -24681,8 +24662,7 @@ again_sc8:
 						cellMsgDialogAbort(); flip();							
 
 						if( ((num_files_big || num_files_split) && payload!=1) || (num_files_big>10) ) {
-							sprintf(filename, "You cannot launch games with split big files!\n\nTransfer the game to internal HDD and try again\nor enable [Verify USB Games] option in SETTINGS XMMB column\nand restart your PS3\xE2\x84\xA2 system.");
-							dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
+							dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, (const char*)STR_NOSPLIT3, dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
 							if(!menu_list[game_sel].split) { game_last_page=-1; old_fi=-1; };
 							menu_list[game_sel].split=1;
 							goto cancel_mount2;
@@ -24780,8 +24760,7 @@ again_sc8:
 									abort_copy=0;
 									my_game_delete(s_destination);
 									rmdir(s_destination);
-									sprintf(filename, "Operation failed or canceled.");
-									dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
+									dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_CANCELED, dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
 									max_joined=0;
 									goto cancel_mount2;
 								}
@@ -24801,7 +24780,7 @@ again_sc8:
 					if( ( (payload==0 && sc36_path_patch==0) || (menu_list[game_sel].user & IS_DISC) ) && !exist((char*)"/dev_bdvd"))
 					{
 						dialog_ret=0;
-						cellMsgDialogOpen2( type_dialog_yes_back, "Please insert an original PLAYSTATION\xC2\xAE\x33 game disc before proceeding!", dialog_fun1, (void*)0x0000aaaa, NULL );
+						cellMsgDialogOpen2( type_dialog_yes_back, (const char*) STR_PS3DISC, dialog_fun1, (void*)0x0000aaaa, NULL );
 						wait_dialog();
 						if(dialog_ret==3 || !exist((char*)"/dev_bdvd")) goto cancel_exit_2;
 					}
@@ -24821,7 +24800,7 @@ again_sc8:
 
 					if(c_firmware!=3.55f && c_firmware!=3.41f && c_firmware!=3.15f)
 					{
-						dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, "Your current configuration doesn't support this function!", dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
+						dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_NOTSUPPORTED, dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
 						goto cancel_mount2;
 					}
 
@@ -24829,7 +24808,7 @@ again_sc8:
 					if(!exist((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO") && (menu_list[game_sel].user & IS_DISC))
 					{
 						dialog_ret=0;
-						cellMsgDialogOpen2( type_dialog_yes_back, "Please insert an original PLAYSTATION\xC2\xAE\x33 game disc before proceeding!", dialog_fun1, (void*)0x0000aaaa, NULL );
+						cellMsgDialogOpen2( type_dialog_yes_back, (const char*) STR_PS3DISC, dialog_fun1, (void*)0x0000aaaa, NULL );
 						wait_dialog();
 						if(dialog_ret==3 || !exist((char*)"/dev_bdvd")) goto cancel_exit_2;
 					}
@@ -24947,7 +24926,7 @@ cancel_mount2:
 					if(strstr(menu_list[game_sel].path, "/dev_usb")==NULL && ((menu_list[game_sel].user & IS_BDMIRROR) || (menu_list[game_sel].user & IS_USB && !(menu_list[game_sel].user & IS_HDD)) ) ) 
 					{	
 						dialog_ret=0;
-						ret = cellMsgDialogOpen2( type_dialog_ok, "This title cannot be loaded from internal HDD.\n\nTransfer to external USB HDD or change title options.", dialog_fun2, (void*)0x0000aaab, NULL );					
+						ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_HDD_ERR, dialog_fun2, (void*)0x0000aaab, NULL );					
 						wait_dialog(); 
 						goto cancel_exit_2;
 					}
@@ -24955,7 +24934,7 @@ cancel_mount2:
 					if(strstr(menu_list[game_sel].path, "/dev_hdd")==NULL && ( (menu_list[game_sel].user & IS_HDD && !(menu_list[game_sel].user & IS_USB)) ) ) 
 					{	
 						dialog_ret=0;
-						ret = cellMsgDialogOpen2( type_dialog_ok, "This title cannot be loaded from external USB HDD.\n\nTransfer to internal HDD or change title options.", dialog_fun2, (void*)0x0000aaab, NULL );					
+						ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_USB_ERR, dialog_fun2, (void*)0x0000aaab, NULL );					
 						wait_dialog(); 
 						goto cancel_exit_2;
 					}
