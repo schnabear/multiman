@@ -634,9 +634,10 @@ static MMString s_MMStringUDF[ sizeof ( s_MMStringDef ) / sizeof ( s_MMStringDef
        MMString g_MMString   [ sizeof ( s_MMStringDef ) / sizeof ( s_MMStringDef[ 0 ] ) ]; //holds default GUI texts
 
 
-long MM_LocaleInit ( char *lang_file ) 
+int MM_LocaleInit ( char *lang_file ) 
 {
 	long lSize=0;
+	unsigned int   lIdx = 0;
 	FILE *lFD = fopen(lang_file, "rb");
 
 	if ( lFD != NULL ) 
@@ -646,13 +647,11 @@ long MM_LocaleInit ( char *lang_file )
 
 		if ( lSize > 0 ) 
 		{
-			unsigned int   lIdx;
 			unsigned char* lpEnd;
 			unsigned char* lpPtr;
 			unsigned char* lpBuff = lpPtr = ( unsigned char* )malloc ( lSize + 1 );
 
 			lpEnd = lpBuff + lSize;
-			lIdx  = 0;
 
 			fseek( lFD, 3, SEEK_SET);
 			fread( (unsigned char*) lpBuff, lSize, 1, lFD);
@@ -678,7 +677,7 @@ long MM_LocaleInit ( char *lang_file )
 		}
 		fclose ( lFD );
 	} 
-	return lSize;
+	return lIdx;
 }
 
 

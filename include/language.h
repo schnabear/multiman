@@ -283,7 +283,7 @@ extern MMString g_MMString [];
 #define STR_GEN_SHOOT		MM_STRING( 220 )
 #define STR_GEN_SIM			MM_STRING( 221 )
 #define STR_GEN_SPORT		MM_STRING( 222 )
-#define STR_GEN_STAT		MM_STRING( 223 )
+#define STR_GEN_STRAT		MM_STRING( 223 )
 #define STR_GEN_TRIV		MM_STRING( 224 )
 #define STR_GEN_3D			MM_STRING( 225 )
 
@@ -314,7 +314,7 @@ extern MMString g_MMString [];
 		extern "C" {
 		#endif  /* __cplusplus */
 
-long MM_LocaleInit ( char *lang_file );
+int  MM_LocaleInit ( char *lang_file );
 void MM_LocaleSet  ( bool mm_language );
 
 		#ifdef __cplusplus

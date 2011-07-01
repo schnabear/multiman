@@ -637,7 +637,7 @@ int direct_launch_forced=0;
 int clear_activity_logs=1;
 
 int	sc36_path_patch=0;
-//int load_last_state=1;
+
 int lock_display_mode=-1;
 int lock_fileman=0;
 int scale_icon_h=0;
@@ -986,15 +986,10 @@ using namespace cell::Gcm;
 #define IS_TRIVIA		(14<<16)
 #define IS_3D			(15<<16)
 
-#define IS_GENRE_MASK	 (15<<16)
-//#define IS_GENRE_CLEAR  ~(IS_GENRE_MASK) // user&= ~IS_GENRE_MASK
-
 static char genre		[16] [48];
-static char retro_groups[ 6] [24];// = { "Retro", "SNES", "FCEU", "VBA", "GEN+", "FBANext" };
-static char alpha_groups[15] [16] = { "All", "A-B", "C-D", "E-F", "G-H", "I-J", "K-L", "M-N", "O-P", "Q-R", "S-T", "U-V", "W-X", "Y-Z", "Other" };
-static char xmb_columns [10] [32];// = { "Empty", "multiMAN", "Settings", "Photo", "Music", "Video", "Game", "Favorites", "Retro", "Web" };
-
-
+static char retro_groups[ 6] [32];
+static char xmb_columns [10] [32];
+static char alpha_groups[16] [32] = { "All", "A-B", "C-D", "E-F", "G-H", "I-J", "K-L", "M-N", "O-P", "Q-R", "S-T", "U-V", "W-X", "Y-Z", "Other", "---" };
 
 typedef struct {
 	u8				val;
@@ -1253,6 +1248,130 @@ void set_xo()
 	}
 }
 
+/*****************************************************/
+/* DIALOG                                            */
+/*****************************************************/
+#define CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF	(0<<7)
+#define CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_ON	(1<<7)
+#define CELL_MSGDIALOG_TYPE_PROGRESSBAR_DOUBLE	(2<<12)
+
+volatile int no_video=0;
+int osk_dialog=0;
+int osk_open=0;
+
+volatile int dialog_ret=0;
+
+u32 type_dialog_yes_no = CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL | CELL_MSGDIALOG_TYPE_BG_VISIBLE | CELL_MSGDIALOG_TYPE_BUTTON_TYPE_YESNO
+					   | CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF | CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_NO;
+
+u32 type_dialog_yes_back = CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL | CELL_MSGDIALOG_TYPE_BG_VISIBLE | CELL_MSGDIALOG_TYPE_BUTTON_TYPE_OK
+					   | CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF | CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_OK;
+
+
+u32 type_dialog_ok = CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL | CELL_MSGDIALOG_TYPE_BG_VISIBLE | CELL_MSGDIALOG_TYPE_BUTTON_TYPE_OK
+				   | CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_ON| CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_OK;
+
+u32 type_dialog_no = CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL | CELL_MSGDIALOG_TYPE_BG_VISIBLE | CELL_MSGDIALOG_TYPE_BUTTON_TYPE_NONE | CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_ON;
+u32 type_dialog_back = CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL | CELL_MSGDIALOG_TYPE_BG_VISIBLE | CELL_MSGDIALOG_TYPE_BUTTON_TYPE_NONE | CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF;
+
+static void dialog_fun1( int button_type, void * )
+{
+	
+	switch ( button_type ) {
+	case CELL_MSGDIALOG_BUTTON_YES:
+		dialog_ret=1;
+		break;
+	case CELL_MSGDIALOG_BUTTON_NO:
+//	case CELL_MSGDIALOG_BUTTON_ESCAPE:
+	case CELL_MSGDIALOG_BUTTON_NONE:
+		dialog_ret=2;
+		break;
+
+	case CELL_MSGDIALOG_BUTTON_ESCAPE:
+		dialog_ret=3;
+		break;
+
+	default:
+		break;
+	}
+}
+static void dialog_fun2( int button_type, void * )
+{
+	
+	switch ( button_type ) {
+		case CELL_MSGDIALOG_BUTTON_OK:
+//		case CELL_MSGDIALOG_BUTTON_ESCAPE:
+		case CELL_MSGDIALOG_BUTTON_NONE:
+		dialog_ret=1;
+		break;
+
+	case CELL_MSGDIALOG_BUTTON_ESCAPE:
+		dialog_ret=3;
+		break;
+
+	default:
+		break;
+	}
+}
+
+
+void ClearSurface()
+{
+	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
+}
+
+void wait_dialog()
+{
+
+	while(!dialog_ret)
+		{
+		
+		if(init_finished)
+		{
+			if(cover_mode==8) draw_whole_xmb(xmb_icon);//draw_xmb_bare(xmb_icon, 1, 0, 0);
+			else if(cover_mode==5) { ClearSurface(); draw_fileman();  flip();sys_timer_usleep(1668);}
+			else if(cover_mode>=0 && cover_mode<3 || cover_mode==6 || cover_mode==7)
+				{
+					ClearSurface();
+					set_texture( text_bmp, 1920, 1080);
+					display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
+					sys_timer_usleep(1668);
+					flip();
+				}
+			else if(cover_mode==4)
+				{
+					ClearSurface();
+					draw_coverflow_icons(xmb, xmb_icon, xmb_slide_y);
+					sys_timer_usleep(1668);
+					flip();
+				}
+			else {flip();sys_timer_usleep(1668);}
+
+		}
+		else
+			{flip();sys_timer_usleep(1668);}
+		}
+
+
+	cellMsgDialogClose(60.0f);
+	setRenderColor();
+				
+}
+
+void wait_dialog_simple()
+{
+
+	while(!dialog_ret)
+		{
+		
+		sys_timer_usleep(1668);
+		flip();
+		}
+
+	cellMsgDialogClose(60.0f);
+	setRenderColor();
+}
+
 void load_localization(int id)
 {
 	MM_LocaleSet(0);
@@ -1261,13 +1380,22 @@ void load_localization(int id)
 	{
 		char lfile[128];
 		sprintf(lfile, "%s/lang/LANG_%s.TXT", app_usrdir, locales[id].id);
-		if(MM_LocaleInit ( lfile )) 
+		int llines = MM_LocaleInit ( lfile );
+		if(llines==STR_LAST_ID) 
 		{
 			MM_LocaleSet (1); 
 			mui_font = locales[id].font_id;
 			user_font = locales[id].font_id;
 		}
-		else mm_locale=0;
+		else 
+		{
+			mm_locale=0;
+			char errlang[512];
+			sprintf(errlang, "Localization file for %s (%s) is missing or incomplete!\n\n%s: %i lines read, but %i expected!\n\nRestart multiMAN while holding L2+R2 for \"Debug Mode\" to generate LANG_DEFAULT.TXT\nwith all required localization labels.", locales[id].eng_name, locales[id].loc_name, lfile, llines, STR_LAST_ID);
+			dialog_ret=0;
+			cellMsgDialogOpen2( type_dialog_ok, errlang, dialog_fun2, (void*)0x0000aaab, NULL );
+			wait_dialog_simple();
+		}
 	}
 	if (mui_font>4 && mui_font<10) mui_font+=5;
 
@@ -1277,11 +1405,12 @@ void load_localization(int id)
 
 							sprintf(xmb_columns[0], "Empty");
 							sprintf(xmb_columns[1], "multiMAN");
-	for(int n=2; n<8 ; n++) sprintf(xmb_columns[n], "%s", (const char*)MM_STRING(230+n));
-							sprintf(xmb_columns[8], "%s", (const char*)STR_GRP_RETRO);	// Retro
-							sprintf(xmb_columns[9], "%s", (const char*)MM_STRING(238));	// Web
+	for(int n=2; n<8 ; n++) sprintf(xmb_columns[n], "%s", (const char*)MM_STRING(230+n));	// 232-237
+							sprintf(xmb_columns[8], "%s", (const char*)STR_GRP_RETRO);		// Retro
+							sprintf(xmb_columns[9], "%s", (const char*)MM_STRING(238));		// Web
 
-
+	for(int n=0; n<MAX_XMB_ICONS ; n++) sprintf(xmb[n].name, "%s", xmb_columns[n]);
+	draw_xmb_icon_text(xmb_icon);
 }
 
 int exist(char *path)
@@ -1359,11 +1488,6 @@ void flipc(int _fc)
 void get_free_memory()
 {
 	system_call_1(352, (uint64_t) &meminfo);
-}
-
-void ClearSurface()
-{
-	cellGcmSetClearSurface(CELL_GCM_CLEAR_Z | CELL_GCM_CLEAR_R | CELL_GCM_CLEAR_G |	CELL_GCM_CLEAR_B | CELL_GCM_CLEAR_A);
 }
 
 
@@ -1847,127 +1971,6 @@ void slide_screen_right(uint8_t *buffer)
 			
 }
 
-
-/*****************************************************/
-/* DIALOG                                            */
-/*****************************************************/
-#define CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF	(0<<7)
-#define CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_ON	(1<<7)
-#define CELL_MSGDIALOG_TYPE_PROGRESSBAR_DOUBLE	(2<<12)
-
-volatile int no_video=0;
-int osk_dialog=0;
-int osk_open=0;
-
-volatile int dialog_ret=0;
-
-u32 type_dialog_yes_no = CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL | CELL_MSGDIALOG_TYPE_BG_VISIBLE | CELL_MSGDIALOG_TYPE_BUTTON_TYPE_YESNO
-					   | CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF | CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_NO;
-
-u32 type_dialog_yes_back = CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL | CELL_MSGDIALOG_TYPE_BG_VISIBLE | CELL_MSGDIALOG_TYPE_BUTTON_TYPE_OK
-					   | CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF | CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_OK;
-
-
-u32 type_dialog_ok = CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL | CELL_MSGDIALOG_TYPE_BG_VISIBLE | CELL_MSGDIALOG_TYPE_BUTTON_TYPE_OK
-				   | CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_ON| CELL_MSGDIALOG_TYPE_DEFAULT_CURSOR_OK;
-
-u32 type_dialog_no = CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL | CELL_MSGDIALOG_TYPE_BG_VISIBLE | CELL_MSGDIALOG_TYPE_BUTTON_TYPE_NONE | CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_ON;
-u32 type_dialog_back = CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL | CELL_MSGDIALOG_TYPE_BG_VISIBLE | CELL_MSGDIALOG_TYPE_BUTTON_TYPE_NONE | CELL_MSGDIALOG_TYPE_DISABLE_CANCEL_OFF;
-
-static void dialog_fun1( int button_type, void * )
-{
-	
-	switch ( button_type ) {
-	case CELL_MSGDIALOG_BUTTON_YES:
-		dialog_ret=1;
-		break;
-	case CELL_MSGDIALOG_BUTTON_NO:
-//	case CELL_MSGDIALOG_BUTTON_ESCAPE:
-	case CELL_MSGDIALOG_BUTTON_NONE:
-		dialog_ret=2;
-		break;
-
-	case CELL_MSGDIALOG_BUTTON_ESCAPE:
-		dialog_ret=3;
-		break;
-
-	default:
-		break;
-	}
-}
-static void dialog_fun2( int button_type, void * )
-{
-	
-	switch ( button_type ) {
-		case CELL_MSGDIALOG_BUTTON_OK:
-//		case CELL_MSGDIALOG_BUTTON_ESCAPE:
-		case CELL_MSGDIALOG_BUTTON_NONE:
-		dialog_ret=1;
-		break;
-
-	case CELL_MSGDIALOG_BUTTON_ESCAPE:
-		dialog_ret=3;
-		break;
-
-	default:
-		break;
-	}
-}
-
-void wait_dialog()
-{
-
-	while(!dialog_ret)
-		{
-		
-		if(init_finished)
-		{
-			if(cover_mode==8) draw_whole_xmb(xmb_icon);//draw_xmb_bare(xmb_icon, 1, 0, 0);
-			else if(cover_mode==5) { ClearSurface(); draw_fileman();  flip();sys_timer_usleep(1668);}
-			else if(cover_mode>=0 && cover_mode<3 || cover_mode==6 || cover_mode==7)
-				{
-					ClearSurface();
-					set_texture( text_bmp, 1920, 1080);
-					display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
-					sys_timer_usleep(1668);
-					flip();
-				}
-			else if(cover_mode==4)
-				{
-					ClearSurface();
-					draw_coverflow_icons(xmb, xmb_icon, xmb_slide_y);
-					sys_timer_usleep(1668);
-					flip();
-				}
-			else {flip();sys_timer_usleep(1668);}
-
-		}
-		else
-			{flip();sys_timer_usleep(1668);}
-		}
-
-
-//	cellMsgDialogAbort();
-	cellMsgDialogClose(60.0f);
-	setRenderColor();
-//	sys_timer_usleep(100000);
-					
-}
-
-void wait_dialog_simple()
-{
-
-	while(!dialog_ret)
-		{
-		
-		sys_timer_usleep(1668);
-		flip();
-		}
-
-	cellMsgDialogClose(60.0f);
-	setRenderColor();
-					
-}
 
 int net_used_ignore()
 {
@@ -16650,7 +16653,7 @@ int select_language()
 	{
 		mm_locale = (int)(strtod(opt_list[ret_f].value, NULL));
 		load_localization(mm_locale);
-		redraw_column_texts(xmb_icon);
+		for(int n=0; n<MAX_XMB_ICONS; n++) redraw_column_texts(n);
 		xmb_legend_drawn=0;
 		xmb_info_drawn=0;
 	}
@@ -19356,11 +19359,6 @@ void add_settings_column()
 		if(overscan>0.10f) overscan=0.10f;
 		xmb[2].member[xmb[2].size-1].option_selected=(u8) ((float)overscan * 100.f);
 		xmb[2].member[xmb[2].size-1].icon=xmb_icon_ss;
-
-		/*add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Restore Last Mode", (char*)"Sets whether to restore some visual settings upon launch.",	(char*)"load_last_state");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"No",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Yes",						(char*)"1");
-		xmb[2].member[xmb[2].size-1].option_selected=load_last_state;*/
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Title Name Appearance", (char*)"Changes size and appearance of title names and paths.",	(char*)"showdir");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Large size title",					(char*)"0");
