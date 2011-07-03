@@ -197,11 +197,11 @@ int Fonts_OpenFonts( const CellFontLibrary*lib, Fonts_t* fonts, char* _app_usrdi
 			int      fontsetType;
 		} openSystemFont[ SYSTEM_FONT_MAX ] = {
 			
-			{ 0, CELL_FONT_TYPE_ROUND_SANS_EUROPEAN_CJK_LATIN_SET }, //CELL_FONT_TYPE_DEFAULT_GOTHIC_LATIN_SET
+			{ 0, CELL_FONT_TYPE_GOTHIC_JAPANESE_CJK_LATIN2_SET }, //CELL_FONT_TYPE_DEFAULT_GOTHIC_LATIN_SET
 			{ 0, CELL_FONT_TYPE_DEFAULT_GOTHIC_JP_SET    },
 			{ 1, CELL_FONT_TYPE_DEFAULT_SANS_SERIF       },
 			{ 1, CELL_FONT_TYPE_DEFAULT_SERIF            },
-			{ 1, CELL_FONT_TYPE_GOTHIC_JAPANESE_CJK_LATIN_SET },
+			{ 1, CELL_FONT_TYPE_ROUND_SANS_EUROPEAN_CJK_LATIN_SET },
 			{ 1, CELL_FONT_TYPE_GOTHIC_SCHINESE_CJK_JP_SET },
 			{ 1, CELL_FONT_TYPE_GOTHIC_TCHINESE_CJK_JP_SET },
 			{ 1, CELL_FONT_TYPE_GOTHIC_JAPANESE_CJK_JP_SET },
@@ -225,9 +225,11 @@ int Fonts_OpenFonts( const CellFontLibrary*lib, Fonts_t* fonts, char* _app_usrdi
 			}
 			fonts->openState |= (1<<n);
 		
-			cellFontSetResolutionDpi( &fonts->SystemFont[n], 36, 36 );
-			cellFontSetScalePoint( &fonts->SystemFont[n], 18.f, 10.125f );
+			//cellFontSetResolutionDpi( &fonts->SystemFont[n], 36, 36 );
+			//cellFontSetScalePoint( &fonts->SystemFont[n], 18.f, 10.125f );
 
+			cellFontSetResolutionDpi( &fonts->SystemFont[n], 72, 72 );
+			cellFontSetScalePoint( &fonts->SystemFont[n], 26.f, 26.f );
 		}
 		
 		for ( n=0; n < fonts->sysFontMax; n++ ) {
@@ -244,6 +246,8 @@ int Fonts_OpenFonts( const CellFontLibrary*lib, Fonts_t* fonts, char* _app_usrdi
 			}
 			fonts->openState |= (1<<n);
 			
+			//cellFontSetResolutionDpi( &fonts->SystemFont[n], 36, 36 );
+			//cellFontSetScalePoint( &fonts->SystemFont[n], 18.f, 10.125f );
 			cellFontSetResolutionDpi( &fonts->SystemFont[n], 72, 72 );
 			cellFontSetScalePoint( &fonts->SystemFont[n], 26.f, 26.f );
 		}

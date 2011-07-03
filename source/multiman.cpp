@@ -1000,28 +1000,30 @@ typedef struct {
 
 } _locales;
 
-#define MAX_LOCALES	20
+#define MAX_LOCALES	22
 static _locales locales[] = {
-	{	0,	2,	 "EN",	"English",		"English"		},
-	{	1,	2,	 "BG",	"Bulgarian",	"Български"		},
-	{	2,	2,	 "RU",	"Russian",		"Русский"		},
-	{	3,	2,	 "RO",	"Romanian",		"Română"		},
+	{	0,	4,	 "EN",	"English",		"English"		},
+	{	1,	4,	 "BG",	"Bulgarian",	"Български"		},
+	{	2,	4,	 "RU",	"Russian",		"Русский"		},
+	{	3,	5,	 "RO",	"Romanian",		"Română"		},
 	{	4,	5,	 "TR",	"Turkish",		"Türkçe"		},
-	{	5,	2,	 "ES",	"Spanish",		"Español"		},
-	{	6,	2,	 "DE",	"German",		"Deutsch"		},
-	{	7,	2,	 "FR",	"French",		"Français"		},
-	{	8,	2,	 "IT",	"Italian",		"Italiano"		},
-	{	9,	2,	 "BR",	"Brazilian",	"Português BR"	},
-	{  10,	2,	 "PR",	"Portuguese",	"Português"		},
-	{  11,	2,	 "NL",	"Dutch",		"Nederlands"	},
-	{  12,	2,	 "PL",	"Polish",		"Polski"		},
-	{  13,	2,	 "UA",	"Ukrainian",	"Українська"	},
-	{  14,	2,	 "HU",	"Hungarian",	"Magyar"		},
-	{  15,	2,	 "DK",	"Danish",		"Dansk"			},
-	{  16,	2,	 "FI",	"Finnish",		"Suomi"			},
-	{  17,	2,	 "SE",	"Swedish",		"Svenska"		},
-	{  18,	2,	 "MY",	"Malaysian",	"Melayu"		},
-	{  19,	2,	 "XX",	"Other",		"Other"			}
+	{	5,	4,	 "ES",	"Spanish",		"Español"		},
+	{	6,	4,	 "DE",	"German",		"Deutsch"		},
+	{	7,	4,	 "FR",	"French",		"Français"		},
+	{	8,	4,	 "IT",	"Italian",		"Italiano"		},
+	{	9,	4,	 "BR",	"Brazilian",	"Português BR"	},
+	{  10,	4,	 "PR",	"Portuguese",	"Português"		},
+	{  11,	4,	 "NL",	"Dutch",		"Nederlands"	},
+	{  12,	5,	 "PL",	"Polish",		"Polski"		},
+	{  13,	5,	 "GR",	"Greek",		"Ελληνικά"		},
+	{  14,	4,	 "UA",	"Ukrainian",	"Українська"	},
+	{  15,	4,	 "HU",	"Hungarian",	"Magyar"		},
+	{  16,	4,	 "DK",	"Danish",		"Dansk"			},
+	{  17,	4,	 "FI",	"Finnish",		"Suomi"			},
+	{  18,	4,	 "SE",	"Swedish",		"Svenska"		},
+	{  19,	4,	 "MY",	"Malaysian",	"Melayu"		},
+	{  20,	0,	 "CN",	"Chinese (S)",	"简化字"			},
+	{  21,	0,	 "XX",	"Other",		"Other"			}
 };
 
 uint8_t padLYstick=0, padLXstick=0, padRYstick=0, padRXstick=0;
@@ -6953,8 +6955,8 @@ void draw_list_text( uint8_t *buffer, uint32_t width, uint32_t height, t_menu_li
 			cellFontRenderSurfaceSetScissor( surf, 0, 0, width, height );
 
 		renderer = &RenderWork.Renderer;
-		fn = FONT_SYSTEM_GOTHIC_JP;
-		if(user_font<2 || user_font>9) fn = FONT_SYSTEM_GOTHIC_JP;
+		fn = FONT_SYSTEM_5;
+		if(user_font==1 || user_font>9) fn = FONT_SYSTEM_GOTHIC_JP;
 		else if (user_font==2) fn = FONT_SYSTEM_GOTHIC_LATIN;
 		else if (user_font==3) fn = FONT_SYSTEM_SANS_SERIF;
 		else if (user_font==4) fn = FONT_SYSTEM_SERIF;
@@ -7187,8 +7189,8 @@ void put_label(uint8_t *buffer, uint32_t width, uint32_t height, char *str1p, ch
 
 		cellFontRenderSurfaceSetScissor( surf, 0, 0, width, height );
 		renderer = &RenderWork.Renderer;
-		fn = FONT_SYSTEM_GOTHIC_JP;
-		if(user_font<2 || user_font>9) fn = FONT_SYSTEM_GOTHIC_JP;
+		fn = FONT_SYSTEM_5;
+		if(user_font==1 || user_font>9) fn = FONT_SYSTEM_GOTHIC_JP;
 		else if (user_font==2) fn = FONT_SYSTEM_GOTHIC_LATIN;
 		else if (user_font==3) fn = FONT_SYSTEM_SANS_SERIF;
 		else if (user_font==4) fn = FONT_SYSTEM_SERIF;
@@ -7378,9 +7380,9 @@ void flush_ttf(uint8_t *buffer, uint32_t _V_WIDTH, uint32_t _V_HEIGHT)
 
 		cellFontRenderSurfaceSetScissor( surf, 0, 0, _V_WIDTH, _V_HEIGHT );
 		renderer = &RenderWork.Renderer;
-		fn = FONT_SYSTEM_GOTHIC_JP;
+		fn = FONT_SYSTEM_5;
 
-		if(user_font<2 || user_font>9) fn = FONT_SYSTEM_GOTHIC_JP;
+		if(user_font==1 || user_font>9) fn = FONT_SYSTEM_GOTHIC_JP;
 		else if (user_font==2) fn = FONT_SYSTEM_GOTHIC_LATIN;
 		else if (user_font==3) fn = FONT_SYSTEM_SANS_SERIF;
 		else if (user_font==4) fn = FONT_SYSTEM_SERIF;
@@ -8100,14 +8102,13 @@ gs_cover:
 		b_color = (b_color & 0xffffff00) | (b_box_opaq);
 		//105, 120+(int)top_o,
 		draw_square(((0.054f-0.5f)*2.0f)-0.005f, ((0.5f-(110.f+top_o)/1080.f)+0.005f)*2.0f , 0.675f, 0.68f, -0.4f, b_color);
-		cellDbgFontPrintf( 0.99f, 0.98f, 0.5f,0x60606040, payloadT); 
 		set_texture( text_FONT, 1920, 1080);  display_img(0, 0, 1920, 1080, 1920, 1080, -0.5f, 1920, 1080);
 		flip();
 
 	}
 	old_fi=-1; game_last_page=-1;
 	new_pad=0; 
-	//sub_menu_open=0;
+	ss_timer=0;
 	return result;
 }
 
@@ -8119,11 +8120,13 @@ int open_mm_submenu(uint8_t *buffer) // system settings menu
 	float x, y, top_o;
 	int m;
 	u8 _menu_font=15;
-	float y_scale=0.5;
+	float y_scale=0.5f;
+	float x_scale=0.5f;
 	if(mm_locale) 
 	{
 		_menu_font=mui_font;
-		y_scale=0.4f;
+		y_scale=0.42f;
+		x_scale=0.48f;
 	}
 
 	u32 oflags=1;
@@ -8148,7 +8151,7 @@ int open_mm_submenu(uint8_t *buffer) // system settings menu
 	draw_box( text_FONT, 1920, 2, 0, 964, 0x808080ff);
 
 	put_texture_with_alpha( text_FONT, text_DOX+(dox_pad_x		*4 + dox_pad_y		* dox_width*4), dox_pad_w,		dox_pad_h,		dox_width,   70, 968, 0, 0);
-	put_texture_with_alpha( text_FONT, text_DOX+(dox_cross_x	*4 + dox_cross_y	* dox_width*4), dox_cross_w,	dox_cross_h,	dox_width, 1520, 975, 0, 0);
+	put_texture_with_alpha( text_FONT, text_DOX+(dox_cross_x	*4 + dox_cross_y	* dox_width*4), dox_cross_w,	dox_cross_h,	dox_width, 1450, 975, 0, 0);
 	put_texture_with_alpha( text_FONT, text_DOX+(dox_circle_x	*4 + dox_circle_y	* dox_width*4), dox_circle_w,	dox_circle_h,	dox_width, 1700, 975, 0, 0);
 
 	max_ttf_label=0;
@@ -8157,51 +8160,51 @@ int open_mm_submenu(uint8_t *buffer) // system settings menu
 	y=top_o+95.0f;
 	u32 title_color=0xffc0c0c0;
 
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_UPDATE, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_UPDATE, 1.04f, 0.0f, _menu_font, x_scale*2.f, y_scale*1.85f, 0);
 	put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y, 0, 0);
 	put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_w_x*4 + dox_arrow_w_y	* dox_width*4), dox_arrow_w_w,	dox_arrow_w_h, dox_width, (int)x-50, (int)y, 0, 0);
 
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_REFRESH, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0); oflags|=(1<<6);
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_REFRESH, 1.04f, 0.0f, _menu_font, x_scale*2.f, y_scale*1.85f, 0); oflags|=(1<<6);
 		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y, 0, 0);
 
 	y+=135.0f;
 	if(lock_fileman) title_color=0xd0808080; else {title_color=0xffc0c0c0;oflags|=(1<<1);put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y, 0, 0); }
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_FILEMAN, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_FILEMAN, 1.04f, 0.0f, _menu_font, x_scale*2.f, y_scale*1.85f, 0);
 
 		title_color=0xffc0c0c0;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_SHOW_ST, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0); oflags|=(1<<7);
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_SHOW_ST, 1.04f, 0.0f, _menu_font, x_scale*2.f, y_scale*1.85f, 0); oflags|=(1<<7);
 		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y, 0, 0);
 
 	y+=135.0f;
 	title_color=0xffc0c0c0; put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y, 0, 0); oflags|=(1<<2);
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_NTFS, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_NTFS, 1.04f, 0.0f, _menu_font, x_scale*2.f, y_scale*1.85f, 0);
 
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_SHOW_LK, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0); oflags|=(1<<8);
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_SHOW_LK, 1.04f, 0.0f, _menu_font, x_scale*2.f, y_scale*1.85f, 0); oflags|=(1<<8);
 		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y, 0, 0);
 
 	y+=135.0f;
 	if(cover_mode==3 or cover_mode==4) title_color=0xd0808080; else {title_color=0xffc0c0c0;oflags|=(1<<3);put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y, 0, 0); }
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_SCRSHOT, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*) STR_MM_SCRSHOT, 1.04f, 0.0f, _menu_font, x_scale*2.f, y_scale*1.85f, 0);
 
 		title_color=0xffc0c0c0;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_SCRSAVE, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0); oflags|=(1<<9);
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_SCRSAVE, 1.04f, 0.0f, _menu_font, x_scale*2.f, y_scale*1.85f, 0); oflags|=(1<<9);
 		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y, 0, 0);	
 
 	title_color=0xffc0c0c0;
 	y+=135.0f;
 	oflags|=(1<<4);
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_RESTART, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_RESTART, 1.04f, 0.0f, _menu_font, x_scale*2.f, y_scale*1.85f, 0);
 	put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y, 0, 0);
 
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_SETUP, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0); oflags|=(1<<10);
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_SETUP, 1.04f, 0.0f, _menu_font, x_scale*2.f, y_scale*1.85f, 0); oflags|=(1<<10);
 		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y, 0, 0);	
 
 //	title_color=0xd0808080;
 	y+=135.0f;
 	title_color=0xffc0c0c0; put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x-50, (int)y, 0, 0); oflags|=(1<<5);
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_QUIT, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0);
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_QUIT, 1.04f, 0.0f, _menu_font, x_scale*2.f, y_scale*1.85f, 0);
 
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_HELP, 1.04f, 0.0f, _menu_font, 1.0f, y_scale*1.85f, 0); oflags|=(1<<11);
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, title_color, (char*)STR_MM_HELP, 1.04f, 0.0f, _menu_font, x_scale*2.f, y_scale*1.85f, 0); oflags|=(1<<11);
 		put_texture_with_alpha( text_FONT, text_DOX+(dox_arrow_b_x*4 + dox_arrow_b_y	* dox_width*4), dox_arrow_b_w,	dox_arrow_b_h, dox_width, (int)x+910, (int)y, 0, 0);	
 
 	u32 info_color=0xffa0a0a0;
@@ -8219,7 +8222,7 @@ int open_mm_submenu(uint8_t *buffer) // system settings menu
 	print_label_ex( ((70.f+dox_pad_w)/1920.f), (981.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
 
 	sprintf(label, " %s", (char*) STR_BUT_SELECT);
-	print_label_ex( ((1520.f+dox_cross_w)/1920.f), (980.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
+	print_label_ex( ((1450.f+dox_cross_w)/1920.f), (980.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
 
 	sprintf(label, " %s", (char*) STR_BUT_BACK);
 	print_label_ex( ((1700.f+dox_circle_w)/1920.f), (980.f/1080.f), 1.5f, info_color, label, 1.00f, 0.00f, _menu_font, 0.5f, y_scale, 0);
@@ -8229,76 +8232,76 @@ int open_mm_submenu(uint8_t *buffer) // system settings menu
 
 	info_color=0xffa0a0a0;
 	y=top_o+(135.0f * 1.0f);
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_UPDATE_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_UPDATE_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_UPDATE_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_UPDATE_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y-=60.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_UPDATE_L1, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_UPDATE_L2, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_UPDATE_L3, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_UPDATE_L4, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y-=60.0f;
 
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_REFRESH_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_REFRESH_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_REFRESH_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_REFRESH_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_REFRESH_L1, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_REFRESH_L2, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_REFRESH_L3, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_REFRESH_L4, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
 
 	y=top_o+(135.0f * 2.0f);
 	if(lock_fileman) info_color=0xc0707070; else info_color=0xffa0a0a0;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_FILEMAN_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_FILEMAN_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_FILEMAN_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_FILEMAN_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y-=60.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_FILEMAN_L1, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_FILEMAN_L2, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_FILEMAN_L3, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_FILEMAN_L4, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y-=60.0f;
 
 	info_color=0xffa0a0a0;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_ST_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_ST_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_ST_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_ST_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_ST_L1, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_ST_L2, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_ST_L3, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_ST_L4, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
 
 	y=top_o+(135.0f * 3.0f);
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_NTFS_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_NTFS_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_NTFS_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_NTFS_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y-=60.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_NTFS_L1, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_NTFS_L2, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_NTFS_L3, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_NTFS_L4, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y-=60.0f;
 
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_LK_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_LK_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_LK_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_LK_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_LK_L1, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_LK_L2, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_LK_L3, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SHOW_LK_L4, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
 
 	y=top_o+(135.0f * 4.0f);
 	if(cover_mode==3 or cover_mode==4) info_color=0xc0707070; else info_color=0xffa0a0a0;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SCRSHOT_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SCRSHOT_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SCRSHOT_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SCRSHOT_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y-=60.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SCRSHOT_L1, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SCRSHOT_L2, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SCRSHOT_L3, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SCRSHOT_L4, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y-=60.0f;
 
 		info_color=0xffa0a0a0;
- 		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SCRSAVE_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SCRSAVE_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SCRSAVE_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SCRSAVE_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+ 		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SCRSAVE_L1, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SCRSAVE_L2, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SCRSAVE_L3, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*)STR_MM_SCRSAVE_L4, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
 
 	info_color=0xffa0a0a0;
 	y=top_o+(135.0f * 5.0f);
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_RESTART_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_RESTART_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_RESTART_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_RESTART_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y-=60.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_RESTART_L1, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_RESTART_L2, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_RESTART_L3, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_RESTART_L4, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y-=60.0f;
 
- 		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SETUP_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SETUP_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SETUP_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SETUP_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+ 		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SETUP_L1, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SETUP_L2, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SETUP_L3, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_SETUP_L4, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
 
 //	info_color=0xc0707070;
 	y=top_o+(135.0f * 6.0f);
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_QUIT_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_QUIT_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_QUIT_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_QUIT_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y-=60.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_QUIT_L1, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_QUIT_L2, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_QUIT_L3, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+	print_label_ex( (x/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_QUIT_L4, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y-=60.0f;
 
- 		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_HELP_L1, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_HELP_L2, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_HELP_L3, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
-		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_HELP_L4, 1.00f, 0.05f, _menu_font, 0.5f, y_scale, 0); y+=20.0f;
+ 		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_HELP_L1, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_HELP_L2, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_HELP_L3, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
+		print_label_ex( ((x+960)/1920.f), (y/1080.f), 1.5f, info_color, (char*) STR_MM_HELP_L4, 1.00f, 0.05f, _menu_font, x_scale, y_scale, 0); y+=20.0f;
 
 	flush_ttf(text_FONT, 1920, 1080);
 
@@ -8439,7 +8442,7 @@ int open_mm_submenu(uint8_t *buffer) // system settings menu
 			remove(video_mem);
 		}
 	}
-
+	ss_timer=0;
 	return result;
 }
 
@@ -16732,11 +16735,11 @@ void update_fm_stripe()
 	memcpy(text_FMS+737280, text_FMS, 368640);
 
 	max_ttf_label=0;
-	print_label_ex( 0.104f, 0.13f, 1.0f, (fm_sel&1  ? 0xffc0c0c0 : COL_FMFILE), (char*)STR_FM_GAMES,  1.04f, 0.0f, 0, (fm_sel&1  ? 1.4f : 1.1f), 21.f, 1);
-	print_label_ex( 0.230f, 0.13f, 1.0f, (fm_sel&2  ? 0xffc0c0c0 : COL_FMFILE), (char*)STR_FM_UPDATE, 1.04f, 0.0f, 0, (fm_sel&2  ? 1.4f : 1.1f), 21.f, 1);
-	print_label_ex( 0.359f, 0.13f, 1.0f, (fm_sel&4  ? 0xffc0c0c0 : COL_FMFILE), (char*)STR_FM_ABOUT,  1.04f, 0.0f, 0, (fm_sel&4  ? 1.4f : 1.1f), 21.f, 1);
-	print_label_ex( 0.479f, 0.13f, 1.0f, (fm_sel&8  ? 0xffc0c0c0 : COL_FMFILE), (char*)STR_FM_HELP,   1.04f, 0.0f, 0, (fm_sel&8  ? 1.4f : 1.1f), 21.f, 1);
-	print_label_ex( 0.609f, 0.13f, 1.0f, (fm_sel&16 ? 0xffc0c0c0 : COL_FMFILE), (char*)STR_FM_THEMES, 1.04f, 0.0f, 0, (fm_sel&16 ? 1.4f : 1.1f), 21.f, 1);
+	print_label_ex( 0.104f, 0.13f, 1.0f, (fm_sel&1  ? 0xffc0c0c0 : COL_FMFILE), (char*)STR_FM_GAMES,  1.04f, 0.0f, 0, (fm_sel&1  ? 1.1f : 0.7f), 21.f, 1);
+	print_label_ex( 0.230f, 0.13f, 1.0f, (fm_sel&2  ? 0xffc0c0c0 : COL_FMFILE), (char*)STR_FM_UPDATE, 1.04f, 0.0f, 0, (fm_sel&2  ? 1.1f : 0.7f), 21.f, 1);
+	print_label_ex( 0.359f, 0.13f, 1.0f, (fm_sel&4  ? 0xffc0c0c0 : COL_FMFILE), (char*)STR_FM_ABOUT,  1.04f, 0.0f, 0, (fm_sel&4  ? 1.1f : 0.7f), 21.f, 1);
+	print_label_ex( 0.479f, 0.13f, 1.0f, (fm_sel&8  ? 0xffc0c0c0 : COL_FMFILE), (char*)STR_FM_HELP,   1.04f, 0.0f, 0, (fm_sel&8  ? 1.1f : 0.7f), 21.f, 1);
+	print_label_ex( 0.609f, 0.13f, 1.0f, (fm_sel&16 ? 0xffc0c0c0 : COL_FMFILE), (char*)STR_FM_THEMES, 1.04f, 0.0f, 0, (fm_sel&16 ? 1.1f : 0.7f), 21.f, 1);
 	flush_ttf(text_FMS+737280, 1920, 48);
 }
 
@@ -18134,8 +18137,8 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 	char filename[1024];
 	int _menu_font = mui_font;		//15;
 	float _y_scale = 0.7f;	//1.0f;
-
-	if(strstr(_caption, (const char*) STR_SEL_LANG)!=NULL) 
+	bool is_lang = (strstr(_caption, (const char*) STR_SEL_LANG)!=NULL);
+	if(is_lang) 
 	{
 		sel=mm_locale;
 		first=sel-_max_entries+2;
@@ -18174,27 +18177,29 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 //			for(int fsr=0; fsr<(_width*_height*4); fsr+=4) *(uint32_t*) ( (u8*)(text_LIST)+fsr )=0x222222a0;
 			memcpy(text_LIST, text_LIST+1512000, 1512000);
 			max_ttf_label=0;
-			print_label_ex( 0.5f, 0.05f, 1.0f, COL_XMB_COLUMN, _caption, 1.04f, 0.0f, _menu_font, 1.0f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 1);
+			print_label_ex( 0.5f, 0.05f, 1.0f, COL_XMB_COLUMN, _caption, 1.04f, 0.0f, mui_font, 1.0f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 1);
 
 			for(int n=first; (n<(first+_max_entries-1) && n<_max); n++)
 			{
+				if(is_lang) _menu_font= (locales[n].font_id>4 ? locales[n].font_id+5 : locales[0].font_id); else _menu_font=mui_font;
 				if(_centered)
 				{
 					if(n==sel)
 						print_label_ex( 0.5f, ((float)((n-first+3)*line_h)/(float)_height)-0.011f, 1.4f, 0xffe0e0e0, list[n].label, 1.04f, 0.0f, _menu_font, 1.0f/((float)(_width/1920.f)), _y_scale/((float)(_height/1080.f)), 1);
 					else
-						print_label_ex( 0.5f, ((float)((n-first+3)*line_h)/(float)_height), 1.0f, COL_XMB_SUBTITLE, list[n].label, 1.00f, 0.0f, _menu_font, 1.0f/((float)(_width/1920.f)), _y_scale/((float)(_height/1080.f)), 1 );
+						print_label_ex( 0.5f, ((float)((n-first+3)*line_h)/(float)_height), 1.0f, COL_XMB_SUBTITLE, list[n].label, 1.04f, 0.0f, _menu_font, 1.0f/((float)(_width/1920.f)), _y_scale/((float)(_height/1080.f)), 1 );
 				}
 				else
 				{
 					if(n==sel)
 						print_label_ex( 0.05f, ((float)((n-first+3)*line_h)/(float)_height)-0.011f, 1.4f, 0xf0e0e0e0, list[n].label, 1.04f, 0.0f, _menu_font, 0.8f/((float)(_width/1920.f)), _y_scale/((float)(_height/1080.f)), 0);
 					else
-						print_label_ex( 0.05f, ((float)((n-first+3)*line_h)/(float)_height), 1.0f, COL_XMB_SUBTITLE, list[n].label, 1.00f, 0.0f, _menu_font, 0.8f/((float)(_width/1920.f)), _y_scale/((float)(_height/1080.f)), 0 );
+						print_label_ex( 0.05f, ((float)((n-first+3)*line_h)/(float)_height), 1.0f, COL_XMB_SUBTITLE, list[n].label, 1.04f, 0.0f, _menu_font, 0.8f/((float)(_width/1920.f)), _y_scale/((float)(_height/1080.f)), 0 );
 				}
+				if(is_lang)	flush_ttf(text_LIST, _width, _height);
 			}
 
-			print_label_ex( 0.7f, ((float)(_height-line_h*2)/(float)_height)+0.01f, 1.5f, 0xf0c0c0c0, (char*) STR_BUT_APPLY, 1.00f, 0.0f, _menu_font, 0.5f/((float)(_width/1920.f)), 0.5f/((float)(_height/1080.f)), 0);
+			print_label_ex( 0.7f, ((float)(_height-line_h*2)/(float)_height)+0.01f, 1.5f, 0xf0c0c0c0, (char*) STR_BUT_APPLY, 1.00f, 0.0f, mui_font, 0.5f/((float)(_width/1920.f)), 0.5f/((float)(_height/1080.f)), 0);
 			flush_ttf(text_LIST, _width, _height);
 			put_texture_with_alpha_gen( text_LIST, text_DOX+(dox_cross_x	*4 + dox_cross_y	* dox_width*4), dox_cross_w,	dox_cross_h,	dox_width, _width, (int)((0.7f*_width)-dox_cross_w-5), _height-line_h*2);
 			last_sel=sel;
@@ -19317,10 +19322,10 @@ void add_settings_column()
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Font Preference", (char*)"Sets default font (key shortcut R3).",	(char*)"user_font");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Default",								(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"New Rodin",							(char*)"1");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Rodin Latin",							(char*)"2");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Rodin Latin 2",						(char*)"3");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Matisse",								(char*)"4");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Pop"		,							(char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"New Rodin",							(char*)"2");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Matisse",								(char*)"3");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Rounded",								(char*)"4");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"User #1 (font0)",						(char*)"5");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"User #2 (font1)",						(char*)"6");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"User #3 (font2)",						(char*)"7");
@@ -23948,7 +23953,7 @@ retry_showtime_xmb:
 					sprintf(string1, "%s/XMBS.008", app_usrdir);
 					remove(string1);
 					xmb[xmb_icon].group=0;
-					sprintf(xmb[8].name, "Retro");
+					sprintf(xmb[8].name, "%s", (const char*) STR_GRP_RETRO);
 					draw_xmb_icon_text(8);
 					add_emulator_column();
 				}
