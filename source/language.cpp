@@ -182,7 +182,7 @@ static unsigned char s_pMMScrSaveL4	[]	= "the screensaver mode.";
 static unsigned char s_pMMRestart	[]	= "Restart";
 static unsigned char s_pMMRestartL1	[]	= "Restart multiMAN. Shortcut is START+SELECT.";
 static unsigned char s_pMMRestartL2	[]	= "You can remotely restart multiMAN by connecting to your";
-static unsigned char s_pMMRestartL3	[]	= "Playstation\xC2\xAE\x33 system via telnet to port 8080";
+static unsigned char s_pMMRestartL3	[]	= "PLAYSTATION\xC2\xAE\x33 system via telnet to port 8080";
 static unsigned char s_pMMRestartL4	[]	= "and type 'restart'.";
 
 static unsigned char s_pMMSetup		[]	= "multiMAN Setup";
@@ -194,7 +194,7 @@ static unsigned char s_pMMSetupL4	[]	= "mode will be changed.";
 static unsigned char s_pMMQuit		[]	= "Quit";
 static unsigned char s_pMMQuitL1	[]	= "Quit multiMAN and return to XMB\xE2\x84\xA2 home screen.";
 static unsigned char s_pMMQuitL2	[]	= "You can remotely quit multiMAN by connecting to your";
-static unsigned char s_pMMQuitL3	[]	= "Playstation\xC2\xAE\x33 system via telnet to port 8080";
+static unsigned char s_pMMQuitL3	[]	= "PLAYSTATION\xC2\xAE\x33 system via telnet to port 8080";
 static unsigned char s_pMMQuitL4	[]	= "and type 'quit'.";
 
 static unsigned char s_pMMHelp		[]	= "Help";
@@ -223,7 +223,7 @@ static unsigned char s_pButDownTheme[]	= "Download Theme";
 // Game settings menu
 static unsigned char s_pGMCopy		[]	= "Copy";
 static unsigned char s_pGMCopyL1	[]	= "Create a backup copy of \x22%s\x22.";
-static unsigned char s_pGMCopyL2	[]	= "To protect your Playstation\xC2\xAE\x33 Blu-ray\xE2\x84\xA2 game disc,";
+static unsigned char s_pGMCopyL2	[]	= "To protect your PLAYSTATION\xC2\xAE\x33 Blu-ray\xE2\x84\xA2 game disc,";
 static unsigned char s_pGMCopyL3	[]	= "transfer its contents to internal or external hard disk drive.";
 
 static unsigned char s_pGMDelete	[]	= "Delete";
@@ -601,7 +601,7 @@ static unsigned char s_pXC2_454	[]	= "BD-ROM Emulator";
 static unsigned char s_pXC2_455	[]	= "Changes emulator type. System restart required to apply changes.";
 
 static unsigned char s_pXC9_456	[]	= "Download PS3\xE2\x84\xA2 Demos and Utilities";
-static unsigned char s_pXC9_457	[]	= "Browse PSX Store Website for rich content for your Playstation\xC2\xAE\x33 system";
+static unsigned char s_pXC9_457	[]	= "Browse PSX Store Website for rich content for your PLAYSTATION\xC2\xAE\x33 system";
 
 static unsigned char s_pXC9_458	[]	= "Download Themes";
 static unsigned char s_pXC9_459	[]	= "Check for new downloadable themes";
