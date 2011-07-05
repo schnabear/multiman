@@ -1002,7 +1002,7 @@ typedef struct {
 
 } _locales;
 
-#define MAX_LOCALES	24
+#define MAX_LOCALES	25
 static _locales locales[] = {
 	{	0,	4,	 "EN",	"English",		"English"		},
 	{	1,	4,	 "BG",	"Bulgarian",	"Български"		},
@@ -1027,8 +1027,10 @@ static _locales locales[] = {
 	{  20,	4,	 "CN",	"Chinese (S)",	"简体中文"		},
 	{  21,	4,	 "CT",	"Chinese (T)",	"繁体中文"		},
 	{  22,	16,	 "AR",	"Arabic",		"ﺔﻴﺑﺮﻌﻟا"		},
-	{  23,	4,	 "XX",	"Other",		"Other"			}
+	{  23,	16,	 "PE",	"Persian",		"پارسی"			},
+	{  24,	16,	 "XX",	"Other",		"Other"			}
 };
+
 
 uint8_t padLYstick=0, padLXstick=0, padRYstick=0, padRXstick=0;
 
@@ -1171,6 +1173,7 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon, int _xmb_x_offset, int _
 void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offset);
 
 void add_home_column();
+void add_web_column();
 void mod_xmb_member(xmbmem *_member, u16 _size, char *_name, char *_subname);
 
 #define MAX_DOWN_LIST (128) //queue for background downloads
@@ -16677,6 +16680,7 @@ int select_language()
 		xmb_info_drawn=0;
 
 		add_home_column();
+		add_web_column();
 		mod_xmb_member(xmb[6].member, 0, (char*)STR_XC1_REFRESH, (char*)STR_XC1_REFRESH2);
 		mod_xmb_member(xmb[8].member, 0, (char*)STR_XC1_REFRESH, (char*)STR_XC1_REFRESH3);
 

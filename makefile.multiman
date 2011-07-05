@@ -26,7 +26,7 @@ PPU_TARGET = $(MM_REL)_BARE.elf
 PPU_OPTIMIZE_LV := -O2 -fno-exceptions
 
 # Disable compiler "warning: format not a string literal, argument types not checked" (not a good idea)
-#PPU_CPPFLAGS	:= -Wformat=0
+PPU_CPPFLAGS	:= -Wformat=0
 
 PPU_INCDIRS= -Iinclude -I$(CELL_INC_DIR) -I$(CELL_INC_DIR)/usb/usbpad -I$(CELL_INC_DIR)/usb/usbkb -I$(CELL_SDK)/target/ppu/include/sysutil -I$(CELL_SDK)/target/ppu/include -I/psl1ght/include
 PPU_LDLIBS = -lftp 
