@@ -391,13 +391,50 @@ static unsigned char s_pUsbErr		[]	= "This title cannot be loaded from external 
 static unsigned char s_pTitleLocked	[]	= "Options cannot be changed or title is locked!";
 static unsigned char s_pTitleRO		[]	= "Options cannot be changed for this title!";
 
+static unsigned char s_pRenameTo	[]	= "Rename [%s] to:";
+static unsigned char s_pCreateNew	[]	= "CREATE NEW FOLDER - Enter name for the new folder:";
+
+static unsigned char s_pXCUP		[]	= "Update";
+static unsigned char s_pXCUP1		[]	= "Check for multiMAN updates";
+static unsigned char s_pXCFM		[]	= "File Manager";
+static unsigned char s_pXCFM0		[]	= "File Manager (Disabled)";
+static unsigned char s_pXCFM1		[]	= "Manage files and folders";
+static unsigned char s_pXCRF		[]	= "Refresh";
+static unsigned char s_pXCRF1		[]	= "Scan all connected devices for supported content";
+static unsigned char s_pXCRF2		[]	= "Scan all connected devices and refresh game list";
+static unsigned char s_pXCRF3		[]	= "Scan all emulator folders for newly added game ROMs";
+static unsigned char s_pXCPF		[]	= "PFS Driver";
+static unsigned char s_pXCPF1		[]	= "Toggle between FAT32 and NTFS driver";
+static unsigned char s_pXCSS		[]	= "Screensaver";
+static unsigned char s_pXCSS1		[]	= "Turn on screensaver mode";
+static unsigned char s_pXCTH		[]	= "Themes";
+static unsigned char s_pXCTH1		[]	= "Change multiMAN appearance";
+static unsigned char s_pXCHL		[]	= "Help";
+static unsigned char s_pXCHL1		[]	= "Start helpMMe application";
+static unsigned char s_pXCRS		[]	= "Restart";
+static unsigned char s_pXCRS1		[]	= "Close and restart multiMAN";
+static unsigned char s_pXCQT		[]	= "Quit";
+static unsigned char s_pXCQT1		[]	= "Quit multiMAN and return to XMB\xE2\x84\xA2 screen";
+
+static unsigned char s_pXC5LK		[]	= "Link Video Library to Showtime";
+static unsigned char s_pXC5LK1		[]	= "Make XMB\xE2\x84\xA2 video files available to Showtime";
+static unsigned char s_pXC5ST		[]	= "Start Showtime Media Center";
+static unsigned char s_pXC5ST1		[]	= "Launch Showtime to play movies and listen to music";
+
+static unsigned char s_pXC2SS		[]	= "System Information";
+static unsigned char s_pXC2SS1		[]	= "Displays information about your PS3\xE2\x84\xA2 system.";
+static unsigned char s_pXC2IL		[]	= "Interface Language";
+static unsigned char s_pXC2IL1		[]	= "Changes multiMAN interface language.";
+static unsigned char s_pXC2GC		[]	= "Clear Game Cache Data";
+static unsigned char s_pXC2GC1		[]	= "Removes cache files for selected title.";
+
 /*
-static unsigned char s_p		[]		= 
-static unsigned char s_p		[]		= 
-static unsigned char s_p		[]		= 
-static unsigned char s_p		[]		= 
-static unsigned char s_p		[]		= 
-static unsigned char s_p		[]		= 
+static unsigned char s_p		[]		=
+static unsigned char s_p		[]		=
+static unsigned char s_p		[]		=
+static unsigned char s_p		[]		=
+static unsigned char s_p		[]		=
+static unsigned char s_p		[]		=
 */
 
 
@@ -419,13 +456,13 @@ static MMString s_MMStringDef[] = {
  { sizeof ( s_pCopy3	  ) - 1, s_pCopy3		},
  { sizeof ( s_pCopy4	  ) - 1, s_pCopy4		},
  { sizeof ( s_pCopy5	  ) - 1, s_pCopy5		},
- { sizeof ( s_pCopy6	  ) - 1, s_pCopy6		}, 
- { sizeof ( s_pCopy7	  ) - 1, s_pCopy7		}, 
- { sizeof ( s_pCopy8	  ) - 1, s_pCopy8		}, 
- { sizeof ( s_pCopy9	  ) - 1, s_pCopy9		}, 
+ { sizeof ( s_pCopy6	  ) - 1, s_pCopy6		},
+ { sizeof ( s_pCopy7	  ) - 1, s_pCopy7		},
+ { sizeof ( s_pCopy8	  ) - 1, s_pCopy8		},
+ { sizeof ( s_pCopy9	  ) - 1, s_pCopy9		},
  { sizeof ( s_pCopy10	  ) - 1, s_pCopy10		},
- { sizeof ( s_pCopy11	  ) - 1, s_pCopy11		}, 
- { sizeof ( s_pCopy12	  ) - 1, s_pCopy12		}, //22 
+ { sizeof ( s_pCopy11	  ) - 1, s_pCopy11		},
+ { sizeof ( s_pCopy12	  ) - 1, s_pCopy12		}, //22
 
  { sizeof ( s_pNetCopy0	  ) - 1, s_pNetCopy0	}, //23
  { sizeof ( s_pNetCopy1	  ) - 1, s_pNetCopy1	},
@@ -433,10 +470,10 @@ static MMString s_MMStringDef[] = {
  { sizeof ( s_pNetCopy3	  ) - 1, s_pNetCopy3	},
  { sizeof ( s_pNetCopy4	  ) - 1, s_pNetCopy4	}, //27
 
- { sizeof ( s_pMove0	  ) - 1, s_pMove0		}, //28 
- { sizeof ( s_pMove1	  ) - 1, s_pMove1		}, 
- { sizeof ( s_pMove2	  ) - 1, s_pMove2		}, 
- { sizeof ( s_pMove3	  ) - 1, s_pMove3		}, 
+ { sizeof ( s_pMove0	  ) - 1, s_pMove0		}, //28
+ { sizeof ( s_pMove1	  ) - 1, s_pMove1		},
+ { sizeof ( s_pMove2	  ) - 1, s_pMove2		},
+ { sizeof ( s_pMove3	  ) - 1, s_pMove3		},
  { sizeof ( s_pMove4	  ) - 1, s_pMove4		}, //32
 
  { sizeof ( s_pWarnINET	  ) - 1, s_pWarnINET	}, //33
@@ -475,7 +512,7 @@ static MMString s_MMStringDef[] = {
  { sizeof ( s_pNewVer		) - 1, s_pNewVer		},
  { sizeof ( s_pNewVerDL		) - 1, s_pNewVerDL		},
  { sizeof ( s_pNewVerNN		) - 1, s_pNewVerNN		}, //60
- { sizeof ( s_pNewVerUSB	) - 1, s_pNewVerUSB		}, 
+ { sizeof ( s_pNewVerUSB	) - 1, s_pNewVerUSB		},
 
  { sizeof ( s_pGameUpdate1	) - 1, s_pGameUpdate1	}, //62
  { sizeof ( s_pGameUpdate2	) - 1, s_pGameUpdate2	},
@@ -533,7 +570,7 @@ static MMString s_MMStringDef[] = {
  { sizeof ( s_pMMShowtimeSTL1	) - 1, s_pMMShowtimeSTL1	},
  { sizeof ( s_pMMShowtimeSTL2	) - 1, s_pMMShowtimeSTL2	},
  { sizeof ( s_pMMShowtimeSTL3	) - 1, s_pMMShowtimeSTL3	},
- { sizeof ( s_pMMShowtimeSTL4	) - 1, s_pMMShowtimeSTL4	}, 
+ { sizeof ( s_pMMShowtimeSTL4	) - 1, s_pMMShowtimeSTL4	},
 
  { sizeof ( s_pMMNTFS			) - 1, s_pMMNTFS			}, //110
  { sizeof ( s_pMMNTFSL1			) - 1, s_pMMNTFSL1			},
@@ -545,43 +582,43 @@ static MMString s_MMStringDef[] = {
  { sizeof ( s_pMMShowtimeLKL1	) - 1, s_pMMShowtimeLKL1	},
  { sizeof ( s_pMMShowtimeLKL2	) - 1, s_pMMShowtimeLKL2	},
  { sizeof ( s_pMMShowtimeLKL3	) - 1, s_pMMShowtimeLKL3	},
- { sizeof ( s_pMMShowtimeLKL4	) - 1, s_pMMShowtimeLKL4	}, 
+ { sizeof ( s_pMMShowtimeLKL4	) - 1, s_pMMShowtimeLKL4	},
 
  { sizeof ( s_pMMScrShot	) - 1, s_pMMScrShot		}, //120
  { sizeof ( s_pMMScrShotL1	) - 1, s_pMMScrShotL1	},
  { sizeof ( s_pMMScrShotL2	) - 1, s_pMMScrShotL2	},
  { sizeof ( s_pMMScrShotL3	) - 1, s_pMMScrShotL3	},
- { sizeof ( s_pMMScrShotL4	) - 1, s_pMMScrShotL4	}, 
+ { sizeof ( s_pMMScrShotL4	) - 1, s_pMMScrShotL4	},
 
  { sizeof ( s_pMMScrSave	) - 1, s_pMMScrSave		}, //125
  { sizeof ( s_pMMScrSaveL1	) - 1, s_pMMScrSaveL1	},
  { sizeof ( s_pMMScrSaveL2	) - 1, s_pMMScrSaveL2	},
  { sizeof ( s_pMMScrSaveL3	) - 1, s_pMMScrSaveL3	},
- { sizeof ( s_pMMScrSaveL4	) - 1, s_pMMScrSaveL4	}, 
+ { sizeof ( s_pMMScrSaveL4	) - 1, s_pMMScrSaveL4	},
 
  { sizeof ( s_pMMRestart	) - 1, s_pMMRestart		}, //130
  { sizeof ( s_pMMRestartL1	) - 1, s_pMMRestartL1	},
  { sizeof ( s_pMMRestartL2	) - 1, s_pMMRestartL2	},
  { sizeof ( s_pMMRestartL3	) - 1, s_pMMRestartL3	},
- { sizeof ( s_pMMRestartL4	) - 1, s_pMMRestartL4	}, 
+ { sizeof ( s_pMMRestartL4	) - 1, s_pMMRestartL4	},
 
  { sizeof ( s_pMMSetup		) - 1, s_pMMSetup		}, //135
  { sizeof ( s_pMMSetupL1	) - 1, s_pMMSetupL1		},
  { sizeof ( s_pMMSetupL2	) - 1, s_pMMSetupL2		},
  { sizeof ( s_pMMSetupL3	) - 1, s_pMMSetupL3		},
- { sizeof ( s_pMMSetupL4	) - 1, s_pMMSetupL4		}, 
+ { sizeof ( s_pMMSetupL4	) - 1, s_pMMSetupL4		},
 
  { sizeof ( s_pMMQuit		) - 1, s_pMMQuit		}, //140
  { sizeof ( s_pMMQuitL1		) - 1, s_pMMQuitL1		},
  { sizeof ( s_pMMQuitL2		) - 1, s_pMMQuitL2		},
  { sizeof ( s_pMMQuitL3		) - 1, s_pMMQuitL3		},
- { sizeof ( s_pMMQuitL4		) - 1, s_pMMQuitL4		}, 
+ { sizeof ( s_pMMQuitL4		) - 1, s_pMMQuitL4		},
 
  { sizeof ( s_pMMHelp		) - 1, s_pMMHelp		}, //145
  { sizeof ( s_pMMHelpL1		) - 1, s_pMMHelpL1		},
  { sizeof ( s_pMMHelpL2		) - 1, s_pMMHelpL2		},
  { sizeof ( s_pMMHelpL3		) - 1, s_pMMHelpL3		},
- { sizeof ( s_pMMHelpL4		) - 1, s_pMMHelpL4		}, 
+ { sizeof ( s_pMMHelpL4		) - 1, s_pMMHelpL4		},
 
  { sizeof ( s_pButNavigate	) - 1, s_pButNavigate	}, //150
  { sizeof ( s_pButSelect	) - 1, s_pButSelect		},
@@ -716,11 +753,11 @@ static MMString s_MMStringDef[] = {
  { sizeof ( s_pDelFiles		) - 1, s_pDelFiles		},
  { sizeof ( s_pDelDir		) - 1, s_pDelDir		},
  { sizeof ( s_pDelDirs		) - 1, s_pDelDirs		},
- 
+
  { sizeof ( s_pDelFromHDD	) - 1, s_pDelFromHDD	},
  { sizeof ( s_pDelFromUSB	) - 1, s_pDelFromUSB	},
  { sizeof ( s_pDelFromCache	) - 1, s_pDelFromCache	},
- 
+
  { sizeof ( s_pCpHdd2Usb	) - 1, s_pCpHdd2Usb		}, //267
  { sizeof ( s_pCpUsb2Hdd	) - 1, s_pCpUsb2Hdd		},
  { sizeof ( s_pCpPfs2Hdd	) - 1, s_pCpPfs2Hdd		},
@@ -730,7 +767,7 @@ static MMString s_MMStringDef[] = {
  { sizeof ( s_pDelPartHDD	) - 1, s_pDelPartHDD	},
  { sizeof ( s_pDelPartUSB	) - 1, s_pDelPartUSB	},
  { sizeof ( s_pDelCacheDone	) - 1, s_pDelCacheDone	},
- 
+
  { sizeof ( s_pCpBD2Hdd		) - 1, s_pCpBD2Hdd		}, //275
  { sizeof ( s_pCpBD2Usb		) - 1, s_pCpBD2Usb		},
 
@@ -754,9 +791,46 @@ static MMString s_MMStringDef[] = {
  { sizeof ( s_pTitleLocked	) - 1, s_pTitleLocked	},
  { sizeof ( s_pTitleRO		) - 1, s_pTitleRO		}, //294
 
+ { sizeof ( s_pRenameTo		) - 1, s_pRenameTo		},
+ { sizeof ( s_pCreateNew	) - 1, s_pCreateNew		},
+
+ { sizeof ( s_pXCUP			) - 1, s_pXCUP			}, //297
+ { sizeof ( s_pXCUP1		) - 1, s_pXCUP1			},
+ { sizeof ( s_pXCFM			) - 1, s_pXCFM			},
+ { sizeof ( s_pXCFM0		) - 1, s_pXCFM0			}, //300
+ { sizeof ( s_pXCFM1		) - 1, s_pXCFM1			},
+ { sizeof ( s_pXCRF			) - 1, s_pXCRF			},
+ { sizeof ( s_pXCRF1		) - 1, s_pXCRF1			},
+ { sizeof ( s_pXCRF2		) - 1, s_pXCRF2			},
+ { sizeof ( s_pXCRF3		) - 1, s_pXCRF3			},
+ { sizeof ( s_pXCPF			) - 1, s_pXCPF			}, //306
+ { sizeof ( s_pXCPF1		) - 1, s_pXCPF1			},
+ { sizeof ( s_pXCSS			) - 1, s_pXCSS			},
+ { sizeof ( s_pXCSS1		) - 1, s_pXCSS1			},
+ { sizeof ( s_pXCTH			) - 1, s_pXCTH			},
+ { sizeof ( s_pXCTH1		) - 1, s_pXCTH1			},
+ { sizeof ( s_pXCHL			) - 1, s_pXCHL			}, //312
+ { sizeof ( s_pXCHL1		) - 1, s_pXCHL1			},
+ { sizeof ( s_pXCRS			) - 1, s_pXCRS			},
+ { sizeof ( s_pXCRS1		) - 1, s_pXCRS1			},
+ { sizeof ( s_pXCQT			) - 1, s_pXCQT			},
+ { sizeof ( s_pXCQT1		) - 1, s_pXCQT1			}, //317
+
+ { sizeof ( s_pXC5LK		) - 1, s_pXC5LK			},
+ { sizeof ( s_pXC5LK1		) - 1, s_pXC5LK1		},
+ { sizeof ( s_pXC5ST		) - 1, s_pXC5ST			},
+ { sizeof ( s_pXC5ST1		) - 1, s_pXC5ST1		}, //321
+
+ { sizeof ( s_pXC2SS		) - 1, s_pXC2SS			},
+ { sizeof ( s_pXC2SS1		) - 1, s_pXC2SS1		},
+ { sizeof ( s_pXC2IL		) - 1, s_pXC2IL			},
+ { sizeof ( s_pXC2IL1		) - 1, s_pXC2IL1		},
+ { sizeof ( s_pXC2GC		) - 1, s_pXC2GC			},
+ { sizeof ( s_pXC2GC1		) - 1, s_pXC2GC1		}, //327
+
  /*,
 
- { sizeof ( s_p	) - 1, s_p		},
+
  { sizeof ( s_p	) - 1, s_p		},
  { sizeof ( s_p	) - 1, s_p		},
  { sizeof ( s_p	) - 1, s_p		},
@@ -785,18 +859,18 @@ static MMString s_MMStringUDF[ sizeof ( s_MMStringDef ) / sizeof ( s_MMStringDef
        MMString g_MMString   [ sizeof ( s_MMStringDef ) / sizeof ( s_MMStringDef[ 0 ] ) ]; //holds default GUI texts
 
 
-int MM_LocaleInit ( char *lang_file ) 
+int MM_LocaleInit ( char *lang_file )
 {
 	long lSize=0;
 	unsigned int   lIdx = 0;
 	FILE *lFD = fopen(lang_file, "rb");
 
-	if ( lFD != NULL ) 
+	if ( lFD != NULL )
 	{
 		fseek ( lFD, 0, SEEK_END );
 		lSize = ftell(lFD);
 
-		if ( lSize > 0 ) 
+		if ( lSize > 0 )
 		{
 			unsigned char* lpEnd;
 			unsigned char* lpPtr;
@@ -806,9 +880,12 @@ int MM_LocaleInit ( char *lang_file )
 
 			fseek( lFD, 3, SEEK_SET);
 			fread( (unsigned char*) lpBuff, lSize, 1, lFD);
-			for(int m=0; m<lSize; m++) if(lpBuff[m]=='|') lpBuff[m]='\n';
+			for(int m=0; m<lSize; m++) {
+				if(lpBuff[m]=='\n') lpBuff[m]=' ';
+				if(lpBuff[m]=='|') lpBuff[m]='\n';
+				}
 
-			while ( 1 ) 
+			while ( 1 )
 			{
 				while ( lpPtr != lpEnd && *lpPtr != '\r' ) ++lpPtr;
 
@@ -827,7 +904,7 @@ int MM_LocaleInit ( char *lang_file )
 			}
 		}
 		fclose ( lFD );
-	} 
+	}
 	return lIdx;
 }
 

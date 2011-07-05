@@ -384,7 +384,44 @@ extern MMString g_MMString [];
 #define STR_TITLE_LOCKED	MM_STRING( 293 )
 #define STR_TITLE_RO		MM_STRING( 294 )
 
-#define	STR_LAST_ID 295
+#define	STR_RENAMETO		MM_STRING( 295 )
+#define	STR_CREATENEW		MM_STRING( 296 )
+
+#define	STR_XC1_UPDATE		MM_STRING( 297 )
+#define	STR_XC1_UPDATE1		MM_STRING( 298 )
+#define	STR_XC1_FILEMAN		MM_STRING( 299 )
+#define	STR_XC1_FILEMAN0	MM_STRING( 300 )
+#define	STR_XC1_FILEMAN1	MM_STRING( 301 )
+#define	STR_XC1_REFRESH		MM_STRING( 302 )
+#define	STR_XC1_REFRESH1	MM_STRING( 303 )
+#define	STR_XC1_REFRESH2	MM_STRING( 304 )
+#define	STR_XC1_REFRESH3	MM_STRING( 305 )
+#define	STR_XC1_PFS			MM_STRING( 306 )
+#define	STR_XC1_PFS1		MM_STRING( 307 )
+#define	STR_XC1_SS			MM_STRING( 308 )
+#define	STR_XC1_SS1			MM_STRING( 309 )
+#define	STR_XC1_THEMES		MM_STRING( 310 )
+#define	STR_XC1_THEMES1		MM_STRING( 311 )
+#define	STR_XC1_HELP		MM_STRING( 312 )
+#define	STR_XC1_HELP1		MM_STRING( 313 )
+#define	STR_XC1_RESTART		MM_STRING( 314 )
+#define	STR_XC1_RESTART1	MM_STRING( 315 )
+#define	STR_XC1_QUIT		MM_STRING( 316 )
+#define	STR_XC1_QUIT1		MM_STRING( 317 )
+
+#define	STR_XC5_LINK		MM_STRING( 318 )
+#define	STR_XC5_LINK1		MM_STRING( 319 )
+#define	STR_XC5_ST			MM_STRING( 320 )
+#define	STR_XC5_ST1			MM_STRING( 321 )
+
+#define	STR_XC2_SI			MM_STRING( 322 )
+#define	STR_XC2_SI1			MM_STRING( 323 )
+#define	STR_XC2_IL			MM_STRING( 324 )
+#define	STR_XC2_IL1			MM_STRING( 325 )
+#define	STR_XC2_GC			MM_STRING( 326 )
+#define	STR_XC2_GC1			MM_STRING( 327 )
+
+#define	STR_LAST_ID 328
 
 // ***********************************************************************************
 
