@@ -428,14 +428,192 @@ static unsigned char s_pXC2IL1		[]	= "Changes multiMAN interface language.";
 static unsigned char s_pXC2GC		[]	= "Clear Game Cache Data";
 static unsigned char s_pXC2GC1		[]	= "Removes cache files for selected title.";
 
-/*
-static unsigned char s_p		[]		=
-static unsigned char s_p		[]		=
-static unsigned char s_p		[]		=
-static unsigned char s_p		[]		=
-static unsigned char s_p		[]		=
-static unsigned char s_p		[]		=
-*/
+static unsigned char s_pXC2YES		[]	= "Yes";
+static unsigned char s_pXC2NO		[]	= "No";
+static unsigned char s_pXC2AUTO		[]	= "Auto";
+static unsigned char s_pXC2ENABLE	[]	= "Enable";
+static unsigned char s_pXC2DISABLE	[]	= "Disable";
+static unsigned char s_pXC2NONE		[]	= "None";
+
+static unsigned char s_pXC2UNAV		[]	= "(Unavailable)";
+static unsigned char s_pXC2STD		[]	= "Standard";
+
+static unsigned char s_pXC2MIN		[]	= "min";
+static unsigned char s_pXC2SEC		[]	= "sec";
+static unsigned char s_pXC2LEVEL	[]	= "Level";
+
+static unsigned char s_pXC2_339	[]	= "Download Game Covers";
+static unsigned char s_pXC2_340	[]	= "Adjusts whether to download missing game covers.";
+
+static unsigned char s_pXC2_341	[]	= "FTP Service";
+static unsigned char s_pXC2_342	[]	= "Sets FTP startup mode.";
+
+static unsigned char s_pXC2_343	[]	= "XMMB Sparks";
+static unsigned char s_pXC2_344	[]	= "Changes display setting for sparks overlay in XMMB display mode.";
+
+static unsigned char s_pXC2_345	[]	= "XMMB Game Poster";
+static unsigned char s_pXC2_346	[]	= "Changes display setting for game poster images in XMMB mode.";
+
+static unsigned char s_pXC2_347	[]	= "XMMB Game Cover";
+static unsigned char s_pXC2_348	[]	= "Changes display setting for game cover images in XMMB display mode.";
+
+static unsigned char s_pXC2_349	[]	= "XMMB Game Icon Swap";
+static unsigned char s_pXC2_350	[]	= "Switches display of icon and cover in Game column.";
+
+static unsigned char s_pXC2_351	[]	= "XMMB Info Pop-up";
+static unsigned char s_pXC2_352	[]	= "Changes display setting for information pop-up boxes.";
+
+static unsigned char s_pXC2_353	[]	= "Parental Control PIN Code";
+static unsigned char s_pXC2_354	[]	= "Sets the parental control level PIN code.";
+
+static unsigned char s_pXC2_355	[]	= "Parental Control Level";
+static unsigned char s_pXC2_356	[]	= "Sets the parental control level for rated titles.";
+
+static unsigned char s_pXC2_357	[]	= "Function Control";
+static unsigned char s_pXC2_358	[]	= "Adjusts which functions will be enabled or disabled.";
+static unsigned char s_pXC2_359	[]	= "Enable Copy and Delete";
+static unsigned char s_pXC2_360	[]	= "Disable Delete";
+static unsigned char s_pXC2_361	[]	= "Disable Copy";
+static unsigned char s_pXC2_362	[]	= "Disable Copy and Delete";
+
+static unsigned char s_pXC2_363	[]	= "File Manager Access";
+static unsigned char s_pXC2_364	[]	= "Sets whether to restrict access to File Manager.";
+
+static unsigned char s_pXC2_365	[]	= "Verify USB Games";
+static unsigned char s_pXC2_366	[]	= "Sets whether to check titles on USB for compatibility.";
+
+static unsigned char s_pXC2_367	[]	= "Scan for Homebrew Applications";
+static unsigned char s_pXC2_368	[]	= "Sets whether to scan for applications with RELOAD.SELF boot file.";
+
+static unsigned char s_pXC2_369	[]	= "Scan for AVCHD\xE2\x84\xA2 and Blu-ray\xE2\x84\xA2";
+static unsigned char s_pXC2_370	[]	= "Sets whether to scan USB devices for AVCHD\xE2\x84\xA2 and Blu-ray\xE2\x84\xA2 content.";
+
+static unsigned char s_pXC2_371	[]	= "Expand Contents of AVCHD\xE2\x84\xA2";
+static unsigned char s_pXC2_372	[]	= "Sets whether to show one entry per title or all AVCHD\xE2\x84\xA2 playlists.";
+
+static unsigned char s_pXC2_373	[]	= "Hide BD-ROM Disc from Game List";
+static unsigned char s_pXC2_374	[]	= "Sets appearance of BD-ROM disc entry in the game list.";
+
+static unsigned char s_pXC2_375	[]	= "Content Filter";
+static unsigned char s_pXC2_376	[]	= "Changes default content filter (key shortcut SELECT+R1).";
+
+static unsigned char s_pXC2_377	[]	= "Clean Activity Logs";
+static unsigned char s_pXC2_378	[]	= "Adjusts whether to remove push list and boot history.";
+
+static unsigned char s_pXC2_379	[]	= "Date Format";
+static unsigned char s_pXC2_380	[]	= "Sets the order of display for year, month and day.";
+
+static unsigned char s_pXC2_381	[]	= "Time Format";
+static unsigned char s_pXC2_382	[]	= "Sets the time display to either a 12-hour or 24-hour clock.";
+static unsigned char s_pXC2_383	[]	= "12-Hour Clock";
+static unsigned char s_pXC2_384	[]	= "24-Hour Clock";
+
+static unsigned char s_pXC2_385	[]	= "Button Assignment";
+static unsigned char s_pXC2_386	[]	= "Sets which buttons are used for Accept/Enter and Cancel/Back.";
+static unsigned char s_pXC2_387	[]	= "Circle is [Accept]";
+static unsigned char s_pXC2_388	[]	= "Cross is [Accept]";
+
+static unsigned char s_pXC2_389	[]	= "Default Display Mode";
+static unsigned char s_pXC2_390	[]	= "Sets default startup display mode. Switch modes with L1/R1.";
+static unsigned char s_pXC2_391	[]	= "Game list (plain)";
+static unsigned char s_pXC2_392	[]	= "4x2 game list";
+static unsigned char s_pXC2_393	[]	= "Game list (poster)";
+static unsigned char s_pXC2_394	[]	= "Game list (user background)";
+static unsigned char s_pXC2_395	[]	= "Slide cover flow";
+static unsigned char s_pXC2_396	[]	= "File Manager mode";
+static unsigned char s_pXC2_397	[]	= "Box-art";
+static unsigned char s_pXC2_398	[]	= "8x4 game list";
+static unsigned char s_pXC2_399	[]	= "XMMB (XMB\xE2\x84\xA2 clone)";
+
+static unsigned char s_pXC2_400	[]	= "Display Mode Lock";
+static unsigned char s_pXC2_401	[]	= "Locks multiMAN to pre-selected display mode.";
+
+static unsigned char s_pXC2_402	[]	= "Font Preference";
+static unsigned char s_pXC2_403	[]	= "Sets default font (key shortcut R3).";
+
+static unsigned char s_pXC2_404	[]	= "Theme Audio";
+static unsigned char s_pXC2_405	[]	= "Sets whether to play theme music in the background.";
+
+static unsigned char s_pXC2_406	[]	= "TV Overscan";
+static unsigned char s_pXC2_407	[]	= "Sets TV overscan zone in percents (key shortcut SELECT+L2/R2).";
+
+static unsigned char s_pXC2_408	[]	= "Title Name Appearance";
+static unsigned char s_pXC2_409	[]	= "Changes size and appearance of title names and paths.";
+static unsigned char s_pXC2_410	[]	= "Large size title";
+static unsigned char s_pXC2_411	[]	= "Title and path";
+static unsigned char s_pXC2_412	[]	= "Medium size title";
+
+static unsigned char s_pXC2_413	[]	= "Title Details";
+static unsigned char s_pXC2_414	[]	= "Adjusts level of displayed details for selected display modes.";
+static unsigned char s_pXC2_415	[]	= "Title Only";
+static unsigned char s_pXC2_416	[]	= "Title and ID";
+static unsigned char s_pXC2_417	[]	= "Full";
+
+static unsigned char s_pXC2_418	[]	= "Animation";
+static unsigned char s_pXC2_419	[]	= "Adjusts animation options for some display modes.";
+static unsigned char s_pXC2_420	[]	= "Disable background slide";
+static unsigned char s_pXC2_421	[]	= "Disable icon animation";
+
+static unsigned char s_pXC2_422	[]	= "Poster Overlay";
+static unsigned char s_pXC2_423	[]	= "Sets whether to show poster in [Game list (poster)] display mode.";
+
+static unsigned char s_pXC2_424	[]	= "Poster and Cover Alteration";
+static unsigned char s_pXC2_425	[]	= "Sets whether to grayscale game poster and cover when required.";
+
+static unsigned char s_pXC2_426	[]	= "Progress Bar";
+static unsigned char s_pXC2_427	[]	= "Sets whether to show progress bar during copy operations.";
+
+static unsigned char s_pXC2_428	[]	= "Inactivity Timeout";
+static unsigned char s_pXC2_429	[]	= "Dim and hide title names after specified amount of time.";
+
+static unsigned char s_pXC2_430	[]	= "Screensaver";
+static unsigned char s_pXC2_431	[]	= "Turn on screensaver after specified amount of time.";
+
+static unsigned char s_pXC2_432	[]	= "Motion Sensor";
+static unsigned char s_pXC2_433	[]	= "Sets whether to use sensor information from SIXAXIS\xE2\x84\xA2 controller.";
+
+static unsigned char s_pXC2_434	[]	= "Mouse Sensitivity (X)";
+static unsigned char s_pXC2_435	[]	= "Sets analogue sticks horizontal sensitivity (dead zone).";
+
+static unsigned char s_pXC2_436	[]	= "Mouse Sensitivity (Y)";
+static unsigned char s_pXC2_437	[]	= "Sets analogue sticks vertical sensitivity (dead zone).";
+
+static unsigned char s_pXC2_438	[]	= "Key Repeat Delay";
+static unsigned char s_pXC2_439	[]	= "Sets initial delay before key repeat.";
+static unsigned char s_pXC2_440	[]	= "Very Short";
+static unsigned char s_pXC2_441	[]	= "Short";
+static unsigned char s_pXC2_442	[]	= "Normal";
+static unsigned char s_pXC2_443	[]	= "Long";
+static unsigned char s_pXC2_444	[]	= "Very Long";
+
+static unsigned char s_pXC2_445	[]	= "Key Repeat Speed";
+static unsigned char s_pXC2_446	[]	= "Sets key repeat speed.";
+static unsigned char s_pXC2_447	[]	= "Very Fast";
+static unsigned char s_pXC2_448	[]	= "Fast";
+static unsigned char s_pXC2_449	[]	= "Normal";
+static unsigned char s_pXC2_450	[]	= "Slow";
+static unsigned char s_pXC2_451	[]	= "Slower";
+
+static unsigned char s_pXC2_452	[]	= "Cache Partition";
+static unsigned char s_pXC2_453	[]	= "Enable or disable 2GB temporary partition (/dev_hdd1).";
+
+static unsigned char s_pXC2_454	[]	= "BD-ROM Emulator";
+static unsigned char s_pXC2_455	[]	= "Changes emulator type. System restart required to apply changes.";
+
+static unsigned char s_pXC9_456	[]	= "Download PS3\xE2\x84\xA2 Demos and Utilities";
+static unsigned char s_pXC9_457	[]	= "Browse PSX Store Website for rich content for your Playstation\xC2\xAE\x33 system";
+
+static unsigned char s_pXC9_458	[]	= "Download Themes";
+static unsigned char s_pXC9_459	[]	= "Check for new downloadable themes";
+
+static unsigned char s_pXC9_460	[]	= "Visit multiMAN Forum";
+static unsigned char s_pXC9_461	[]	= "Browse psx-scene thread for multiMAN discussions";
+
+static unsigned char s_pXC9_462	[]	= "View Online User Guide";
+static unsigned char s_pXC9_463	[]	= "Browse to GBATemp website for beginner's guide to multiMAN";
+
+static unsigned char s_pXC9_464	[]	= "Support multiMAN Development";
+static unsigned char s_pXC9_465	[]	= "Find how to contribute to multiMAN development";
 
 
 static MMString s_MMStringDef[] = {
@@ -827,6 +1005,147 @@ static MMString s_MMStringDef[] = {
  { sizeof ( s_pXC2IL1		) - 1, s_pXC2IL1		},
  { sizeof ( s_pXC2GC		) - 1, s_pXC2GC			},
  { sizeof ( s_pXC2GC1		) - 1, s_pXC2GC1		}, //327
+
+ { sizeof ( s_pXC2YES		) - 1, s_pXC2YES		},
+ { sizeof ( s_pXC2NO		) - 1, s_pXC2NO			},
+ { sizeof ( s_pXC2AUTO		) - 1, s_pXC2AUTO		}, //330
+ { sizeof ( s_pXC2ENABLE	) - 1, s_pXC2ENABLE		},
+ { sizeof ( s_pXC2DISABLE	) - 1, s_pXC2DISABLE	},
+ { sizeof ( s_pXC2NONE		) - 1, s_pXC2NONE		},
+ { sizeof ( s_pXC2UNAV		) - 1, s_pXC2UNAV		},
+ { sizeof ( s_pXC2STD		) - 1, s_pXC2STD		},
+ { sizeof ( s_pXC2MIN		) - 1, s_pXC2MIN		}, //336
+ { sizeof ( s_pXC2SEC		) - 1, s_pXC2SEC		},
+ { sizeof ( s_pXC2LEVEL		) - 1, s_pXC2LEVEL		}, //338
+
+  { sizeof ( s_pXC2_339		) - 1, s_pXC2_339		},
+  { sizeof ( s_pXC2_340		) - 1, s_pXC2_340		},
+  { sizeof ( s_pXC2_341		) - 1, s_pXC2_341		},
+  { sizeof ( s_pXC2_342		) - 1, s_pXC2_342		},
+  { sizeof ( s_pXC2_343		) - 1, s_pXC2_343		},
+  { sizeof ( s_pXC2_344		) - 1, s_pXC2_344		},
+  { sizeof ( s_pXC2_345		) - 1, s_pXC2_345		},
+  { sizeof ( s_pXC2_346		) - 1, s_pXC2_346		},
+  { sizeof ( s_pXC2_347		) - 1, s_pXC2_347		},
+  { sizeof ( s_pXC2_348		) - 1, s_pXC2_348		},
+  { sizeof ( s_pXC2_349		) - 1, s_pXC2_349		},
+  { sizeof ( s_pXC2_350		) - 1, s_pXC2_350		},
+  { sizeof ( s_pXC2_351		) - 1, s_pXC2_351		},
+  { sizeof ( s_pXC2_352		) - 1, s_pXC2_352		},
+  { sizeof ( s_pXC2_353		) - 1, s_pXC2_353		},
+  { sizeof ( s_pXC2_354		) - 1, s_pXC2_354		},
+  { sizeof ( s_pXC2_355		) - 1, s_pXC2_355		},
+  { sizeof ( s_pXC2_356		) - 1, s_pXC2_356		},
+  { sizeof ( s_pXC2_357		) - 1, s_pXC2_357		},
+  { sizeof ( s_pXC2_358		) - 1, s_pXC2_358		},
+  { sizeof ( s_pXC2_359		) - 1, s_pXC2_359		},
+  { sizeof ( s_pXC2_360		) - 1, s_pXC2_360		},
+  { sizeof ( s_pXC2_361		) - 1, s_pXC2_361		},
+  { sizeof ( s_pXC2_362		) - 1, s_pXC2_362		},
+  { sizeof ( s_pXC2_363		) - 1, s_pXC2_363		},
+  { sizeof ( s_pXC2_364		) - 1, s_pXC2_364		},
+  { sizeof ( s_pXC2_365		) - 1, s_pXC2_365		},
+  { sizeof ( s_pXC2_366		) - 1, s_pXC2_366		},
+  { sizeof ( s_pXC2_367		) - 1, s_pXC2_367		},
+  { sizeof ( s_pXC2_368		) - 1, s_pXC2_368		},
+  { sizeof ( s_pXC2_369		) - 1, s_pXC2_369		},
+  { sizeof ( s_pXC2_370		) - 1, s_pXC2_370		},
+  { sizeof ( s_pXC2_371		) - 1, s_pXC2_371		},
+  { sizeof ( s_pXC2_372		) - 1, s_pXC2_372		},
+  { sizeof ( s_pXC2_373		) - 1, s_pXC2_373		},
+  { sizeof ( s_pXC2_374		) - 1, s_pXC2_374		},
+  { sizeof ( s_pXC2_375		) - 1, s_pXC2_375		},
+  { sizeof ( s_pXC2_376		) - 1, s_pXC2_376		},
+  { sizeof ( s_pXC2_377		) - 1, s_pXC2_377		},
+  { sizeof ( s_pXC2_378		) - 1, s_pXC2_378		},
+  { sizeof ( s_pXC2_379		) - 1, s_pXC2_379		},
+  { sizeof ( s_pXC2_380		) - 1, s_pXC2_380		},
+  { sizeof ( s_pXC2_381		) - 1, s_pXC2_381		},
+  { sizeof ( s_pXC2_382		) - 1, s_pXC2_382		},
+  { sizeof ( s_pXC2_383		) - 1, s_pXC2_383		},
+  { sizeof ( s_pXC2_384		) - 1, s_pXC2_384		},
+  { sizeof ( s_pXC2_385		) - 1, s_pXC2_385		},
+  { sizeof ( s_pXC2_386		) - 1, s_pXC2_386		},
+  { sizeof ( s_pXC2_387		) - 1, s_pXC2_387		},
+  { sizeof ( s_pXC2_388		) - 1, s_pXC2_388		},
+  { sizeof ( s_pXC2_389		) - 1, s_pXC2_389		},
+  { sizeof ( s_pXC2_390		) - 1, s_pXC2_390		},
+  { sizeof ( s_pXC2_391		) - 1, s_pXC2_391		},
+  { sizeof ( s_pXC2_392		) - 1, s_pXC2_392		},
+  { sizeof ( s_pXC2_393		) - 1, s_pXC2_393		},
+  { sizeof ( s_pXC2_394		) - 1, s_pXC2_394		},
+  { sizeof ( s_pXC2_395		) - 1, s_pXC2_395		},
+  { sizeof ( s_pXC2_396		) - 1, s_pXC2_396		},
+  { sizeof ( s_pXC2_397		) - 1, s_pXC2_397		},
+  { sizeof ( s_pXC2_398		) - 1, s_pXC2_398		},
+  { sizeof ( s_pXC2_399		) - 1, s_pXC2_399		},
+  { sizeof ( s_pXC2_400		) - 1, s_pXC2_400		},
+  { sizeof ( s_pXC2_401		) - 1, s_pXC2_401		},
+  { sizeof ( s_pXC2_402		) - 1, s_pXC2_402		},
+  { sizeof ( s_pXC2_403		) - 1, s_pXC2_403		},
+  { sizeof ( s_pXC2_404		) - 1, s_pXC2_404		},
+  { sizeof ( s_pXC2_405		) - 1, s_pXC2_405		},
+  { sizeof ( s_pXC2_406		) - 1, s_pXC2_406		},
+  { sizeof ( s_pXC2_407		) - 1, s_pXC2_407		},
+  { sizeof ( s_pXC2_408		) - 1, s_pXC2_408		},
+  { sizeof ( s_pXC2_409		) - 1, s_pXC2_409		},
+  { sizeof ( s_pXC2_410		) - 1, s_pXC2_410		},
+  { sizeof ( s_pXC2_411		) - 1, s_pXC2_411		},
+  { sizeof ( s_pXC2_412		) - 1, s_pXC2_412		},
+  { sizeof ( s_pXC2_413		) - 1, s_pXC2_413		},
+  { sizeof ( s_pXC2_414		) - 1, s_pXC2_414		},
+  { sizeof ( s_pXC2_415		) - 1, s_pXC2_415		},
+  { sizeof ( s_pXC2_416		) - 1, s_pXC2_416		},
+  { sizeof ( s_pXC2_417		) - 1, s_pXC2_417		},
+  { sizeof ( s_pXC2_418		) - 1, s_pXC2_418		},
+  { sizeof ( s_pXC2_419		) - 1, s_pXC2_419		},
+  { sizeof ( s_pXC2_420		) - 1, s_pXC2_420		},
+  { sizeof ( s_pXC2_421		) - 1, s_pXC2_421		},
+  { sizeof ( s_pXC2_422		) - 1, s_pXC2_422		},
+  { sizeof ( s_pXC2_423		) - 1, s_pXC2_423		},
+  { sizeof ( s_pXC2_424		) - 1, s_pXC2_424		},
+  { sizeof ( s_pXC2_425		) - 1, s_pXC2_425		},
+  { sizeof ( s_pXC2_426		) - 1, s_pXC2_426		},
+  { sizeof ( s_pXC2_427		) - 1, s_pXC2_427		},
+  { sizeof ( s_pXC2_428		) - 1, s_pXC2_428		},
+  { sizeof ( s_pXC2_429		) - 1, s_pXC2_429		},
+  { sizeof ( s_pXC2_430		) - 1, s_pXC2_430		},
+  { sizeof ( s_pXC2_431		) - 1, s_pXC2_431		},
+  { sizeof ( s_pXC2_432		) - 1, s_pXC2_432		},
+  { sizeof ( s_pXC2_433		) - 1, s_pXC2_433		},
+  { sizeof ( s_pXC2_434		) - 1, s_pXC2_434		},
+  { sizeof ( s_pXC2_435		) - 1, s_pXC2_435		},
+  { sizeof ( s_pXC2_436		) - 1, s_pXC2_436		},
+  { sizeof ( s_pXC2_437		) - 1, s_pXC2_437		},
+  { sizeof ( s_pXC2_438		) - 1, s_pXC2_438		},
+  { sizeof ( s_pXC2_439		) - 1, s_pXC2_439		},
+  { sizeof ( s_pXC2_440		) - 1, s_pXC2_440		},
+  { sizeof ( s_pXC2_441		) - 1, s_pXC2_441		},
+  { sizeof ( s_pXC2_442		) - 1, s_pXC2_442		},
+  { sizeof ( s_pXC2_443		) - 1, s_pXC2_443		},
+  { sizeof ( s_pXC2_444		) - 1, s_pXC2_444		},
+  { sizeof ( s_pXC2_445		) - 1, s_pXC2_445		},
+  { sizeof ( s_pXC2_446		) - 1, s_pXC2_446		},
+  { sizeof ( s_pXC2_447		) - 1, s_pXC2_447		},
+  { sizeof ( s_pXC2_448		) - 1, s_pXC2_448		},
+  { sizeof ( s_pXC2_449		) - 1, s_pXC2_449		},
+  { sizeof ( s_pXC2_450		) - 1, s_pXC2_450		},
+  { sizeof ( s_pXC2_451		) - 1, s_pXC2_451		},
+  { sizeof ( s_pXC2_452		) - 1, s_pXC2_452		},
+  { sizeof ( s_pXC2_453		) - 1, s_pXC2_453		},
+  { sizeof ( s_pXC2_454		) - 1, s_pXC2_454		},
+  { sizeof ( s_pXC2_455		) - 1, s_pXC2_455		},
+
+  { sizeof ( s_pXC9_456		) - 1, s_pXC9_456		},
+  { sizeof ( s_pXC9_457		) - 1, s_pXC9_457		},
+  { sizeof ( s_pXC9_458		) - 1, s_pXC9_458		},
+  { sizeof ( s_pXC9_459		) - 1, s_pXC9_459		},
+  { sizeof ( s_pXC9_460		) - 1, s_pXC9_460		},
+  { sizeof ( s_pXC9_461		) - 1, s_pXC9_461		},
+  { sizeof ( s_pXC9_462		) - 1, s_pXC9_462		},
+  { sizeof ( s_pXC9_463		) - 1, s_pXC9_463		},
+  { sizeof ( s_pXC9_464		) - 1, s_pXC9_464		},
+  { sizeof ( s_pXC9_465		) - 1, s_pXC9_465		},
 
  /*,
 

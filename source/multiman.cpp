@@ -371,6 +371,7 @@ float repeat_counter3_inc=0.f;
 bool key_repeat=0;
 
 char time_result[2];
+char cat_result[64];
 u16 seconds_clock=0;
 bool xmb_legend_drawn=0;
 bool xmb_info_drawn=0;
@@ -570,7 +571,7 @@ void draw_text_stroke(float x, float y, float size, u32 color, const char *str);
 #define	GAME_INI_VER	"MMGI0100" //PS3GAME.INI	game flags (submenu)
 #define	GAME_STATE_VER	"MMLS0106" //LSTAT.BIN		multiMAN last state data
 #define	GAME_LIST_VER	"MMGL0106" //LLIST.BIN		cache for game list
-#define	XMB_COL_VER		"MMXC0109" //XMBS.00x		xmb[?] structure (1 XMMB column)
+#define	XMB_COL_VER		"MMXC0110" //XMBS.00x		xmb[?] structure (1 XMMB column)
 
 char current_version[9]="02.01.00";
 char current_version_NULL[10];
@@ -1108,8 +1109,8 @@ typedef struct __xmbmem
 	int game_id; //pointer to menu_list[id]
 	u8 game_split;
 	u32 game_user_flags;
-	char name[128];
-	char subname[96];
+	char name[192];
+	char subname[128];
 	u8 option_size;
 	u8 option_selected;
 	char optionini[20];
@@ -1221,6 +1222,15 @@ char *tmhour(int _hour)
 	sprintf(time_result, "%2d", th);
 	return time_result;
 }
+
+char *string_cat(char* str1, const char* str2)
+{
+	cat_result[0]=0;
+	strcat(cat_result, str1);
+	strcat(cat_result, str2);
+	return cat_result;
+}
+
 
 void set_xo()
 {
@@ -1398,6 +1408,8 @@ void load_localization(int id)
 		else
 		{
 			mm_locale=0;
+			MM_LocaleSet(0);
+			mui_font = locales[0].font_id;
 			char errlang[512];
 			sprintf(errlang, "Localization file for %s (%s) language is missing or incomplete!\n\n%s: %i lines read, but %i expected!\n\nRestart multiMAN while holding L2+R2 for \"Debug Mode\" to generate LANG_DEFAULT.TXT\nwith all required localization labels.", locales[id].eng_name, locales[id].loc_name, lfile, llines, STR_LAST_ID);
 			dialog_ret=0;
@@ -19206,161 +19218,161 @@ void add_settings_column()
 		add_xmb_member(xmb[2].member, &xmb[2].size, (char*)STR_XC2_GC, (char*)STR_XC2_GC1,
 				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_tool, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Download Game Covers", (char*)"Adjusts whether to download missing game covers.", (char*)"download_covers");//, (char*)"Internet connection required.")
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"No",		(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Auto",		(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_DL_COVERS, (char*)STR_XC2_DL_COVERS1, (char*)"download_covers");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_NO ,		(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_AUTO,		(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=download_covers;
 		xmb[2].member[xmb[2].size-1].icon=xmb[9].data;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"FTP Service", (char*)"Sets FTP startup mode.", (char*)"ftpd_on");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disabled",		(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Auto start",	(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_FTP, (char*)STR_XC2_FTP1, (char*)"ftpd_on");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,	(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,		(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=ftp_service;
 		xmb[2].member[xmb[2].size-1].icon=xmb_icon_ftp;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"XMMB Sparks", (char*)"Changes display setting for sparks overlay in XMMB display mode.",	(char*)"xmb_sparks");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Show always",					(char*)"1");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Auto hide",					(char*)"2");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_SPARKS, (char*)STR_XC2_SPARKS1,	(char*)"xmb_sparks");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,					(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,						(char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_AUTO,						(char*)"2");
 		xmb[2].member[xmb[2].size-1].option_selected=xmb_sparks;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"XMMB Game Poster", (char*)"Changes display setting for game poster images in XMMB mode.",	(char*)"xmb_game_bg");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Enable",						(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_POSTER, (char*)STR_XC2_POSTER1,	(char*)"xmb_game_bg");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,					(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=xmb_game_bg;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"XMMB Game Cover", (char*)"Changes display setting for game cover images in XMMB display mode.",	(char*)"xmb_cover");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Enable",						(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_COVER, (char*)STR_XC2_COVER1,	(char*)"xmb_cover");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=xmb_cover;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"XMMB Game Icon Swap", (char*)"Switches display of icon and cover in Game column.",	(char*)"xmb_cover_column");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Show Icon",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Show Cover",						(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_SWAP, (char*)STR_XC2_SWAP1,	(char*)"xmb_cover_column");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=xmb_cover_column;
 
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"XMMB Info Pop-up", (char*)"Changes display setting for information pop-up boxes.",	(char*)"xmb_popup");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Enable",						(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_POP, (char*)STR_XC2_POP1,	(char*)"xmb_popup");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=xmb_popup;
 
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Parental Control PIN Code", (char*)"Sets the parental control level PIN code.",	(char*)"parental_pass");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_PIN, (char*)STR_XC2_PIN1,	(char*)"parental_pass");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 1, (char*)"****",						(char*)parental_pass);
 		xmb[2].member[xmb[2].size-1].option_selected=0;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Parental Control Level", (char*)"Sets the parental control level for rated titles.",	(char*)"parental_level");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Level 1",						(char*)"1");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Level 2",						(char*)"2");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Level 3",						(char*)"3");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Level 4",						(char*)"4");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Level 5",						(char*)"5");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Level 6",						(char*)"6");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Level 7",						(char*)"7");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Level 8",						(char*)"8");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Level 9",						(char*)"9");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Level 10",						(char*)"10");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Level 11",						(char*)"11");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_PLEVEL, (char*)STR_XC2_PLEVEL1,	(char*)"parental_level");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,								(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_LEVEL, " 1"),		(char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_LEVEL, " 2"),		(char*)"2");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_LEVEL, " 3"),		(char*)"3");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_LEVEL, " 4"),		(char*)"4");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_LEVEL, " 5"),		(char*)"5");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_LEVEL, " 6"),		(char*)"6");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_LEVEL, " 7"),		(char*)"7");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_LEVEL, " 8"),		(char*)"8");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_LEVEL, " 9"),		(char*)"9");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_LEVEL, " 10"),	(char*)"10");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_LEVEL, " 11"),	(char*)"11");
 		xmb[2].member[xmb[2].size-1].option_selected=parental_level;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Function Control", (char*)"Adjusts which functions will be enabled or disabled.",	(char*)"disable_options");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Enable Copy and Delete",	(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable Delete",			(char*)"1");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable Copy",				(char*)"2");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable Copy and Delete",	(char*)"3");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_FUNC, (char*)STR_XC2_FUNC1,	(char*)"disable_options");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_FUNC2,			(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_FUNC3,			(char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_FUNC4,			(char*)"2");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_FUNC5,			(char*)"3");
 		xmb[2].member[xmb[2].size-1].option_selected=disable_options;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"File Manager Access", (char*)"Sets whether to restrict access to File Manager.",	(char*)"lock_fileman");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Allow",	(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Deny",			(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_FM_ACC, (char*)STR_XC2_FM_ACC1,	(char*)"lock_fileman");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,			(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,			(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=lock_fileman;
 		xmb[2].member[xmb[2].size-1].icon=xmb_icon_desk;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Verify USB Games", (char*)"Sets whether to check titles on USB for compatibility.",	(char*)"verify_data");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"No",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Auto",						(char*)"1");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Always",					(char*)"2");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_USB_VRF, (char*)STR_XC2_USB_VRF1,	(char*)"verify_data");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_AUTO,						(char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,					(char*)"2");
 		xmb[2].member[xmb[2].size-1].option_selected=verify_data;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Scan for Homebrew Applications", (char*)"Sets whether to scan for applications with RELOAD.SELF boot file.",	(char*)"scan_for_apps");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"No",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Yes",						(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_HB, (char*)STR_XC2_HB1,	(char*)"scan_for_apps");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_NO ,						(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_YES,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=scan_for_apps;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Scan for AVCHD\xE2\x84\xA2 and Blu-ray\xE2\x84\xA2", (char*)"Sets whether to scan USB devices for AVCHD\xE2\x84\xA2 and Blu-ray\xE2\x84\xA2 content.",	(char*)"scan_avchd");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"No",					(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Yes",					(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_HDMV, (char*)STR_XC2_HDMV1,	(char*)"scan_avchd");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_NO ,						(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_YES,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=scan_avchd;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Expand Contents of AVCHD\xE2\x84\xA2", (char*)"Sets whether to show one entry per title or all AVCHD\xE2\x84\xA2 playlists.",	(char*)"expand_avchd");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Do not expand",			(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Expand",					(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_HDMV_EXP, (char*)STR_XC2_HDMV_EXP1,	(char*)"expand_avchd");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_NO ,						(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_YES,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=expand_avchd;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Hide BD-ROM Disc from Game List", (char*)"Sets appearance of BD-ROM disc entry in the game list.", (char*)"hide_bd");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"No",	(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Yes",	(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_HIDE_BD, (char*)STR_XC2_HIDE_BD1, (char*)"hide_bd");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_NO ,	(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_YES,	(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=hide_bd;
 		xmb[2].member[xmb[2].size-1].icon=xmb_icon_blu;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Content Filter", (char*)"Changes default content filter (key shortcut SELECT+R1).",	(char*)"display_mode");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"No filtering",						(char*)"0");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_FILTER, (char*)STR_XC2_FILTER1,	(char*)"display_mode");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,					(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"PS3\xE2\x84\xA2 titles only",		(char*)"1");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"AVCHD\xE2\x84\xA2 titles only",		(char*)"2");
 		xmb[2].member[xmb[2].size-1].option_selected=display_mode;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Clean Activity Logs", (char*)"Adjusts whether to remove push list and boot history.", (char*)"clear_activity_logs");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"No",		(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Yes",	(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_CLEAN, (char*)STR_XC2_CLEAN1, (char*)"clear_activity_logs");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_NO ,		(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_YES,	(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=clear_activity_logs;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Date Format", (char*)"Sets the order of display for year, month and day.", (char*)"date_format");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_DATE, (char*)STR_XC2_DATE1, (char*)"date_format");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"DD/MM/YYYY",	(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"MM/DD/YYYY",	(char*)"1");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"YYYY/MM/DD",	(char*)"2");
 		xmb[2].member[xmb[2].size-1].option_selected=date_format;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Time Format", (char*)"Sets the time display to either a 12-hour or 24-hour clock.", (char*)"time_format");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"12-Hour Clock",	(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"24-Hour Clock",	(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_TIME, (char*)STR_XC2_TIME1, (char*)"time_format");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_TIME2,	(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_TIME3,	(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=time_format;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Button Assignment", (char*)"Sets which buttons are used for Accept/Enter and Cancel/Back.", (char*)"confirm_with_x");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Circle is [Accept]",	(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Cross is [Accept]",	(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_ACC, (char*)STR_XC2_ACC1, (char*)"confirm_with_x");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ACC2,	(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ACC3,	(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=confirm_with_x;
 
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Default Display Mode", (char*)"Sets default startup display mode. Switch modes with L1/R1.",	(char*)"full_png");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Game list (plain)",					(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"4x2 game list",						(char*)"1");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Game list (poster)",					(char*)"2");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Game list (user background)",			(char*)"3");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Slide cover flow",						(char*)"4");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"File Manager mode",					(char*)"5");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Box-art",								(char*)"6");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"8x4 game list",						(char*)"7");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"XMMB (XMB\xE2\x84\xA2 clone)",			(char*)"8");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_DM, (char*)STR_XC2_DM1,	(char*)"full_png");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM2,					(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM3,					(char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM4,					(char*)"2");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM5,					(char*)"3");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM6,					(char*)"4");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM7,					(char*)"5");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM8,					(char*)"6");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM9,					(char*)"7");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM10,					(char*)"8");
 		xmb[2].member[xmb[2].size-1].option_selected=initial_cover_mode;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Display Mode Lock", (char*)"Locks multiMAN to pre-selected display mode.",	(char*)"lock_display_mode");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable",								(char*)"-1");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Game list (plain)",					(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"4x2 game list",						(char*)"1");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Game list (poster)",					(char*)"2");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Game list (user background)",			(char*)"3");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Slide cover flow",						(char*)"4");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"File Manager mode",					(char*)"5");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Box-art",								(char*)"6");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"8x4 game list",						(char*)"7");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"XMMB (XMB\xE2\x84\xA2 clone)",			(char*)"8");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_LOCKDM, (char*)STR_XC2_LOCKDM1,	(char*)"lock_display_mode");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,								(char*)"-1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM2,					(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM3,					(char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM4,					(char*)"2");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM5,					(char*)"3");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM6,					(char*)"4");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM7,					(char*)"5");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM8,					(char*)"6");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM9,					(char*)"7");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM10,					(char*)"8");
 		xmb[2].member[xmb[2].size-1].option_selected=lock_display_mode+1;
 
 		if(user_font<10)
 		{
-			add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Font Preference", (char*)"Sets default font (key shortcut R3).",	(char*)"user_font");
+			add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_FONT, (char*)STR_XC2_FONT1,	(char*)"user_font");
 			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Default",								(char*)"0");
 			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Pop"		,							(char*)"1");
 			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"New Rodin",							(char*)"2");
@@ -19374,14 +19386,14 @@ void add_settings_column()
 			xmb[2].member[xmb[2].size-1].option_selected=user_font;
 		}
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Theme Audio", (char*)"Sets whether to play theme music in the background.",	(char*)"theme_sound");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Enable",						(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_THM, (char*)STR_XC2_THM1,	(char*)"theme_sound");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=theme_sound;
 
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"TV Overscan", (char*)"Sets TV overscan zone in percents (key shortcut SELECT+L2/R2).",	(char*)"overscan");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable",						(char*)"0");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_TV, (char*)STR_XC2_TV1,	(char*)"overscan");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"1%",							(char*)"1");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"2%",							(char*)"2");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"3%",							(char*)"3");
@@ -19397,80 +19409,80 @@ void add_settings_column()
 		xmb[2].member[xmb[2].size-1].option_selected=(u8) ((float)overscan * 100.f);
 		xmb[2].member[xmb[2].size-1].icon=xmb_icon_ss;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Title Name Appearance", (char*)"Changes size and appearance of title names and paths.",	(char*)"showdir");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Large size title",					(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Title and path",					(char*)"1");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Medium size title",				(char*)"2");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_TITLE_APP, (char*)STR_XC2_TITLE_APP1,	(char*)"showdir");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_TITLE_APP2,					(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_TITLE_APP3,					(char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_TITLE_APP4,				(char*)"2");
 		xmb[2].member[xmb[2].size-1].option_selected=dir_mode;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Title Details", (char*)"Adjusts level of displayed details for selected display modes.",	(char*)"game_details");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Title Only",					(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Title and ID",					(char*)"1");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Full",							(char*)"2");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"None",							(char*)"3");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_TITLE_DET, (char*)STR_XC2_TITLE_DET1,	(char*)"game_details");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_TITLE_DET2,					(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_TITLE_DET3,					(char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_TITLE_DET4,							(char*)"2");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"3");
 		xmb[2].member[xmb[2].size-1].option_selected=game_details;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Animation", (char*)"Adjusts animation options for some display modes.",		(char*)"animation");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable all animations",	(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable background slide",	(char*)"1");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable icon animation",	(char*)"2");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"All animations On",		(char*)"3");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_ANI, (char*)STR_XC2_ANI1,		(char*)"animation");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,					(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ANI2,	(char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ANI3,	(char*)"2");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,					(char*)"3");
 		xmb[2].member[xmb[2].size-1].option_selected=animation;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Poster Overlay", (char*)"Sets whether to show poster in [Game list (poster)] display mode.",	(char*)"game_bg_overlay");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"No",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Yes",						(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_POSTER_OVL, (char*)STR_XC2_POSTER_OVL1,	(char*)"game_bg_overlay");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_NO ,						(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_YES,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=game_bg_overlay;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Poster and Cover Alteration", (char*)"Sets whether to grayscale game poster and cover when required.",	(char*)"gray_poster");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Never",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Auto",						(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_POSTER_ALT, (char*)STR_XC2_POSTER_ALT1,	(char*)"gray_poster");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,					(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_AUTO,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=gray_poster;
 
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Progress Bar", (char*)"Sets whether to show progress bar during copy operations.",	(char*)"progress_bar");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"No",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Yes",						(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_PROGRESS, (char*)STR_XC2_PROGRESS1,	(char*)"progress_bar");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_NO ,						(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_YES,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=progress_bar;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Inactivity Timeout", (char*)"Dim and hide title names after specified amount of time.",	(char*)"dim_titles");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"1 sec",						(char*)"1");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"2 sec",						(char*)"2");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"3 sec",						(char*)"3");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"4 sec",						(char*)"4");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"5 sec",						(char*)"5");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"6 sec",						(char*)"6");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"7 sec",						(char*)"7");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"8 sec",						(char*)"8");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"9 sec",						(char*)"9");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"10 sec",						(char*)"10");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_TIMEOUT, (char*)STR_XC2_TIMEOUT1,	(char*)"dim_titles");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,				(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"1 ", (const char*)STR_XC2_SEC), (char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"2 ", (const char*)STR_XC2_SEC), (char*)"2");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"3 ", (const char*)STR_XC2_SEC), (char*)"3");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"4 ", (const char*)STR_XC2_SEC), (char*)"4");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"5 ", (const char*)STR_XC2_SEC), (char*)"5");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"6 ", (const char*)STR_XC2_SEC), (char*)"6");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"7 ", (const char*)STR_XC2_SEC), (char*)"7");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"8 ", (const char*)STR_XC2_SEC), (char*)"8");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"9 ", (const char*)STR_XC2_SEC), (char*)"9");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"10 ", (const char*)STR_XC2_SEC), (char*)"10");
 		if(dim_setting<0) dim_setting=0;
 		if(dim_setting>10) dim_setting=10;
 		xmb[2].member[xmb[2].size-1].option_selected=dim_setting;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Screensaver", (char*)"Turn on screensaver after specified amount of time.",	(char*)"ss_timeout");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"1 min",						(char*)"1");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"2 min",						(char*)"2");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"3 min",						(char*)"3");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"4 min",						(char*)"4");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"5 min",						(char*)"5");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"6 min",						(char*)"6");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"7 min",						(char*)"7");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"8 min",						(char*)"8");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"9 min",						(char*)"9");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"10 min",						(char*)"10");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_SS, (char*)STR_XC2_SS1,	(char*)"ss_timeout");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"1 ", (const char*)STR_XC2_MIN), (char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"2 ", (const char*)STR_XC2_MIN), (char*)"2");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"3 ", (const char*)STR_XC2_MIN), (char*)"3");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"4 ", (const char*)STR_XC2_MIN), (char*)"4");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"5 ", (const char*)STR_XC2_MIN), (char*)"5");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"6 ", (const char*)STR_XC2_MIN), (char*)"6");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"7 ", (const char*)STR_XC2_MIN), (char*)"7");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"8 ", (const char*)STR_XC2_MIN), (char*)"8");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"9 ", (const char*)STR_XC2_MIN), (char*)"9");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"10 ", (const char*)STR_XC2_MIN), (char*)"10");
 		xmb[2].member[xmb[2].size-1].option_selected=ss_timeout;
 		xmb[2].member[xmb[2].size-1].icon=xmb_icon_ss;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Motion Sensor", (char*)"Sets whether to use sensor information from SIXAXIS\xE2\x84\xA2 controller.",	(char*)"use_pad_sensor");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disabled",						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Enabled",						(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_SENSOR, (char*)STR_XC2_SENSOR1,	(char*)"use_pad_sensor");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=use_pad_sensor;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Mouse Sensitivity (X)", (char*)"Sets analogue sticks horizontal sensitivity (dead zone).",	(char*)"deadzone_x");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable",						(char*)"0");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_SENSX, (char*)STR_XC2_SENSX1,	(char*)"deadzone_x");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"10%",							(char*)"10");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"20%",							(char*)"20");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"30%",							(char*)"30");
@@ -19483,8 +19495,8 @@ void add_settings_column()
 		if(xDZ>90) xDZ=90;
 		xmb[2].member[xmb[2].size-1].option_selected=(int) (xDZ/10);
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Mouse Sensitivity (Y)", (char*)"Sets analogue sticks vertical sensitivity (dead zone).",	(char*)"deadzone_y");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable",						(char*)"0");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_SENSY, (char*)STR_XC2_SENSY1,	(char*)"deadzone_y");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"10%",							(char*)"10");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"20%",							(char*)"20");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"30%",							(char*)"30");
@@ -19498,35 +19510,35 @@ void add_settings_column()
 		xmb[2].member[xmb[2].size-1].option_selected=(int) (yDZ/10);
 
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Key Repeat Delay", (char*)"Sets initial delay before key repeat.",	(char*)"repeat_init_delay");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Very Short",					(char*)"20");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Short",						(char*)"40");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Normal",						(char*)"60");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Long",							(char*)"80");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Very Long",					(char*)"100");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_KEY_DELAY, (char*)STR_XC2_KEY_DELAY1,	(char*)"repeat_init_delay");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_KEY_DELAY2,					(char*)"20");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_KEY_DELAY3,						(char*)"40");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_KEY_DELAY4,						(char*)"60");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_KEY_DELAY5,						(char*)"80");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_KEY_DELAY6,					(char*)"100");
 		xmb[2].member[xmb[2].size-1].option_selected=(int) ((repeat_init_delay/20)-1);
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Key Repeat Speed", (char*)"Sets key repeat speed.",	(char*)"repeat_key_delay");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Very Fast",					(char*)"2");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Fast",							(char*)"4");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Normal",						(char*)"6");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Slow",							(char*)"8");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Slower",						(char*)"10");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_KEY_REP, (char*)STR_XC2_KEY_REP1,	(char*)"repeat_key_delay");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_KEY_REP2,					(char*)"2");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_KEY_REP3,					(char*)"4");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_KEY_REP4,					(char*)"6");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_KEY_REP5,					(char*)"8");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_KEY_REP6,					(char*)"10");
 		xmb[2].member[xmb[2].size-1].option_selected=(int) ((repeat_key_delay/2)-1);
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"Cache Partition", (char*)"Enable or disable 2GB temporary partition (/dev_hdd1).",	(char*)"mount_hdd1");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Disable",					(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Enable",					(char*)"1");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_CACHE, (char*)STR_XC2_CACHE1,	(char*)"mount_hdd1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,					(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,					(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=mount_hdd1;
 
-		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)"BD-ROM Emulator", (char*)"Changes emulator type. System restart required to apply changes. ",	(char*)"bd_emulator");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"None",			(char*)"0");
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_EMU, (char*)STR_XC2_EMU1,	(char*)"bd_emulator");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_NONE,		(char*)"0");
 		if(bdemu2_present)
 			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Hermes",		(char*)"1");
 		else
-			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"(Unavailable)",		(char*)"1");
+			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_UNAV,	(char*)"1");
 		if(c_firmware==3.55f)
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Standard",		(char*)"2");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_STD,		(char*)"2");
 		if(c_firmware==3.41f && bd_emulator>1) bd_emulator=1;
 		xmb[2].member[xmb[2].size-1].option_selected=bd_emulator;
 
@@ -19766,15 +19778,15 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 void add_web_column()
 {
 		sprintf(xmb[9].name, "%s", xmb_columns[9]); xmb[9].first=0; xmb[9].size=0;
-		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)"Download PS3\xE2\x84\xA2 Demos and Utilities", (char*)"Browse PSX Store Website for rich content for your Playstation\xC2\xAE\x33 system",
+		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)STR_XC9_PSX, (char*)STR_XC9_PSX1,
 				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_globe, 128, 128, /*f_path*/(char*)"http://www.psxstore.com/", /*i_path*/(char*)"/", 0, 0);
-		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)"Download Themes", (char*)"Check for new downloadable themes",
+		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)STR_XC9_THM, (char*)STR_XC9_THM1,
 				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_theme, 128, 128, /*f_path*/(char*)"http://ps3.spiffy360.com/themes.php?category=3", /*i_path*/(char*)"/", 0, 0);
-		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)"Visit multiMAN Forum", (char*)"Browse psx-scene thread for multiMAN discussions",
+		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)STR_XC9_HOME, (char*)STR_XC9_HOME1,
 				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb[1].data, 128, 128, /*f_path*/(char*)"http://psx-scene.com/forums/f187/multiman-multifunctional-tool-your-ps3-game-manager-file-manager-ftp-avchd-bdmv-72826/", /*i_path*/(char*)"/", 0, 0);
-		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)"View Online User Guide", (char*)"Browse to GBATemp website for beginner's guide to multiMAN",
+		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)STR_XC9_HELP, (char*)STR_XC9_HELP1,
 				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb[9].data, 128, 128, /*f_path*/(char*)"http://gbatemp.net/t291170-multiman-beginner-s-guide", /*i_path*/(char*)"/", 0, 0);
-		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)"Support multiMAN Development", (char*)"Find how to contribute to multiMAN development",
+		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)STR_XC9_SUPP, (char*)STR_XC9_SUPP1,
 				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_help, 128, 128, /*f_path*/(char*)"http://www.google.com/search?q=donate+for+multiMAN", /*i_path*/(char*)"/", 0, 0);
 
 }
