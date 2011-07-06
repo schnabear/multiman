@@ -319,7 +319,7 @@ static unsigned char s_pNoSplit1	[]	= "You cannot launch games with split big fi
 static unsigned char s_pNoSplit2	[]	= "You cannot launch games with split big files!\n\nTransfer the game to internal HDD and try again\nor use [Hermes] option for BD-Emulator type in SETTINGS XMMB column\nand restart your PS3\xE2\x84\xA2 system.";
 static unsigned char s_pNoSplit3	[]	= "You cannot launch games with split big files!\n\nTransfer the game to internal HDD and try again\nor enable [Verify USB Games] option in SETTINGS XMMB column\nand restart your PS3\xE2\x84\xA2 system.";
 
-static unsigned char s_pVerifying	[]	= "Verifying game data, please wait...";
+static unsigned char s_pVerifying	[]	= "Verifying data, please wait...";
 static unsigned char s_pCanceled	[]	= "Operation failed or canceled.";
 
 static unsigned char s_pNotSupported[]	= "Your current configuration doesn't support this function!";
@@ -614,6 +614,25 @@ static unsigned char s_pXC9_463	[]	= "Browse to GBATemp website for beginner's g
 
 static unsigned char s_pXC9_464	[]	= "Support multiMAN Development";
 static unsigned char s_pXC9_465	[]	= "Find how to contribute to multiMAN development";
+
+static unsigned char s_pCopy13	[]	= "Installed %.0f of %.0f MB. Remaining: %i:%2.2i min";
+static unsigned char s_pCopy14	[]	= "Files linked: %i. Elapsed time: %i:%2.2i min";
+static unsigned char s_pCopy15	[]	= "Files linked: %i/%i. Remaining: %i:%2.2i min";
+static unsigned char s_pCopy16	[]	= "Copied %.0f MB (%i of %i files). Elapsed: %2.2i:%2.2i min";
+static unsigned char s_pCopy17	[]	= "Copied %.0f / %.0f MB (%i/%i) Remaining: %i:%2.2i min";
+static unsigned char s_pCopy18	[]	= "Copied %1.2f of %1.2f MB. Remaining: %i:%2.2i min";
+static unsigned char s_pCopy19	[]	= "Copied %1.2fMB. Elapsed time: %i:%2.2i min";
+
+static unsigned char s_pGMDISC	[]	= "Game disc";
+static unsigned char s_pGMINT	[]	= "Internal";
+static unsigned char s_pGMEXT	[]	= "External";
+
+static unsigned char s_pGMDB	[]	= "Direct boot";
+static unsigned char s_pGMBDM	[]	= "BD mirror";
+static unsigned char s_pGMEXTGD	[]	= "Ext Game Data";
+static unsigned char s_pGMFAV	[]	= "Favorite";
+static unsigned char s_pGMUSBP	[]	= "USB patch";
+
 
 
 static MMString s_MMStringDef[] = {
@@ -1146,6 +1165,25 @@ static MMString s_MMStringDef[] = {
   { sizeof ( s_pXC9_463		) - 1, s_pXC9_463		},
   { sizeof ( s_pXC9_464		) - 1, s_pXC9_464		},
   { sizeof ( s_pXC9_465		) - 1, s_pXC9_465		},
+
+  { sizeof ( s_pCopy13		) - 1, s_pCopy13		}, //466
+  { sizeof ( s_pCopy14		) - 1, s_pCopy14		},
+  { sizeof ( s_pCopy15		) - 1, s_pCopy15		},
+  { sizeof ( s_pCopy16		) - 1, s_pCopy16		},
+  { sizeof ( s_pCopy17		) - 1, s_pCopy17		}, //470
+  { sizeof ( s_pCopy18		) - 1, s_pCopy18		},
+  { sizeof ( s_pCopy19		) - 1, s_pCopy19		},
+
+  { sizeof ( s_pGMDISC		) - 1, s_pGMDISC		}, //473
+  { sizeof ( s_pGMINT		) - 1, s_pGMINT			},
+  { sizeof ( s_pGMEXT		) - 1, s_pGMEXT			},
+  { sizeof ( s_pGMDB		) - 1, s_pGMDB			},
+  { sizeof ( s_pGMBDM		) - 1, s_pGMBDM			},
+  { sizeof ( s_pGMEXTGD		) - 1, s_pGMEXTGD		},
+  { sizeof ( s_pGMFAV		) - 1, s_pGMFAV			},
+  { sizeof ( s_pGMUSBP		) - 1, s_pGMUSBP		}, //480
+
+
 
  /*,
 

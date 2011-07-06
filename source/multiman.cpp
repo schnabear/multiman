@@ -1004,30 +1004,30 @@ typedef struct {
 
 #define MAX_LOCALES	25
 static _locales locales[] = {
-	{	0,	4,	 "EN",	"English",		"English"		},
-	{	1,	4,	 "BG",	"Bulgarian",	"Български"		},
-	{	2,	16,	 "RO",	"Romanian",		"Română"		},
-	{	3,	16,	 "TR",	"Turkish",		"Türkçe"		},
-	{   4,	16,	 "GR",	"Greek",		"Ελληνικά"		},
-	{   5,	16,	 "PL",	"Polish",		"Polski"		},
-	{	6,	4,	 "RU",	"Russian",		"Русский"		},
-	{   7,	4,	 "UA",	"Ukrainian",	"Українська"	},
-	{   8,	16,	 "HU",	"Hungarian",	"Magyar"		},
-	{	9,	4,	 "ES",	"Spanish",		"Español"		},
-	{  10,	4,	 "DE",	"German",		"Deutsch"		},
-	{  11,	4,	 "FR",	"French",		"Français"		},
-	{  12,	4,	 "IT",	"Italian",		"Italiano"		},
-	{  13,	4,	 "NL",	"Dutch",		"Nederlands"	},
-	{  14,	4,	 "DK",	"Danish",		"Dansk"			},
-	{  15,	4,	 "FI",	"Finnish",		"Suomi"			},
-	{  16,	4,	 "SE",	"Swedish",		"Svenska"		},
-	{  17,	4,	 "BR",	"Brazilian",	"Português BR"	},
-	{  18,	4,	 "PR",	"Portuguese",	"Português"		},
-	{  19,	4,	 "MY",	"Malaysian",	"Melayu"		},
-	{  20,	4,	 "CN",	"Chinese (S)",	"简体中文"		},
-	{  21,	4,	 "CT",	"Chinese (T)",	"繁体中文"		},
-	{  22,	16,	 "AR",	"Arabic",		"ﺔﻴﺑﺮﻌﻟا"		},
-	{  23,	16,	 "PE",	"Persian",		"پارسی"			},
+	{	0,	4,	 "EN",	"English",		"English"		}, // Dean
+	{	1,	4,	 "BG",	"Bulgarian",	"Български"		}, // Dean
+	{	2,	16,	 "RO",	"Romanian",		"Română"		}, // MihaiOlimpiu
+	{	3,	16,	 "TR",	"Turkish",		"Türkçe"		}, // ozayturay
+	{   4,	16,	 "GR",	"Greek",		"Ελληνικά"		}, // Nick97_Olympiak
+	{   5,	16,	 "PL",	"Polish",		"Polski"		}, // djtom
+	{	6,	4,	 "RU",	"Russian",		"Русский"		}, // pvc1
+	{   7,	4,	 "UA",	"Ukrainian",	"Українська"	}, // sanya007
+	{   8,	16,	 "HU",	"Hungarian",	"Magyar"		}, // Lajos Szalay
+	{	9,	4,	 "ES",	"Spanish",		"Español"		}, // Nathan_r32_69, aldostools
+	{  10,	4,	 "DE",	"German",		"Deutsch"		}, // flip
+	{  11,	4,	 "FR",	"French",		"Français"		}, // Guilouz
+	{  12,	4,	 "IT",	"Italian",		"Italiano"		}, // m0h
+	{  13,	4,	 "NL",	"Dutch",		"Nederlands"	}, // ???
+	{  14,	4,	 "DK",	"Danish",		"Dansk"			}, // RobinCecil
+	{  15,	4,	 "FI",	"Finnish",		"Suomi"			}, // Jeggu
+	{  16,	4,	 "SE",	"Swedish",		"Svenska"		}, // dlanor
+	{  17,	4,	 "BR",	"Brazilian",	"Português BR"	}, // pontogames, asapreta
+	{  18,	4,	 "PR",	"Portuguese",	"Português"		}, // kgb, NuclearAqua
+	{  19,	4,	 "EL",	"Spanish Latin","Español Latino"}, // tupac4u
+	{  20,	4,	 "CN",	"Chinese (S)",	"简体中文"		}, // Lucky-star
+	{  21,	4,	 "CT",	"Chinese (T)",	"繁体中文"		}, // Lucky-star
+	{  22,	16,	 "AR",	"Arabic",		"ﺔﻴﺑﺮﻌﻟا"		}, // ???
+	{  23,	16,	 "PE",	"Persian",		"ﻰﺳﺭﺎﭘ"			}, // ASTeam  پارسی  پارسی  یسراپ
 	{  24,	16,	 "XX",	"Other",		"Other"			}
 };
 
@@ -7844,19 +7844,19 @@ gs_cover:
 	if(is_game)
 	{
 		if(is_locked) dev_color=0xc0808080;
-		print_label_ex( (225.f/1920.f), ((top_o+657.f)/1080.f), 1.5f, dev_color, (char*)"Game disc", 1.00f, 0.00f, 15, 0.4f, 0.5f, 2);
-		print_label_ex( (225.f/1920.f), ((top_o+697.f)/1080.f), 1.5f, dev_color, (char*)"Internal", 1.00f, 0.00f, 15, 0.4f, 0.5f, 2);
-		print_label_ex( (225.f/1920.f), ((top_o+737.f)/1080.f), 1.5f, dev_color, (char*)"External", 1.00f, 0.00f, 15, 0.4f, 0.5f, 2);
+		print_label_ex( (225.f/1920.f), ((top_o+657.f)/1080.f), 1.5f, dev_color, (char*)STR_GM_DISC, 1.00f, 0.00f, _menu_font, 0.4f, y_scale, 2);
+		print_label_ex( (225.f/1920.f), ((top_o+697.f)/1080.f), 1.5f, dev_color, (char*)STR_GM_INT, 1.00f, 0.00f, _menu_font, 0.4f, y_scale, 2);
+		print_label_ex( (225.f/1920.f), ((top_o+737.f)/1080.f), 1.5f, dev_color, (char*)STR_GM_EXT, 1.00f, 0.00f, _menu_font, 0.4f, y_scale, 2);
 
-		print_label_ex( (620.f/1920.f), ((top_o+660.f)/1080.f), 1.5f, dev_color, (char*)"Direct boot", 1.00f, 0.00f, 15, 0.4f, 0.5f, 0);
-		print_label_ex( (620.f/1920.f), ((top_o+700.f)/1080.f), 1.5f, dev_color, (char*)"BD mirror", 1.00f, 0.00f, 15, 0.4f, 0.5f, 0);
+		print_label_ex( (620.f/1920.f), ((top_o+660.f)/1080.f), 1.5f, dev_color, (char*)STR_GM_DB, 1.00f, 0.00f, _menu_font, 0.4f, y_scale, 0);
+		print_label_ex( (620.f/1920.f), ((top_o+700.f)/1080.f), 1.5f, dev_color, (char*)STR_GM_BDM, 1.00f, 0.00f, _menu_font, 0.4f, y_scale, 0);
 		if(payload!=1) dev_color=0xc0808080;
-		print_label_ex( (620.f/1920.f), ((top_o+780.f)/1080.f), 1.5f, dev_color, (char*)"Ext Game Data", 1.00f, 0.00f, 15, 0.4f, 0.5f, 0);dev_color=0xffe0e0e0;
-		print_label_ex( (620.f/1920.f), ((top_o+820.f)/1080.f), 1.5f, dev_color, (char*)"Favorite", 1.00f, 0.00f, 15, 0.4f, 0.5f, 0);
+		print_label_ex( (620.f/1920.f), ((top_o+780.f)/1080.f), 1.5f, dev_color, (char*)STR_GM_EXTGD, 1.00f, 0.00f, _menu_font, 0.4f, y_scale, 0);dev_color=0xffe0e0e0;
+		print_label_ex( (620.f/1920.f), ((top_o+820.f)/1080.f), 1.5f, dev_color, (char*)STR_GM_FAV, 1.00f, 0.00f, _menu_font, 0.4f, y_scale, 0);
 		if(c_firmware!=3.41) dev_color=0xc0808080;
-		print_label_ex( (620.f/1920.f), ((top_o+740.f)/1080.f), 1.5f, dev_color, (char*)"USB patch", 1.00f, 0.00f, 15, 0.4f, 0.5f, 0);
+		print_label_ex( (620.f/1920.f), ((top_o+740.f)/1080.f), 1.5f, dev_color, (char*)STR_GM_USBP, 1.00f, 0.00f, _menu_font, 0.4f, y_scale, 0);
 	}
-
+	flush_ttf(text_FONT, 1920, 1080);
 	time ( &rawtime ); timeinfo = localtime ( &rawtime );
 
 	if(date_format==0)	sprintf(label,"%d/%d %s:%02d", timeinfo->tm_mday, timeinfo->tm_mon+1, tmhour(timeinfo->tm_hour), timeinfo->tm_min);
@@ -10797,23 +10797,23 @@ if(lastINC3>0 || (time(NULL)-seconds2)!=0 || use_symlinks==1)
 {
 
 	if(join_copy==1)
-		sprintf(string1,"Installed %.0f of %.0f MB. Remaining: %i:%2.2i min", ((double) global_device_bytes)/(1024.0*1024.0),((double) copy_global_bytes)/(1024.0*1024.0), (eta/60), eta % 60);
+		sprintf(string1, (const char*) STR_COPY13, ((double) global_device_bytes)/(1024.0*1024.0),((double) copy_global_bytes)/(1024.0*1024.0), (eta/60), eta % 60);
 
 	else
 	{
 		if(use_symlinks==1)
 		{
 			if(no_real_progress==1)
-				sprintf(string1,"Files linked: %i. Elapsed time: %i:%2.2i min", file_counter, (seconds/60), seconds % 60);
+				sprintf(string1, (const char*) STR_COPY14, file_counter, (seconds/60), seconds % 60);
 			else
-				sprintf(string1,"Files linked: %i/%i. Remaining: %i:%2.2i min", file_counter, copy_file_counter, (eta/60), eta % 60);
+				sprintf(string1, (const char*) STR_COPY15, file_counter, copy_file_counter, (eta/60), eta % 60);
 		}
 		else
 		{
 			if(no_real_progress==1)
-				sprintf(string1,"Copied %.0f MB (%i of %i files). Elapsed: %2.2i:%2.2i min",((double) global_device_bytes)/(1024.0*1024.0), file_counter+1, copy_file_counter, (seconds/60), seconds % 60);
+				sprintf(string1, (const char*) STR_COPY16,((double) global_device_bytes)/(1024.0*1024.0), file_counter+1, copy_file_counter, (seconds/60), seconds % 60);
 			else
-				sprintf(string1,"Copied %.0f / %.0f MB (%i/%i) Remaining: %i:%2.2i min", ((double) global_device_bytes)/(1024.0*1024.0),((double) copy_global_bytes)/(1024.0*1024.0), file_counter+1, copy_file_counter, (eta/60), eta % 60);
+				sprintf(string1, (const char*) STR_COPY17, ((double) global_device_bytes)/(1024.0*1024.0),((double) copy_global_bytes)/(1024.0*1024.0), file_counter+1, copy_file_counter, (eta/60), eta % 60);
 		}
 	}
 	ClearSurface();
@@ -11018,7 +11018,7 @@ if( ( ( ((int)(global_device_bytes*100ULL/copy_global_bytes)) - lastINC2)>0 || (
 {
 //	sprintf(string1,"%1.3f of %1.3f MB copied (elapsed: %2.2i:%2.2i:%2.2i) Remaining: %imin %2.2isec",((double) global_device_bytes)/(1024.0*1024.0),((double) copy_global_bytes)/(1024.0*1024.0), seconds/3600, (seconds/60) % 60, seconds % 60, (eta/60), eta % 60);
 
-	sprintf(string1,"Copied %1.2f of %1.2f MB. Remaining: %i:%2.2i min",((double) global_device_bytes)/(1024.0*1024.0),((double) copy_global_bytes)/(1024.0*1024.0), (eta/60), eta % 60);
+	sprintf(string1, (const char*) STR_COPY18,((double) global_device_bytes)/(1024.0*1024.0),((double) copy_global_bytes)/(1024.0*1024.0), (eta/60), eta % 60);
 
 
 	cellMsgDialogProgressBarSetMsg(
@@ -11598,9 +11598,9 @@ static int _my_game_copy_pfsm(char *path, char *path2)
 				{
 					if(no_real_progress==1)
 						//sprintf(string1,"Copied %1.2f MB (file %i). Elapsed: %i %2.2i min",((double) global_device_bytes)/(1024.0*1024.0), file_counter, (seconds/60), seconds % 60);
-						sprintf(string1,"Copied %.0f MB (%i of %i files). Elapsed: %i:%2.2i min",((double) global_device_bytes)/(1024.0*1024.0), file_counter, copy_file_counter, (seconds/60), seconds % 60);
+						sprintf(string1, (const char*) STR_COPY16,((double) global_device_bytes)/(1024.0*1024.0), file_counter, copy_file_counter, (seconds/60), seconds % 60);
 					else
-						sprintf(string1,"Copied %1.2f of %1.2f MB. Remaining: %i:%2.2i min",((double) global_device_bytes)/(1024.0*1024.0),((double) copy_global_bytes)/(1024.0*1024.0), (eta/60), eta % 60);
+						sprintf(string1, (const char*) STR_COPY18,((double) global_device_bytes)/(1024.0*1024.0),((double) copy_global_bytes)/(1024.0*1024.0), (eta/60), eta % 60);
 
 					cellMsgDialogProgressBarSetMsg(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE, string1);
 
@@ -11866,7 +11866,7 @@ int my_game_copy(char *path, char *path2)
 	disable_sc36();
 	char string1[1024];
 	if(progress_bar==1) {
-		dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, "Verifying source data, please wait...", dialog_fun2, (void*)0x0000aaab, NULL );
+		dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, (const char*) STR_VERIFYING, dialog_fun2, (void*)0x0000aaab, NULL );
 		flipc(60);
 
 
@@ -12172,9 +12172,9 @@ if( ( ((int)(global_device_bytes*100ULL/copy_global_bytes)) - lastINC2)>0)
 if(lastINC3>0 || (time(NULL)-seconds2)!=0 )
 {
 	if(no_real_progress==1)
-		sprintf(string1,"Copied %1.2fMB. Elapsed time: %i:%2.2i min",((double) global_device_bytes)/(1024.0*1024.0), (seconds/60), seconds % 60);
+		sprintf(string1, (const char*) STR_COPY19,((double) global_device_bytes)/(1024.0*1024.0), (seconds/60), seconds % 60);
 	else
-		sprintf(string1,"Copied %1.2f of %1.2f MB. Remaining: %i:%2.2i min",((double) global_device_bytes)/(1024.0*1024.0),((double) copy_global_bytes)/(1024.0*1024.0), (eta/60), eta % 60);
+		sprintf(string1, (const char*) STR_COPY18,((double) global_device_bytes)/(1024.0*1024.0),((double) copy_global_bytes)/(1024.0*1024.0), (eta/60), eta % 60);
 
 	cellMsgDialogProgressBarSetMsg(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE, string1);
 
@@ -16680,6 +16680,7 @@ int select_language()
 		xmb_info_drawn=0;
 
 		add_home_column();
+
 		add_web_column();
 		mod_xmb_member(xmb[6].member, 0, (char*)STR_XC1_REFRESH, (char*)STR_XC1_REFRESH2);
 		mod_xmb_member(xmb[8].member, 0, (char*)STR_XC1_REFRESH, (char*)STR_XC1_REFRESH3);
@@ -19323,8 +19324,8 @@ void add_settings_column()
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_FILTER, (char*)STR_XC2_FILTER1,	(char*)"display_mode");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,					(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"PS3\xE2\x84\xA2 titles only",		(char*)"1");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"AVCHD\xE2\x84\xA2 titles only",		(char*)"2");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"PS3\xE2\x84\xA2",					(char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"AVCHD\xE2\x84\xA2",				(char*)"2");
 		xmb[2].member[xmb[2].size-1].option_selected=display_mode;
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_CLEAN, (char*)STR_XC2_CLEAN1, (char*)"clear_activity_logs");
@@ -23851,8 +23852,8 @@ xmb_pin_ok2:
 
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "lock_fileman"))
 			{
-				if(lock_fileman) sprintf(xmb[1].member[1].name, "%s", "File Manager (Disabled)");
-				else sprintf(xmb[1].member[1].name, "%s", "File Manager");
+				if(lock_fileman) sprintf(xmb[1].member[1].name, "%s", STR_XC1_FILEMAN0);
+				else sprintf(xmb[1].member[1].name, "%s", STR_XC1_FILEMAN);
 				for(int n=0; n<MAX_XMB_TEXTS; n++)
 				{
 					xmb_txt_buf[n].used=0;

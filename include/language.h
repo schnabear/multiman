@@ -565,7 +565,26 @@ extern MMString g_MMString [];
 #define	STR_XC9_SUPP		MM_STRING( 464 )
 #define	STR_XC9_SUPP1		MM_STRING( 465 )
 
-#define	STR_LAST_ID 466
+#define STR_COPY13			MM_STRING( 466 )
+#define STR_COPY14			MM_STRING( 467 )
+#define STR_COPY15			MM_STRING( 468 )
+#define STR_COPY16			MM_STRING( 469 )
+#define STR_COPY17			MM_STRING( 470 )
+#define STR_COPY18			MM_STRING( 471 )
+#define STR_COPY19			MM_STRING( 472 )
+
+#define STR_GM_DISC			MM_STRING( 473 )
+#define STR_GM_INT			MM_STRING( 474 )
+#define STR_GM_EXT			MM_STRING( 475 )
+
+#define STR_GM_DB			MM_STRING( 476 )
+#define STR_GM_BDM			MM_STRING( 477 )
+#define STR_GM_EXTGD		MM_STRING( 478 )
+#define STR_GM_FAV			MM_STRING( 479 )
+#define STR_GM_USBP			MM_STRING( 480 )
+
+
+#define	STR_LAST_ID 481
 
 // ***********************************************************************************
 
