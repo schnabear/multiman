@@ -1017,20 +1017,20 @@ static _locales locales[] = {
 	{  10,	4,	 "DE",	"German",		"Deutsch"		}, // flip
 	{  11,	4,	 "FR",	"French",		"Français"		}, // Guilouz
 	{  12,	4,	 "IT",	"Italian",		"Italiano"		}, // m0h
-	{  13,	4,	 "NL",	"Dutch",		"Nederlands"	}, // ???
+	{  13,	16,	 "WE",	"Welsh",		"Cymraeg"		}, // bropesda
+//	{  13,	4,	 "NL",	"Dutch",		"Nederlands"	}, // ??? (removed)
 	{  14,	4,	 "DK",	"Danish",		"Dansk"			}, // RobinCecil
 	{  15,	4,	 "FI",	"Finnish",		"Suomi"			}, // Jeggu
 	{  16,	4,	 "SE",	"Swedish",		"Svenska"		}, // dlanor
-	{  17,	4,	 "BR",	"Brazilian",	"Português BR"	}, // pontogames, asapreta
+	{  17,	4,	 "BR",	"Brazilian",	"Português BR"	}, // kgb, NuclearAqua, pontogames, asapreta
 	{  18,	4,	 "PR",	"Portuguese",	"Português"		}, // kgb, NuclearAqua
 	{  19,	4,	 "EL",	"Spanish Latin","Español Latino"}, // pyns, aldostools
 	{  20,	4,	 "CN",	"Chinese (S)",	"简体中文"		}, // Lucky-star
 	{  21,	4,	 "CT",	"Chinese (T)",	"正體中文"		}, // Lucky-star
-	{  22,	16,	 "AR",	"Arabic",		"ﺔﻴﺑﺮﻌﻟا"		}, // ???
+	{  22,	16,	 "AR",	"Arabic",		"ﺔﻴﺑﺮﻌﻟا"		}, // ??? (will be removed in next update)
 	{  23,	16,	 "PE",	"Persian",		"ﻰﺳﺭﺎﭘ"			}, // ASTeam
 	{  24,	16,	 "XX",	"Other",		"Other"			}
 };
-
 
 uint8_t padLYstick=0, padLXstick=0, padRYstick=0, padRXstick=0;
 
@@ -23890,7 +23890,7 @@ xmb_pin_ok2:
 					xmb[2].member[xmb[2].first].option_selected=0;
 
 				dialog_ret=0;
-				cellMsgDialogOpen2( type_dialog_ok, "Selected option is not available.\n\nERROR: Incorrect BDEMU version!", dialog_fun2, (void*)0x0000aaab, NULL );
+				cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_BDEMU1, dialog_fun2, (void*)0x0000aaab, NULL );
 				wait_dialog();
 
 			}
