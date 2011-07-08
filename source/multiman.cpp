@@ -1018,17 +1018,17 @@ static _locales locales[] = {
 	{  11,	4,	 "FR",	"French",		"Français"		}, // Guilouz
 	{  12,	4,	 "IT",	"Italian",		"Italiano"		}, // m0h
 	{  13,	16,	 "WE",	"Welsh",		"Cymraeg"		}, // bropesda
-//	{  13,	4,	 "NL",	"Dutch",		"Nederlands"	}, // ??? (removed)
 	{  14,	4,	 "DK",	"Danish",		"Dansk"			}, // RobinCecil
 	{  15,	4,	 "FI",	"Finnish",		"Suomi"			}, // Jeggu
 	{  16,	4,	 "SE",	"Swedish",		"Svenska"		}, // dlanor
 	{  17,	4,	 "BR",	"Brazilian",	"Português BR"	}, // kgb, NuclearAqua, pontogames, asapreta
 	{  18,	4,	 "PR",	"Portuguese",	"Português"		}, // kgb, NuclearAqua
-	{  19,	4,	 "EL",	"Spanish Latin","Español Latino"}, // pyns, aldostools
+	{  19,	4,	 "EL",	"Spanish Latin","Español Latino"}, // tupac4u, pyns, aldostools
 	{  20,	4,	 "CN",	"Chinese (S)",	"简体中文"		}, // Lucky-star
 	{  21,	4,	 "CT",	"Chinese (T)",	"正體中文"		}, // Lucky-star
 	{  22,	16,	 "AR",	"Arabic",		"ﺔﻴﺑﺮﻌﻟا"		}, // ??? (will be removed in next update)
 	{  23,	16,	 "PE",	"Persian",		"ﻰﺳﺭﺎﭘ"			}, // ASTeam
+//	{  24,	4,	 "NL",	"Dutch",		"Nederlands"	}, // ??? (removed)
 	{  24,	16,	 "XX",	"Other",		"Other"			}
 };
 

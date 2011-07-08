@@ -68,7 +68,7 @@ static unsigned char s_pDownTheme	[]	= "Downloading theme, please wait!";
 
 static unsigned char s_pDownMSG0	[]	= "\nDownloaded %.1f of %.3f MB. Remaining: %imin %2.2isec (/\\ to cancel)\nSave path: %s";
 static unsigned char s_pDownMSG1	[]	= "Downloaded %1.2f of %1.2f KB. Remaining: %imin %2.2isec\n\nPress /\\ to cancel download";
-static unsigned char s_pDownMSG2	[]	= "Downloaded %1.2f of %1.2f KB. Remaining: %imin %2.2isec";
+static unsigned char s_pDownMSG2	[]	= "Downloaded %.0f of %.0f KB. Remaining: %i:%2.2i min";
 
 static unsigned char s_pParamVer	[]	= "Game requires PS3 firmware version %.2f.\n\nDo you want to change PARAM.SFO version to %.2f?";
 
@@ -620,8 +620,8 @@ static unsigned char s_pCopy14	[]	= "Files linked: %i. Elapsed time: %i:%2.2i mi
 static unsigned char s_pCopy15	[]	= "Files linked: %i/%i. Remaining: %i:%2.2i min";
 static unsigned char s_pCopy16	[]	= "Copied %.0f MB (%i of %i files). Elapsed: %2.2i:%2.2i min";
 static unsigned char s_pCopy17	[]	= "Copied %.0f / %.0f MB (%i/%i) Remaining: %i:%2.2i min";
-static unsigned char s_pCopy18	[]	= "Copied %1.2f of %1.2f MB. Remaining: %i:%2.2i min";
-static unsigned char s_pCopy19	[]	= "Copied %1.2fMB. Elapsed time: %i:%2.2i min";
+static unsigned char s_pCopy18	[]	= "Copied %.0f of %.0f MB. Remaining: %i:%2.2i min";
+static unsigned char s_pCopy19	[]	= "Copied %.0fMB. Elapsed time: %i:%2.2i min";
 
 static unsigned char s_pGMDISC	[]	= "Game disc";
 static unsigned char s_pGMINT	[]	= "Internal";
@@ -1174,19 +1174,18 @@ static MMString s_MMStringDef[] = {
   { sizeof ( s_pCopy18		) - 1, s_pCopy18		},
   { sizeof ( s_pCopy19		) - 1, s_pCopy19		},
 
+// Game Settings screen
   { sizeof ( s_pGMDISC		) - 1, s_pGMDISC		}, //473
   { sizeof ( s_pGMINT		) - 1, s_pGMINT			},
   { sizeof ( s_pGMEXT		) - 1, s_pGMEXT			},
+
   { sizeof ( s_pGMDB		) - 1, s_pGMDB			},
   { sizeof ( s_pGMBDM		) - 1, s_pGMBDM			},
   { sizeof ( s_pGMEXTGD		) - 1, s_pGMEXTGD		},
   { sizeof ( s_pGMFAV		) - 1, s_pGMFAV			},
   { sizeof ( s_pGMUSBP		) - 1, s_pGMUSBP		}, //480
 
-
-
- /*,
-
+/*,
 
  { sizeof ( s_p	) - 1, s_p		},
  { sizeof ( s_p	) - 1, s_p		},
