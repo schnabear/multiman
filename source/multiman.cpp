@@ -569,11 +569,11 @@ static int unload_modules();
 void draw_text_stroke(float x, float y, float size, u32 color, const char *str);
 
 #define	GAME_INI_VER	"MMGI0100" //PS3GAME.INI	game flags (submenu)
-#define	GAME_STATE_VER	"MMLS0106" //LSTAT.BIN		multiMAN last state data
-#define	GAME_LIST_VER	"MMGL0106" //LLIST.BIN		cache for game list
-#define	XMB_COL_VER		"MMXC0110" //XMBS.00x		xmb[?] structure (1 XMMB column)
+#define	GAME_STATE_VER	"MMLS0107" //LSTAT.BIN		multiMAN last state data
+#define	GAME_LIST_VER	"MMGL0107" //LLIST.BIN		cache for game list
+#define	XMB_COL_VER		"MMXC0111" //XMBS.00x		xmb[?] structure (1 XMMB column)
 
-char current_version[9]="02.01.00";
+char current_version[9]="02.02.00";
 char current_version_NULL[10];
 char versionUP[64];
 
@@ -808,7 +808,7 @@ char this_pane[256], other_pane[256];
 
 char gameID[512];
 
-#define MAX_LIST 768
+#define MAX_LIST 640
 t_menu_list menu_list[MAX_LIST];
 
 void DBPrintf( const char *string)
@@ -1002,34 +1002,37 @@ typedef struct {
 
 } _locales;
 
-#define MAX_LOCALES	25
+#define MAX_LOCALES	23
 static _locales locales[] = {
 	{	0,	4,	 "EN",	"English",		"English"		}, // Dean
 	{	1,	4,	 "BG",	"Bulgarian",	"Български"		}, // Dean
-	{	2,	16,	 "RO",	"Romanian",		"Română"		}, // MihaiOlimpiu
+	{   2,	16,	 "GR",	"Greek",		"Ελληνικά"		}, // Nick97_Olympiak
 	{	3,	16,	 "TR",	"Turkish",		"Türkçe"		}, // ozayturay
-	{   4,	16,	 "GR",	"Greek",		"Ελληνικά"		}, // Nick97_Olympiak
-	{   5,	16,	 "PL",	"Polish",		"Polski"		}, // djtom
-	{	6,	4,	 "RU",	"Russian",		"Русский"		}, // pvc1
+	{	4,	16,	 "RO",	"Romanian",		"Română"		}, // MihaiOlimpiu
+	{   5,	16,	 "PL",	"Polish",		"Polski"		}, // djtom, Bolec
+	{	6,	4,	 "RU",	"Russian",		"Русский"		}, // pvc1, thesixsouls
 	{   7,	4,	 "UA",	"Ukrainian",	"Українська"	}, // sanya007
-	{   8,	16,	 "HU",	"Hungarian",	"Magyar"		}, // Lajos Szalay
-	{	9,	4,	 "ES",	"Spanish",		"Español"		}, // Nathan_r32_69, aldostools
+	{	8,	4,	 "ES",	"Spanish",		"Español"		}, // Nathan_r32_69, aldostools
+	{   9,	4,	 "PR",	"Portuguese",	"Português"		}, // kgb, NuclearAqua
 	{  10,	4,	 "DE",	"German",		"Deutsch"		}, // flip
 	{  11,	4,	 "FR",	"French",		"Français"		}, // Guilouz
 	{  12,	4,	 "IT",	"Italian",		"Italiano"		}, // m0h
-	{  13,	16,	 "WE",	"Welsh",		"Cymraeg"		}, // bropesda
-	{  14,	4,	 "DK",	"Danish",		"Dansk"			}, // RobinCecil
+	{  13,	4,	 "SE",	"Swedish",		"Svenska"		}, // dlanor
+	{  14,	4,	 "DK",	"Danish",		"Dansk"			}, // RobinCecil, Anglia
 	{  15,	4,	 "FI",	"Finnish",		"Suomi"			}, // Jeggu
-	{  16,	4,	 "SE",	"Swedish",		"Svenska"		}, // dlanor
-	{  17,	4,	 "BR",	"Brazilian",	"Português BR"	}, // kgb, NuclearAqua, pontogames, asapreta
-	{  18,	4,	 "PR",	"Portuguese",	"Português"		}, // kgb, NuclearAqua
-	{  19,	4,	 "EL",	"Spanish Latin","Español Latino"}, // tupac4u, pyns, aldostools
-	{  20,	4,	 "CN",	"Chinese (S)",	"简体中文"		}, // Lucky-star
-	{  21,	4,	 "CT",	"Chinese (T)",	"正體中文"		}, // Lucky-star
-	{  22,	16,	 "AR",	"Arabic",		"ﺔﻴﺑﺮﻌﻟا"		}, // ??? (will be removed in next update)
-	{  23,	16,	 "PE",	"Persian",		"ﻰﺳﺭﺎﭘ"			}, // ASTeam
-//	{  24,	4,	 "NL",	"Dutch",		"Nederlands"	}, // ??? (removed)
-	{  24,	16,	 "XX",	"Other",		"Other"			}
+	{  16,	16,	 "WE",	"Welsh",		"Cymraeg"		}, // bropesda
+	{  17,	4,	 "EL",	"Spanish Latin","Español Latino"}, // tupac4u, pyns, aldostools
+	{  18,	4,	 "JP",	"Japanese",		"日本語"			}, // zch
+	{  19,	4,	 "CN",	"Chinese (S)",	"简体中文"		}, // Lucky-star
+	{  20,	4,	 "CT",	"Chinese (T)",	"正體中文"		}, // Lucky-star
+	{  21,	16,	 "PE",	"Persian",		"ﻰﺳﺭﺎﭘ"			}, // ASTeam
+	{  22,	16,	 "XX",	"Other",		"Other"			}
+
+//	{  13,	16,	 "HU",	"Hungarian",	"Magyar"		}, // Lajos Szalay
+//	{  22,	16,	 "AR",	"Arabic",		"ﺔﻴﺑﺮﻌﻟا"		}, // ???
+//	{  23,	4,	 "NL",	"Dutch",		"Nederlands"	}, // ???
+//	{  24,	4,	 "BR",	"Brazilian",	"Português BR"	}, // kgb, NuclearAqua, pontogames, asapreta
+
 };
 
 uint8_t padLYstick=0, padLXstick=0, padRYstick=0, padRXstick=0;
@@ -1091,18 +1094,18 @@ xmbthumbs xmb_icon_buf[MAX_XMB_THUMBS];
 int xmb_icon_buf_max=0;
 
 #define MAX_XMB_OPTIONS 12
-typedef struct
+typedef struct __xmbopt
 {
 //	u8 type; //0-list 1-text
 	char label[32];
 	char value[4];
 
 }
-xmbopt;
+xmbopt __attribute__((aligned(8)));
 
 //sys_addr_t vm; //pointer to virtual memory
 
-#define MAX_XMB_MEMBERS 2560
+#define MAX_XMB_MEMBERS 2304
 typedef struct __xmbmem
 {
 	u8 type; //0 unkn, 1 ps3 game, 2 AVCHD/Blu-ray video from gamelist, 3 showtime vid, 4 music, 5 photo, 6 function, 7 setting, 8 snes rom, 9 fceu rom, 10 vba rom, 11 genp rom, 12 fbanext
@@ -1152,7 +1155,7 @@ int xmb_slide_step=0;
 int xmb_slide_step_y=0;
 u8 xmb_sublevel=0;
 
-#define MAX_WWW_THEMES 128
+#define MAX_WWW_THEMES 64
 typedef struct
 {
 	u8 type;
@@ -3027,7 +3030,7 @@ int read_folder(char *path)
 		struct dirent *entry=readdir (dir);
 		if(!entry) break;
 
-		if(entry->d_name[0]=='.' && entry->d_name[1]==0) continue;
+		if(entry->d_name[0]=='.' && (entry->d_name[1]==0 || entry->d_name[1]=='_')) continue;
 		if(entry->d_name[0]=='.' && entry->d_name[1]=='.' && entry->d_name[2]==0) continue;
 
 		if((entry->d_type & DT_DIR))
@@ -9012,7 +9015,7 @@ int ps3_home_scan(char *path, t_dir_pane *list, int *max)
 		struct dirent *entry=readdir (dir);
 		if(!entry) break;
 
-		if(entry->d_name[0]=='.' && entry->d_name[1]==0) continue;
+		if(entry->d_name[0]=='.' && (entry->d_name[1]==0 || entry->d_name[1]=='_')) continue;
 		if(entry->d_name[0]=='.' && entry->d_name[1]=='.' && entry->d_name[2]==0) continue;
 		if(strstr(entry->d_name, ".MTH")!=NULL || strstr(entry->d_name, ".STH")!=NULL) continue;
 
@@ -9072,7 +9075,7 @@ int ps3_home_scan_ext(char *path, t_dir_pane *list, int *max, char *_ext)
 		struct dirent *entry=readdir (dir);
 		if(!entry) break;
 
-		if(entry->d_name[0]=='.' && entry->d_name[1]==0) continue;
+		if(entry->d_name[0]=='.' && (entry->d_name[1]==0 || entry->d_name[1]=='_')) continue;
 		if(entry->d_name[0]=='.' && entry->d_name[1]=='.' && entry->d_name[2]==0) continue;
 
 		if((entry->d_type & DT_DIR))
@@ -9121,7 +9124,7 @@ int ps3_home_scan_ext_bare(char *path, t_dir_pane_bare *list, int *max, char *_e
 		struct dirent *entry=readdir (dir);
 		if(!entry) break;
 
-		if(entry->d_name[0]=='.' && entry->d_name[1]==0) continue;
+		if(entry->d_name[0]=='.' && (entry->d_name[1]==0 || entry->d_name[1]=='_')) continue;
 		if(entry->d_name[0]=='.' && entry->d_name[1]=='.' && entry->d_name[2]==0) continue;
 
 		if((entry->d_type & DT_DIR))
@@ -9171,7 +9174,7 @@ int ps3_home_scan_bare(char *path, t_dir_pane_bare *list, int *max)
 		struct dirent *entry=readdir (dir);
 		if(!entry) break;
 
-		if(entry->d_name[0]=='.' && entry->d_name[1]==0) continue;
+		if(entry->d_name[0]=='.' && (entry->d_name[1]==0 || entry->d_name[1]=='_')) continue;
 		if(entry->d_name[0]=='.' && entry->d_name[1]=='.' && entry->d_name[2]==0) continue;
 		if(strstr(entry->d_name, ".MTH")!=NULL || strstr(entry->d_name, ".STH")!=NULL) continue;
 
@@ -9219,7 +9222,7 @@ int ps3_home_scan_bare2(char *path, t_dir_pane *list, int *max)
 		struct dirent *entry=readdir (dir);
 		if(!entry) break;
 
-		if(entry->d_name[0]=='.' && entry->d_name[1]==0) continue;
+		if(entry->d_name[0]=='.' && (entry->d_name[1]==0 || entry->d_name[1]=='_')) continue;
 		if(entry->d_name[0]=='.' && entry->d_name[1]=='.' && entry->d_name[2]==0) continue;
 		if(strstr(entry->d_name, ".MTH")!=NULL || strstr(entry->d_name, ".STH")!=NULL) continue;
 
@@ -11691,7 +11694,7 @@ static int _my_game_copy(char *path, char *path2)
 		struct dirent *entry=readdir (dir);
 		if(!entry) break;
 
-		if(entry->d_name[0]=='.' && entry->d_name[1]==0) continue;
+		if(entry->d_name[0]=='.' && (entry->d_name[1]==0 || entry->d_name[1]=='_')) continue;
 		if(entry->d_name[0]=='.' && entry->d_name[1]=='.' && entry->d_name[2]==0) continue;
 
 		if((entry->d_type & DT_DIR))
@@ -11806,7 +11809,7 @@ int my_game_test(char *path, int to_abort)
 		struct dirent *entry=readdir (dir);
 		if(!entry) break;
 
-		if(entry->d_name[0]=='.' && entry->d_name[1]==0) continue;
+		if(entry->d_name[0]=='.' && (entry->d_name[1]==0 || entry->d_name[1]=='_')) continue;
 		if(entry->d_name[0]=='.' && entry->d_name[1]=='.' && entry->d_name[2]==0) continue;
 
 		if((entry->d_type & DT_DIR))
@@ -12104,7 +12107,7 @@ static int _copy_nr(char *path, char *path2, char *path_name)
 		struct dirent *entry=readdir (dir);
 		if(!entry) break;
 
-		if(entry->d_name[0]=='.' && entry->d_name[1]==0) continue;
+		if(entry->d_name[0]=='.' && (entry->d_name[1]==0 || entry->d_name[1]=='_')) continue;
 		if(entry->d_name[0]=='.' && entry->d_name[1]=='.' && entry->d_name[2]==0) continue;
 
 		if((entry->d_type & DT_DIR))
@@ -17717,7 +17720,7 @@ void load_coverflow_legend()
 		if(!key_repeat)
 		{
 			char str[256];
-			sprintf(str, "%i of %i", xmb[6].first, xmb[6].size-1);
+			sprintf(str, (const char*)(STR_POP_1OF1)+4, xmb[6].first, xmb[6].size-1); //"%i of %i"
 			if(dir_mode==1)
 				put_label(text_bmp, 1920, 1080, (char*)menu_list[game_sel].title, (char*)str, (char*)menu_list[game_sel].path, color);
 			else
@@ -18252,6 +18255,7 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 			memcpy(text_LIST, text_LIST+1512000, 1512000);
 			max_ttf_label=0;
 			print_label_ex( 0.5f, 0.05f, 1.0f, COL_XMB_COLUMN, _caption, 1.04f, 0.0f, mui_font, 1.0f/((float)(_width/1920.f)), 1.0f/((float)(_height/1080.f)), 1);
+			if(is_lang)	flush_ttf(text_LIST, _width, _height);
 
 			for(int n=first; (n<(first+_max_entries-1) && n<_max); n++)
 			{
@@ -22919,6 +22923,7 @@ skip_find_device:
 
 
 	if ((old_pad & BUTTON_SELECT) && (new_pad & BUTTON_L3)){
+refresh_list_0:
 		reset_xmb(1);
 refresh_list:
 		new_pad=0; is_reloaded=0;
@@ -22997,7 +23002,7 @@ update_title:
 			}
 			if(ret_f==6 && net_used_ignore()) {unload_modules(); sys_process_exit(1);}
 
-			if(ret_f==7) goto refresh_list;
+			if(ret_f==7) goto refresh_list_0;
 			if( (ret_f==8 || ret_f==9)  && net_used_ignore() ) {
 				sprintf(my_mp3_file, "%s/XMB Video", app_usrdir);
 				if(!exist(my_mp3_file) || ret_f==9)
@@ -23726,7 +23731,7 @@ cancel_theme_exit:
 		{
 			if(xmb[1].first==0) force_update_check=1;
 			if(xmb[1].first==1) { if(!lock_fileman) {last_cover_mode=cover_mode; cover_mode=5; new_pad=0; goto open_file_manager;}}
-			if(xmb[1].first==2) goto refresh_list;
+			if(xmb[1].first==2) goto refresh_list_0;
 			if(xmb[1].first==3) goto switch_ntfs;
 			if(xmb[1].first==4) {screen_saver(); goto start_of_loop; }
 			if(xmb[1].first==5) select_theme();

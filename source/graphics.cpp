@@ -1,6 +1,6 @@
 #include <cell/error.h>
 #include <cell/sysmodule.h>
-#include <sysutil/sysutil_sysparam.h> 
+#include <sysutil/sysutil_sysparam.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -17,6 +17,7 @@
 #include <netex/libnetctl.h>
 
 #include "graphics.h"
+#include "language.h"
 
 #define ROUNDUP(x, a) (((x)+((a)-1))&(~((a)-1)))
 
@@ -43,7 +44,7 @@ extern u8 hide_bd;
 typedef struct
 {
 	float x, y, z;
-	u32 color; 
+	u32 color;
 } vtx_color;
 
 typedef struct {
@@ -52,7 +53,7 @@ typedef struct {
 } vtx_texture;
 
 u32 screen_width;
-u32 screen_height; 
+u32 screen_height;
 float screen_aspect;
 
 u32 color_pitch;
@@ -66,9 +67,9 @@ extern u32 _binary_fpshader_fpo_start;
 extern u32 _binary_fpshader_fpo_end;
 extern u32 video_buffer;
 
-static unsigned char *vertex_program_ptr = 
+static unsigned char *vertex_program_ptr =
 (unsigned char *)&_binary_vpshader_vpo_start;
-static unsigned char *fragment_program_ptr = 
+static unsigned char *fragment_program_ptr =
 (unsigned char *)&_binary_fpshader_fpo_start;
 
 static CGprogram vertex_program;
@@ -135,11 +136,11 @@ static CellGcmTexture text_param;
 
 static u32 local_heap = 0;
 
-static void *localAlloc(const u32 size) 
+static void *localAlloc(const u32 size)
 {
 	u32 align = (size + 1023) & (~1023);
 	u32 base = local_heap;
-	
+
 	local_heap += align;
 	return (void*)base;
 }
@@ -147,25 +148,25 @@ static void *localAlloc(const u32 size)
 static void *localAllocAlign(const u32 alignment, const u32 size)
 {
 	local_heap = (local_heap + alignment-1) & (~(alignment-1));
-	
+
 	return (void*)localAlloc(size);
 }
 
 
 void put_vertex(float x, float y, float z, u32 color)
 {
-	vertex_color[vert_indx].x = x; 
-	vertex_color[vert_indx].y = y; 
-	vertex_color[vert_indx].z = z; 
+	vertex_color[vert_indx].x = x;
+	vertex_color[vert_indx].y = y;
+	vertex_color[vert_indx].z = z;
 	vertex_color[vert_indx].color=color;
-	
+
 	vert_indx++;
 }
 
 void setRenderTarget(void)
 {
 	CellGcmSurface surface;
-	
+
 	surface.colorFormat 	 = CELL_GCM_SURFACE_A8R8G8B8;
 	surface.colorTarget		 = CELL_GCM_SURFACE_TARGET_0;
 	surface.colorLocation[0] = CELL_GCM_LOCATION_LOCAL;
@@ -211,10 +212,10 @@ void initShader(void)
 	u32 ucode_size;
 	void *ucode;
 	cellGcmCgGetUCode(fragment_program, &ucode, &ucode_size);
-	
+
 	void *ret = localAllocAlign(64, ucode_size);
 	fragment_program_ucode = ret;
-	memcpy(fragment_program_ucode, ucode, ucode_size); 
+	memcpy(fragment_program_ucode, ucode, ucode_size);
 
 	cellGcmCgGetUCode(vertex_program, &ucode, &ucode_size);
 	vertex_program_ucode = ucode;
@@ -238,7 +239,7 @@ int initDisplay(void)
 	CellVideoOutState videoState;
 
 	//cellVideoOutGetState(CELL_VIDEO_OUT_PRIMARY, 0, &videoState);
-	
+
 	ret = cellVideoOutGetState(CELL_VIDEO_OUT_PRIMARY, 0, &videoState);
 	if (ret != CELL_OK)	return -1;
 
@@ -281,13 +282,13 @@ int initDisplay(void)
 
 	CellGcmConfig config;
 	cellGcmGetConfiguration(&config);
-	
+
 	local_heap = (u32) config.localAddress;
 
 	color_base_addr = localAllocAlign(16, 2*color_size);
 	video_buffer=color_size;
 
-	for (i = 0; i < 2; i++) 
+	for (i = 0; i < 2; i++)
 		{
 		color_addr[i]= (void *)((u32)color_base_addr+ (i*color_size));
 		ret = cellGcmAddressToOffset(color_addr[i], &color_offset[i]);
@@ -295,7 +296,7 @@ int initDisplay(void)
 		ret = cellGcmSetDisplayBuffer(i, color_offset[i], color_pitch, screen_width, screen_height);
 		if(ret != CELL_OK) return -1;
 		}
-		
+
 	depth_base_addr = localAllocAlign(16, depth_size);
 	ret = cellGcmAddressToOffset(depth_base_addr, &depth_offset);
 	if(ret != CELL_OK) return -1;
@@ -384,15 +385,15 @@ int initFont()
 	CellDbgFontConfigGcm config;
 
 	int size = CELL_DBGFONT_FRAGMENT_SIZE + CELL_DBGFONT_VERTEX_SIZE * CONSOLE_WIDTH * CONSOLE_HEIGHT + CELL_DBGFONT_TEXTURE_SIZE;
-	
+
 	int ret = 0;
 
 	void*localmem = localAllocAlign(128, size);
-	if( localmem == NULL ) return -1;	
-	
+	if( localmem == NULL ) return -1;
+
 	memset(&config, 0, sizeof(CellDbgFontConfigGcm));
 
-	config.localBufAddr = (sys_addr_t)localmem; 
+	config.localBufAddr = (sys_addr_t)localmem;
 	config.localBufSize = size;
 	config.mainBufAddr = NULL;
 	config.mainBufSize  = 0;
@@ -417,7 +418,7 @@ int initConsole()
 	config.color       = 0xffA0A0A0;
 	consoleID = cellDbgFontConsoleOpen(&config);
 
-	if (consoleID < 0) return -1; 
+	if (consoleID < 0) return -1;
 
 return 0;
 }
@@ -440,7 +441,7 @@ int termConsole()
 	if(ret) return -1;
 
 	consoleID = CELL_DBGFONT_STDOUT_ID;
-	
+
 	return ret;
 }
 
@@ -449,7 +450,7 @@ int termFont()
 	int ret;
 
 	ret = cellDbgFontExitGcm();
-	
+
 	if(ret) return -1;
 
 	return ret;
@@ -460,7 +461,7 @@ int DPrintf( const char *string, ... )
 {
 	int ret=0;
 	va_list argp;
-	
+
 	va_start(argp, string);
 	if(consoleID != CELL_DBGFONT_STDOUT_ID)
 		ret = cellDbgFontConsoleVprintf(consoleID, string, argp);
@@ -476,18 +477,18 @@ u8 c;
 
 	while(*ch!=0 && len>0){
 
-	// 3, 4 bytes utf-8 code 
+	// 3, 4 bytes utf-8 code
 	if(((*ch & 0xF1)==0xF0 || (*ch & 0xF0)==0xe0) && (*(ch+1) & 0xc0)==0x80){
 
 	*ansi++=' '; // ignore
 	len--;
 	ch+=2+1*((*ch & 0xF1)==0xF0);
-	
+
 	}
-	else 
-	// 2 bytes utf-8 code	
+	else
+	// 2 bytes utf-8 code
 	if((*ch & 0xE0)==0xc0 && (*(ch+1) & 0xc0)==0x80){
-	
+
 	c= (((*ch & 3)<<6) | (*(ch+1) & 63));
 
 	if(c>=0xC0 && c<=0xC5) c='A';
@@ -513,14 +514,14 @@ u8 c;
 	*ansi++=c;
 	len--;
 	ch++;
-	
+
 	}
 	else {
-	
+
 	if(*ch<32) *ch=32;
 	if(*ch=='%') *ch='#';
 	*ansi++=*ch;
-	
+
 	len--;
 
 	}
@@ -569,13 +570,13 @@ void draw_device_list(u32 flags, int _cover_mode, int opaq, char *content)
 	if( (cover_mode<3 || cover_mode==6 || cover_mode==7 || cover_mode==4) ) goto just_legend;
 
 	for(n=0;n<16;n++)
-		{ 
+		{
 		if(th_device_list==0) break;
 		if(n==11 && hide_bd==1) continue;
 		str[0]=0;
 		ok=0;
 		if((flags>>n) & 1) ok=1;
-   
+
 		if(ok || n==12)
 
 			{
@@ -667,7 +668,7 @@ void draw_device_list(u32 flags, int _cover_mode, int opaq, char *content)
 
 			len=0.025f*(float)(strlen(str));
 			x+=len;
- 
+
 			}
 		}
 
@@ -705,12 +706,12 @@ just_legend:
 			x=0.1f;
 			max_ttf_label=0;
 			for(n=0;n<16;n++)
-				{ 
+				{
 				str[0]=0;
 				ok=0;
 				if(n==11 && hide_bd==1) continue;
 				if((flags>>n) & 1) ok=1;
-		   
+
 				if(ok || n==12)
 
 					{
@@ -802,7 +803,7 @@ just_legend:
 
 					len=0.11f;
 					x+=len;
-		 
+
 					}
 				}
 				flush_ttf(text_bmp, 1920, 1080);
@@ -813,7 +814,7 @@ just_legend:
 
 }
 
-		
+
 
 void draw_list( t_menu_list *menu, int menu_size, int selected, int dir_mode, int display_mode, int _cover_mode, int game_sel_last, int opaq )
 {
@@ -841,7 +842,7 @@ void draw_list( t_menu_list *menu, int menu_size, int selected, int dir_mode, in
 		if(grey && menu[selected].title[0]=='_')
 			{utf8_to_ansi(menu[selected].title+1, ansi, 60);}
 		else
-			{utf8_to_ansi(menu[selected].title, ansi, 60);}	
+			{utf8_to_ansi(menu[selected].title, ansi, 60);}
 		ansi[60]=0;
 		color= (flagb && selected==0)? COL_PS3DISC : ((grey==0) ?  COL_PS3 : COL_SPLIT);
 		if(strstr(menu[selected].content,"AVCHD")!=NULL) color=COL_AVCHD;
@@ -854,8 +855,8 @@ void draw_list( t_menu_list *menu, int menu_size, int selected, int dir_mode, in
 		else
 			sprintf(str, "%s", ansi);
 		len=(0.023f*(float)(strlen(str)))/2;
-		sprintf(str, "%i of %i", selected+1, menu_size);
-		
+		sprintf(str, (const char*)(STR_POP_1OF1)+4, selected+1, menu_size); //"%i of %i"
+
 		if(cover_mode==4)
 //			draw_text_stroke( 0.5f-(float)(len/2), 0.71f, 0.88f, color, str);
 //		else
@@ -920,18 +921,18 @@ void draw_list( t_menu_list *menu, int menu_size, int selected, int dir_mode, in
 			{
 				game_rel=int(selected/8)*8;
 				c_game= selected-(game_rel);
-				if(c_game<4) 
+				if(c_game<4)
 				{
 					c_y=64;
 					c_x= 150 + (433*c_game);
-				
+
 				}
-				else 
+				else
 				{
 					c_y=430;
 					c_x= 150 + (433*(c_game-4));
 				}
-				if(menu[selected].cover!=1) 
+				if(menu[selected].cover!=1)
 				{
 					c_y+=124;
 					c_w=320;
@@ -949,30 +950,30 @@ void draw_list( t_menu_list *menu, int menu_size, int selected, int dir_mode, in
 			{
 				game_rel=int(selected/32)*32;
 				c_game= selected-(game_rel);
-				if(c_game<8) 
+				if(c_game<8)
 				{
 					c_y=62;
 					c_x= 118 + (int)(216.5f*c_game);
 				}
 
-				if(c_game>7 && c_game<16) 
+				if(c_game>7 && c_game<16)
 				{
 					c_y=240;
 					c_x= 118 + (int)(216.5f*(c_game-8));
 				}
 
-				if(c_game>15 && c_game<24) 
+				if(c_game>15 && c_game<24)
 				{
 					c_y=418;
 					c_x= 118 + (int)(216.5f*(c_game-16));
 				}
 
-				if(c_game>23 && c_game<32) 
+				if(c_game>23 && c_game<32)
 				{
 					c_y=596;
 					c_x= 118 + (int)(216.5f*(c_game-24));
 				}
-				if(menu[selected].cover!=1) 
+				if(menu[selected].cover!=1)
 				{
 					c_y+=62;
 					c_w=160;
@@ -1019,7 +1020,7 @@ void draw_list( t_menu_list *menu, int menu_size, int selected, int dir_mode, in
 
 
 
-	while( (c<max_entries && i < menu_size) ) 
+	while( (c<max_entries && i < menu_size) )
 	{
 
 		if( (display_mode==1 && strstr(menu[i].content,"AVCHD")!=NULL) || (display_mode==2 && strstr(menu[i].content,"PS3")!=NULL) ) { i++; continue;}
@@ -1051,7 +1052,7 @@ void draw_list( t_menu_list *menu, int menu_size, int selected, int dir_mode, in
 			{
 			sprintf(str, " ");
 			}
-		
+
 		color= 0xff606060;
 
 		if(i==selected)
@@ -1105,7 +1106,7 @@ void draw_list( t_menu_list *menu, int menu_size, int selected, int dir_mode, in
 
 
 		if(strlen(str)>1 && dir_mode==1)
-		{	
+		{
 			sprintf(str, "%s", menu[i].path);
 			if(strstr(menu[i].content,"AVCHD")!=NULL || strstr(menu[i].content,"BDMV")!=NULL)
 				sprintf(str, "(%s) %s", menu[i].entry, menu[i].details); str[102]=0;
@@ -1129,7 +1130,7 @@ void draw_list( t_menu_list *menu, int menu_size, int selected, int dir_mode, in
 		y += 0.05f;
 		c++;
 		}
-		i++; 
+		i++;
 	}
 	} // cover_mode==4
 
@@ -1148,7 +1149,7 @@ static void init_text_shader( void )
 
 	cellGcmCgInitProgram( vertex_prg );
 	cellGcmCgInitProgram( fragment_prg );
-	
+
 	cellGcmCgGetUCode( fragment_prg, &ucode, &ucode_size );
 
 	text_fragment_prg_ucode = localAllocAlign(64, ucode_size );
@@ -1170,7 +1171,7 @@ int text_create( u32 xsize, u32 ysize )
 	u32 depth_limit;
 	u32 buffer_width;
 
-	
+
 	text_width = xsize;
 	text_height =ysize;
 
@@ -1179,13 +1180,13 @@ int text_create( u32 xsize, u32 ysize )
 
 	text_colorp = cellGcmGetTiledPitchSize( buffer_width*4 );
 	if( text_colorp == 0 ) return -1;
-	
+
 	text_depthp = cellGcmGetTiledPitchSize( buffer_width*4 );
 	if( text_depthp == 0 ) return -1;
-	
+
 	color_size = text_colorp*ROUNDUP( text_height, 64 );
 	color_limit = ROUNDUP( 2*color_size, 0x10000 );
-	
+
 	depth_size = text_depthp*ROUNDUP( text_height, 64 );
 	depth_limit = ROUNDUP( depth_size, 0x10000 );
 
@@ -1218,7 +1219,7 @@ int text_create( u32 xsize, u32 ysize )
 	CGparameter texture = cellGcmCgGetNamedParameter( fragment_prg, "texture" );
 
 	if( texture == 0 ) return -1;
-	
+
 	text_obj_coord_indx = cellGcmCgGetParameterResource( vertex_prg, objCoord) - CG_ATTR0;
 	text_tex_coord_indx = cellGcmCgGetParameterResource( vertex_prg, texCoord) - CG_ATTR0;
 	tindex = (CGresource) (cellGcmCgGetParameterResource( fragment_prg, texture ) - CG_TEXUNIT0 );
@@ -1243,12 +1244,12 @@ int set_texture( u8 *buffer, u32 x_size, u32 y_size )
 	text_param.offset = buf_offs;
 	text_param.location = CELL_GCM_LOCATION_MAIN;
 
-	
+
 	cellGcmSetTexture( gCellGcmCurrentContext, tindex, &text_param );
 
 	cellGcmSetTextureControl( gCellGcmCurrentContext, tindex, 1, 0, 15, CELL_GCM_TEXTURE_MAX_ANISO_1 );
 
-	cellGcmSetTextureAddress( gCellGcmCurrentContext, tindex, CELL_GCM_TEXTURE_CLAMP_TO_EDGE, CELL_GCM_TEXTURE_CLAMP_TO_EDGE, 
+	cellGcmSetTextureAddress( gCellGcmCurrentContext, tindex, CELL_GCM_TEXTURE_CLAMP_TO_EDGE, CELL_GCM_TEXTURE_CLAMP_TO_EDGE,
 		CELL_GCM_TEXTURE_CLAMP_TO_EDGE, CELL_GCM_TEXTURE_UNSIGNED_REMAP_NORMAL, CELL_GCM_TEXTURE_ZFUNC_LESS, 0 );
 
 //	cellGcmSetTextureFilter( gCellGcmCurrentContext, tindex, 0, CELL_GCM_TEXTURE_LINEAR_LINEAR, CELL_GCM_TEXTURE_LINEAR, CELL_GCM_TEXTURE_CONVOLUTION_QUINCUNX );
@@ -1431,25 +1432,25 @@ void display_img_angle(int x, int y, int width, int height, int tx, int ty, floa
 
 void draw_square(float x, float y, float w, float h, float z, u32 color)
 {
-	
-	vertex_color[vert_indx].x = x; 
-	vertex_color[vert_indx].y = y; 
-	vertex_color[vert_indx].z = z; 
+
+	vertex_color[vert_indx].x = x;
+	vertex_color[vert_indx].y = y;
+	vertex_color[vert_indx].z = z;
 	vertex_color[vert_indx].color=color;
 
-	vertex_color[vert_indx+1].x = x+w; 
-	vertex_color[vert_indx+1].y = y; 
-	vertex_color[vert_indx+1].z = z; 
+	vertex_color[vert_indx+1].x = x+w;
+	vertex_color[vert_indx+1].y = y;
+	vertex_color[vert_indx+1].z = z;
 	vertex_color[vert_indx+1].color=color;
 
-	vertex_color[vert_indx+2].x = x+w; 
-	vertex_color[vert_indx+2].y = y-h; 
-	vertex_color[vert_indx+2].z = z; 
+	vertex_color[vert_indx+2].x = x+w;
+	vertex_color[vert_indx+2].y = y-h;
+	vertex_color[vert_indx+2].z = z;
 	vertex_color[vert_indx+2].color=color;
 
-	vertex_color[vert_indx+3].x = x; 
-	vertex_color[vert_indx+3].y = y-h; 
-	vertex_color[vert_indx+3].z = z; 
+	vertex_color[vert_indx+3].x = x;
+	vertex_color[vert_indx+3].y = y-h;
+	vertex_color[vert_indx+3].z = z;
 	vertex_color[vert_indx+3].color=color;
 
 	cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_QUADS, vert_indx, 4);
@@ -1468,24 +1469,24 @@ void draw_square_angle(float _x, float _y, float w, float h, float z, u32 color,
 	float x=_x+(float)angle_coord_x(_radius, _angle)/1920.f;
 	float y=_y+(float)angle_coord_y(_radius, _angle)/1080.f;
 
-	vertex_color[vert_indx].x = x; 
-	vertex_color[vert_indx].y = y; 
-	vertex_color[vert_indx].z = z; 
+	vertex_color[vert_indx].x = x;
+	vertex_color[vert_indx].y = y;
+	vertex_color[vert_indx].z = z;
 	vertex_color[vert_indx].color=color;
 
-	vertex_color[vert_indx+1].x = x+w; 
-	vertex_color[vert_indx+1].y = y; 
-	vertex_color[vert_indx+1].z = z; 
+	vertex_color[vert_indx+1].x = x+w;
+	vertex_color[vert_indx+1].y = y;
+	vertex_color[vert_indx+1].z = z;
 	vertex_color[vert_indx+1].color=color;
 
-	vertex_color[vert_indx+2].x = x+w; 
-	vertex_color[vert_indx+2].y = y-h; 
-	vertex_color[vert_indx+2].z = z; 
+	vertex_color[vert_indx+2].x = x+w;
+	vertex_color[vert_indx+2].y = y-h;
+	vertex_color[vert_indx+2].z = z;
 	vertex_color[vert_indx+2].color=color;
 
-	vertex_color[vert_indx+3].x = x; 
-	vertex_color[vert_indx+3].y = y-h; 
-	vertex_color[vert_indx+3].z = z; 
+	vertex_color[vert_indx+3].x = x;
+	vertex_color[vert_indx+3].y = y-h;
+	vertex_color[vert_indx+3].z = z;
 	vertex_color[vert_indx+3].color=color;
 
 	cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_QUADS, vert_indx, 4);

@@ -1183,30 +1183,7 @@ static MMString s_MMStringDef[] = {
   { sizeof ( s_pGMBDM		) - 1, s_pGMBDM			},
   { sizeof ( s_pGMEXTGD		) - 1, s_pGMEXTGD		},
   { sizeof ( s_pGMFAV		) - 1, s_pGMFAV			},
-  { sizeof ( s_pGMUSBP		) - 1, s_pGMUSBP		}, //480
-
-/*,
-
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
- { sizeof ( s_p	) - 1, s_p		},
-*/
+  { sizeof ( s_pGMUSBP		) - 1, s_pGMUSBP		}  //480
 
 };
 
