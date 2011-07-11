@@ -43,7 +43,7 @@ static unsigned char s_pNetCopy0	[]	= "Copying network folder (%i files in %i fo
 static unsigned char s_pNetCopy1	[]	= "Copying file to network host [%s], please wait!";
 static unsigned char s_pNetCopy2	[]	= "Copying network file from [%s], please wait!";
 static unsigned char s_pNetCopy3	[]	= "Copying local folder (%i files in %i folders) to network host [%s], please wait!";
-static unsigned char s_pNetCopy4	[]	= "Transferred %.2f of %.2f MB. Remaining: %imin %2.2isec";
+static unsigned char s_pNetCopy4	[]	= "Transferred %.0f/%.0f MB. Remaining: %i:%2.2i min";
 
 static unsigned char s_pMove0		[]	= "Do you want to move the selected folders?\n\nSource: [%s]\n\nDestination: [%s]";
 static unsigned char s_pMove1		[]	= "Do you want to move the selected file?\n\nSource: [%s]\n\nDestination: [%s/%s]";
@@ -615,12 +615,12 @@ static unsigned char s_pXC9_463	[]	= "Browse to GBATemp website for beginner's g
 static unsigned char s_pXC9_464	[]	= "Support multiMAN Development";
 static unsigned char s_pXC9_465	[]	= "Find how to contribute to multiMAN development";
 
-static unsigned char s_pCopy13	[]	= "Installed %.0f of %.0f MB. Remaining: %i:%2.2i min";
+static unsigned char s_pCopy13	[]	= "Installed %.0f/%.0f MB. Remaining: %i:%2.2i min";
 static unsigned char s_pCopy14	[]	= "Files linked: %i. Elapsed time: %i:%2.2i min";
 static unsigned char s_pCopy15	[]	= "Files linked: %i/%i. Remaining: %i:%2.2i min";
-static unsigned char s_pCopy16	[]	= "Copied %.0f MB (%i of %i files). Elapsed: %2.2i:%2.2i min";
-static unsigned char s_pCopy17	[]	= "Copied %.0f / %.0f MB (%i/%i) Remaining: %i:%2.2i min";
-static unsigned char s_pCopy18	[]	= "Copied %.0f of %.0f MB. Remaining: %i:%2.2i min";
+static unsigned char s_pCopy16	[]	= "Copied %.0f MB (%i/%i). Elapsed: %i:%2.2i min";
+static unsigned char s_pCopy17	[]	= "Copied %.0f/%.0f MB (%i/%i) Remaining: %i:%2.2i min";
+static unsigned char s_pCopy18	[]	= "Copied %.0f/%.0f MB. Remaining: %i:%2.2i min";
 static unsigned char s_pCopy19	[]	= "Copied %.0fMB. Elapsed time: %i:%2.2i min";
 
 static unsigned char s_pGMDISC	[]	= "Game disc";

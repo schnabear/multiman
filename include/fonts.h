@@ -8,7 +8,7 @@ extern "C" {
 #include <cell/font.h>
 #include <cell/fontFT.h>
 
-#define FONT_FILE_CACHE_SIZE (2*1024*1024) //1MB
+#define FONT_FILE_CACHE_SIZE (1*1024*1024) //1MB
 
 #define SYSTEM_FONT_MAX (10)
 #define USER_FONT_MAX   (32-SYSTEM_FONT_MAX)
@@ -29,7 +29,7 @@ enum {
 
 #define FONT_ENABLE_BIT(n)  (1<<(n))
 
-typedef struct 
+typedef struct
 {
 	int sysFontMax;
 	CellFont SystemFont[ SYSTEM_FONT_MAX ];
@@ -61,7 +61,7 @@ int Fonts_SetFontEffectSlant( CellFont* cf, float effSlant );
 int Fonts_GetFontHorizontalLayout( CellFont* cf, float* lineHeight, float*baseLineY );
 int Fonts_GetFontVerticalLayout( CellFont* cf, float* lineWidth, float*baseLineX );
 
-float Fonts_GetPropTextWidth( CellFont*, 
+float Fonts_GetPropTextWidth( CellFont*,
                               uint8_t* utf8, float xScale, float yScale, float slant, float between,
                               float* strWidth, uint32_t* count );
 

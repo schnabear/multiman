@@ -570,8 +570,8 @@ void draw_text_stroke(float x, float y, float size, u32 color, const char *str);
 
 #define	GAME_INI_VER	"MMGI0100" //PS3GAME.INI	game flags (submenu)
 #define	GAME_STATE_VER	"MMLS0107" //LSTAT.BIN		multiMAN last state data
-#define	GAME_LIST_VER	"MMGL0107" //LLIST.BIN		cache for game list
-#define	XMB_COL_VER		"MMXC0111" //XMBS.00x		xmb[?] structure (1 XMMB column)
+#define	GAME_LIST_VER	"MMGL0108" //LLIST.BIN		cache for game list
+#define	XMB_COL_VER		"MMXC0112" //XMBS.00x		xmb[?] structure (1 XMMB column)
 
 char current_version[9]="02.02.00";
 char current_version_NULL[10];
@@ -808,7 +808,7 @@ char this_pane[256], other_pane[256];
 
 char gameID[512];
 
-#define MAX_LIST 640
+#define MAX_LIST 960
 t_menu_list menu_list[MAX_LIST];
 
 void DBPrintf( const char *string)
@@ -1002,7 +1002,7 @@ typedef struct {
 
 } _locales;
 
-#define MAX_LOCALES	23
+#define MAX_LOCALES	25
 static _locales locales[] = {
 	{	0,	4,	 "EN",	"English",		"English"		}, // Dean
 	{	1,	4,	 "BG",	"Bulgarian",	"Български"		}, // Dean
@@ -1026,12 +1026,13 @@ static _locales locales[] = {
 	{  19,	4,	 "CN",	"Chinese (S)",	"简体中文"		}, // Lucky-star
 	{  20,	4,	 "CT",	"Chinese (T)",	"正體中文"		}, // Lucky-star
 	{  21,	16,	 "PE",	"Persian",		"ﻰﺳﺭﺎﭘ"			}, // ASTeam
-	{  22,	16,	 "XX",	"Other",		"Other"			}
+	{  22,	4,	 "NL",	"Dutch",		"Nederlands"	}, // GuardianSoul
+	{  23,	4,	 "BR",	"Brazilian",	"Português BR"	}, // fabricio, kgb, NuclearAqua, pontogames, asapreta
+	{  24,	16,	 "XX",	"Other",		"Other"			}
 
 //	{  13,	16,	 "HU",	"Hungarian",	"Magyar"		}, // Lajos Szalay
 //	{  22,	16,	 "AR",	"Arabic",		"ﺔﻴﺑﺮﻌﻟا"		}, // ???
-//	{  23,	4,	 "NL",	"Dutch",		"Nederlands"	}, // ???
-//	{  24,	4,	 "BR",	"Brazilian",	"Português BR"	}, // kgb, NuclearAqua, pontogames, asapreta
+
 
 };
 
@@ -1097,7 +1098,7 @@ int xmb_icon_buf_max=0;
 typedef struct __xmbopt
 {
 //	u8 type; //0-list 1-text
-	char label[32];
+	char label[36];
 	char value[4];
 
 }
@@ -1105,7 +1106,7 @@ xmbopt __attribute__((aligned(8)));
 
 //sys_addr_t vm; //pointer to virtual memory
 
-#define MAX_XMB_MEMBERS 2304
+#define MAX_XMB_MEMBERS 2650
 typedef struct __xmbmem
 {
 	u8 type; //0 unkn, 1 ps3 game, 2 AVCHD/Blu-ray video from gamelist, 3 showtime vid, 4 music, 5 photo, 6 function, 7 setting, 8 snes rom, 9 fceu rom, 10 vba rom, 11 genp rom, 12 fbanext
@@ -7467,14 +7468,17 @@ void flush_ttf(uint8_t *buffer, uint32_t _V_WIDTH, uint32_t _V_HEIGHT)
 
 			for(cl=0; cl<max_ttf_label; cl++)
 			{
-				weight = ttf_label[cl].weight;
-				scale = 30.0f * ttf_label[cl].scale * ((float)_V_WIDTH/1920.0f) * ttf_label[cl].hscale;
-				scaley = 29.0f * ttf_label[cl].scale * ((float)_V_HEIGHT/1080.0f) * ttf_label[cl].vscale;
 				slant = ttf_label[cl].slant;
+				weight = ttf_label[cl].weight;
+
+				scale  = 30.0f * ttf_label[cl].scale * ((float)_V_WIDTH /1920.0f) * ttf_label[cl].hscale;
+				scaley = 28.0f * ttf_label[cl].scale * ((float)_V_HEIGHT/1080.0f) * ttf_label[cl].vscale;
+
 				ret = Fonts_SetFontScale( cf, scale );
 				if ( ret == CELL_OK ) ret = Fonts_SetFontEffectWeight( cf, weight );
 				if ( ret == CELL_OK ) ret = Fonts_SetFontEffectSlant( cf, slant );
 				ret = Fonts_GetFontHorizontalLayout( cf, &lineH, &baseY );
+
 				utf8Str0 = (uint8_t*) ttf_label[cl].label;
 				x = ttf_label[cl].x;
 				y = ttf_label[cl].y;
@@ -7484,16 +7488,20 @@ void flush_ttf(uint8_t *buffer, uint32_t _V_WIDTH, uint32_t _V_HEIGHT)
 
 					w = Fonts_GetPropTextWidth( cf, utf8Str0, scale, scaley, slant, step, NULL, NULL );
 
-					if ( (w+x+16.f) > textW && ttf_label[cl].cut==0.0f ) {
+					if(ttf_label[cl].centered==1) x=(ttf_label[cl].x - (w/2.0f)/(float)_V_WIDTH);
+					else if(ttf_label[cl].centered==2) x=(ttf_label[cl].x - (w)/(float)_V_WIDTH); //right justified
+
+
+					if ( ( (w+(x*surfW)+8.f) > textW) && (ttf_label[cl].cut==0.0f) ) {
 						float ratio;
 
-						scale = Fonts_GetPropTextWidthRescale( scale, w, textW-x-16.f, &ratio );
+						scale = Fonts_GetPropTextWidthRescale( scale, w, textW-(x*surfW)-8.f, &ratio );
 						w     *= ratio;
 						baseY *= ratio;
 						lineH *= ratio;
 						step  *= ratio;
 					}
-					else if ( ttf_label[cl].cut>0.0f && w>((int)(ttf_label[cl].cut*(float)V_WIDTH))) {
+					else if ( (ttf_label[cl].cut>0.0f) && (w>((int)(ttf_label[cl].cut*(float)V_WIDTH))) ) {
 						float ratio;
 
 						scale = Fonts_GetPropTextWidthRescale( scale, w, ((int)(ttf_label[cl].cut*(float)V_WIDTH)), &ratio );
@@ -7503,11 +7511,8 @@ void flush_ttf(uint8_t *buffer, uint32_t _V_WIDTH, uint32_t _V_HEIGHT)
 						step  *= ratio;
 					}
 
-					if(ttf_label[cl].centered==1) x=(ttf_label[cl].x - (w/2.0f)/(float)_V_WIDTH);
-					else if(ttf_label[cl].centered==2) x=(ttf_label[cl].x - (w)/(float)_V_WIDTH); //right justified
-
-
 					if(cl==0) Fonts_BindRenderer( cf, renderer );
+
 					if(cover_mode!=8 && cover_mode!=5) Fonts_RenderPropText( cf, surf, (int)(x*(float)_V_WIDTH)+1, (int)(y *(float)_V_HEIGHT)+1, utf8Str0, scale, scaley, slant, step, 0xff000000 );
 					if(cover_mode==8) Fonts_RenderPropText( cf, surf, (int)(x*(float)_V_WIDTH)+2, (int)(y *(float)_V_HEIGHT)+2, utf8Str0, scale, scaley, slant, step, 0x10101010 );
 					// && cover_mode!=8
@@ -17117,18 +17122,18 @@ void draw_xmb_title(u8 *buffer, xmbmem *member, int cn, u32 col1, u32 col2, u8 _
 		memset(buffer, 0, XMB_TEXT_WIDTH*XMB_TEXT_HEIGHT*4); //flush_ttf(buffer, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT);
 		if((_xmb_col==6 || _xmb_col==7) && xmb_game_bg)
 		{
-			print_label_ex( 0.005f, 0.03f, 0.75f, 0x80101010, member[cn].name, 1.04f, 0.0f, 0, 3.0f, 22.0f, 0);
+			print_label_ex( 0.005f, 0.03f, 1.1f, 0x80101010, member[cn].name, 1.04f, 0.0f, 0, (1920.f/(float)XMB_TEXT_WIDTH), 15.0f, 0);//3.0f // /0.75f
 		}
 
 		if(_xmb_col==2 && member[cn].option_size) //settings
-			print_label_ex( 0.93f, 0.2f, 0.45f, col1, member[cn].option[member[cn].option_selected].label, 1.04f, 0.0f, 0, 3.0f, 22.0f, 2);
+			print_label_ex( 0.99f, 0.2f, 0.48f, col1, member[cn].option[member[cn].option_selected].label, 1.04f, 0.0f, 0, 3.0f, 23.0f, 2);
 
 		if(!((_xmb_col>3 && _xmb_col<8 && member[cn].type<6) || (_xmb_col==8 && member[cn].type>7)))
-			print_label_ex( 0.0f, 0.57f, 0.5f, col2, member[cn].subname, 1.02f, 0.0f, 0, 3.0f, 23.0f, 0);
+			print_label_ex( 0.005f, 0.52f, 0.67f, col2, member[cn].subname, 1.03f, 0.0f, 0, (1920.f/(float)XMB_TEXT_WIDTH), 20.0f, 0); //3.0f
 
-		flush_ttf(buffer, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT);
+		//flush_ttf(buffer, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT);
 
-		print_label_ex( 0.004f, 0.02f, 0.75f, col1, member[cn].name, 1.04f, 0.0f, 0, 3.0f, 22.0f, 0);
+		print_label_ex( 0.004f, 0.02f, 1.10f, col1, member[cn].name, 1.04f, 0.0f, 0, (1920.f/(float)XMB_TEXT_WIDTH), 15.0f, 0);//3.0f
 		flush_ttf(buffer, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT);
 
 		u8 *xmb_dev_icon1=xmb_icon_dev;
@@ -17204,9 +17209,9 @@ void add_xmb_member(xmbmem *_member, u16 *_size, char *_name, char *_subname,
 	_member[size].game_split	  =_split;
 
 	snprintf(_member[size].name, sizeof(_member[size].name), "%s", _name);
-	_member[size].name[sizeof(_member[size].name)]=0;
+	_member[size].name[sizeof(_member[size].name)-1]=0;
 	snprintf(_member[size].subname, sizeof(_member[size].subname), "%s", _subname);
-	_member[size].subname[sizeof(_member[size].subname)]=0;
+	_member[size].subname[sizeof(_member[size].subname)-1]=0;
 
 	_member[size].option_size=0;
 	_member[size].option_selected=0;
@@ -17247,13 +17252,14 @@ void add_xmb_option(xmbmem *_member, u16 *_size, char *_name, char *_subname, ch
 	_member[size].game_split	  = 0;
 
 	snprintf(_member[size].name, sizeof(_member[size].name), "%s", _name);
-	_member[size].name[sizeof(_member[size].name)]=0;
+	_member[size].name[sizeof(_member[size].name)-1]=0;
 	snprintf(_member[size].subname, sizeof(_member[size].subname), "%s", _subname);
-	_member[size].subname[sizeof(_member[size].subname)]=0;
+	_member[size].subname[sizeof(_member[size].subname)-1]=0;
 
 	_member[size].option_size=0;
 	_member[size].option_selected=0;
-	sprintf(_member[size].optionini, "%s", _optionini);
+	snprintf(_member[size].optionini, sizeof(_member[size].option), "%s", _optionini);
+	_member[size].subname[sizeof(_member[size].option)-1]=0;
 
 	_member[size].data=-1;
 	_member[size].icon  = xmb_icon_tool;
@@ -20093,7 +20099,7 @@ void draw_xmb_icon_text(int _xmb_icon)
 	//draw column name
 	max_ttf_label=0;
 //	print_label_ex( 0.504f, 0.04f, 1.0f, 0x101010ff, xmb[_xmb_icon].name, 1.04f, 0.0f, 8, 4.48f, 24.0f, 1);
-	print_label_ex( 0.5f, 0.0f, 1.0f, COL_XMB_COLUMN, xmb[_xmb_icon].name, 1.04f, 0.0f, mui_font, 4.48f, 24.0f, 1);
+	print_label_ex( 0.5f, 0.0f, 1.0f, COL_XMB_COLUMN, xmb[_xmb_icon].name, 1.04f, 0.0f, mui_font, 4.2f, 25.5f, 1);
 	memset(xmb_col, 0, 36000);
 	flush_ttf(xmb_col, 300, 30);
 	for(int n=0; n<xmb[_xmb_icon].size; n++) xmb[_xmb_icon].member[n].data=-1;
