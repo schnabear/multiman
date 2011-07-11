@@ -1027,7 +1027,7 @@ static _locales locales[] = {
 	{  20,	4,	 "CT",	"Chinese (T)",	"正體中文"		}, // Lucky-star
 	{  21,	16,	 "PE",	"Persian",		"ﻰﺳﺭﺎﭘ"			}, // ASTeam
 	{  22,	4,	 "NL",	"Dutch",		"Nederlands"	}, // GuardianSoul
-	{  23,	4,	 "BR",	"Brazilian",	"Português BR"	}, // fabricio, kgb, NuclearAqua, pontogames, asapreta
+	{  23,	4,	 "BR",	"Brazilian",	"Português BR"	}, // fabricio
 	{  24,	16,	 "XX",	"Other",		"Other"			}
 
 //	{  13,	16,	 "HU",	"Hungarian",	"Magyar"		}, // Lajos Szalay
@@ -7468,15 +7468,16 @@ void flush_ttf(uint8_t *buffer, uint32_t _V_WIDTH, uint32_t _V_HEIGHT)
 
 			for(cl=0; cl<max_ttf_label; cl++)
 			{
-				slant = ttf_label[cl].slant;
+				if(cl==0) Fonts_BindRenderer( cf, renderer );
+				slant  = ttf_label[cl].slant;
 				weight = ttf_label[cl].weight;
 
-				scale  = 30.0f * ttf_label[cl].scale * ((float)_V_WIDTH /1920.0f) * ttf_label[cl].hscale;
-				scaley = 28.0f * ttf_label[cl].scale * ((float)_V_HEIGHT/1080.0f) * ttf_label[cl].vscale;
+				scale  = 30.0f * ttf_label[cl].scale * (surfW/1920.0f) * ttf_label[cl].hscale;
+				scaley = 28.0f * ttf_label[cl].scale * (surfH/1080.0f) * ttf_label[cl].vscale;
 
-				ret = Fonts_SetFontScale( cf, scale );
-				if ( ret == CELL_OK ) ret = Fonts_SetFontEffectWeight( cf, weight );
-				if ( ret == CELL_OK ) ret = Fonts_SetFontEffectSlant( cf, slant );
+				Fonts_SetFontScale( cf, scale );
+				Fonts_SetFontEffectWeight( cf, weight );
+				Fonts_SetFontEffectSlant( cf, slant );
 				ret = Fonts_GetFontHorizontalLayout( cf, &lineH, &baseY );
 
 				utf8Str0 = (uint8_t*) ttf_label[cl].label;
@@ -7488,35 +7489,40 @@ void flush_ttf(uint8_t *buffer, uint32_t _V_WIDTH, uint32_t _V_HEIGHT)
 
 					w = Fonts_GetPropTextWidth( cf, utf8Str0, scale, scaley, slant, step, NULL, NULL );
 
-					if(ttf_label[cl].centered==1) x=(ttf_label[cl].x - (w/2.0f)/(float)_V_WIDTH);
-					else if(ttf_label[cl].centered==2) x=(ttf_label[cl].x - (w)/(float)_V_WIDTH); //right justified
+					if(ttf_label[cl].centered==1) x=(ttf_label[cl].x - (w/2.0f)/surfW);
+					else if(ttf_label[cl].centered==2) x=(ttf_label[cl].x - (w)/surfW); //right justified
 
 
-					if ( ( (w+(x*surfW)+8.f) > textW) && (ttf_label[cl].cut==0.0f) ) {
+					if ( ( (w+(x*surfW)) > textW) && (ttf_label[cl].cut==0.0f) && ttf_label[cl].centered!=2) {
 						float ratio;
 
-						scale = Fonts_GetPropTextWidthRescale( scale, w, textW-(x*surfW)-8.f, &ratio );
+						scale = Fonts_GetPropTextWidthRescale( scale, w, (textW-(x*surfW)), &ratio );
 						w     *= ratio;
-						baseY *= ratio;
-						lineH *= ratio;
+						//baseY *= ratio;
+						//lineH *= ratio;
 						step  *= ratio;
+						if(ttf_label[cl].centered==1) x=(ttf_label[cl].x - (w/2.0f)/surfW);
+						else if(ttf_label[cl].centered==2) x=(ttf_label[cl].x - (w)/surfW); //right justified
+
 					}
 					else if ( (ttf_label[cl].cut>0.0f) && (w>((int)(ttf_label[cl].cut*(float)V_WIDTH))) ) {
 						float ratio;
 
-						scale = Fonts_GetPropTextWidthRescale( scale, w, ((int)(ttf_label[cl].cut*(float)V_WIDTH)), &ratio );
+						scale = Fonts_GetPropTextWidthRescale( scale, w, ((ttf_label[cl].cut*(float)V_WIDTH)), &ratio );
 						w     *= ratio;
-						baseY *= ratio;
-						lineH *= ratio;
+						//baseY *= ratio;
+						//lineH *= ratio;
 						step  *= ratio;
+
+						if(ttf_label[cl].centered==1) x=(ttf_label[cl].x - (w/2.0f)/surfW);
+						else if(ttf_label[cl].centered==2) x=(ttf_label[cl].x - (w)/surfW); //right justified
+
 					}
 
-					if(cl==0) Fonts_BindRenderer( cf, renderer );
-
-					if(cover_mode!=8 && cover_mode!=5) Fonts_RenderPropText( cf, surf, (int)(x*(float)_V_WIDTH)+1, (int)(y *(float)_V_HEIGHT)+1, utf8Str0, scale, scaley, slant, step, 0xff000000 );
-					if(cover_mode==8) Fonts_RenderPropText( cf, surf, (int)(x*(float)_V_WIDTH)+2, (int)(y *(float)_V_HEIGHT)+2, utf8Str0, scale, scaley, slant, step, 0x10101010 );
+					if(cover_mode!=8 && cover_mode!=5) Fonts_RenderPropText( cf, surf, (int)(x*surfW)+1, (int)(y*surfH)+1, utf8Str0, scale, scaley, slant, step, 0xff000000 );
+					if(cover_mode==8) Fonts_RenderPropText( cf, surf, (int)(x*surfW)+2, (int)(y*surfH)+2, utf8Str0, scale, scaley, slant, step, 0x10101010 );
 					// && cover_mode!=8
-					Fonts_RenderPropText( cf, surf, (int)(x*(float)_V_WIDTH), (int)(y*(float)_V_HEIGHT), utf8Str0, scale, scaley, slant, step, color );//(color & 0x00ffffff)
+					Fonts_RenderPropText( cf, surf, (int)(x*surfW), (int)(y*surfH), utf8Str0, scale, scaley, slant, step, color );//(color & 0x00ffffff)
 
 				}
 			}
@@ -17122,18 +17128,18 @@ void draw_xmb_title(u8 *buffer, xmbmem *member, int cn, u32 col1, u32 col2, u8 _
 		memset(buffer, 0, XMB_TEXT_WIDTH*XMB_TEXT_HEIGHT*4); //flush_ttf(buffer, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT);
 		if((_xmb_col==6 || _xmb_col==7) && xmb_game_bg)
 		{
-			print_label_ex( 0.005f, 0.03f, 1.1f, 0x80101010, member[cn].name, 1.04f, 0.0f, 0, (1920.f/(float)XMB_TEXT_WIDTH), 15.0f, 0);//3.0f // /0.75f
+			print_label_ex( 0.001f, 0.03f, 1.1f, 0x80101010, member[cn].name, 1.04f, 0.0f, 0, (1920.f/(float)XMB_TEXT_WIDTH), 15.0f, 0);//3.0f // /0.75f
 		}
 
 		if(_xmb_col==2 && member[cn].option_size) //settings
 			print_label_ex( 0.99f, 0.2f, 0.48f, col1, member[cn].option[member[cn].option_selected].label, 1.04f, 0.0f, 0, 3.0f, 23.0f, 2);
 
 		if(!((_xmb_col>3 && _xmb_col<8 && member[cn].type<6) || (_xmb_col==8 && member[cn].type>7)))
-			print_label_ex( 0.005f, 0.52f, 0.67f, col2, member[cn].subname, 1.03f, 0.0f, 0, (1920.f/(float)XMB_TEXT_WIDTH), 20.0f, 0); //3.0f
+			print_label_ex( 0.000f, 0.52f, 0.87f, col2, member[cn].subname, 1.02f, 0.0f, 0, (1920.f/(float)XMB_TEXT_WIDTH), 15.5f, 0); //3.0f
 
 		//flush_ttf(buffer, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT);
 
-		print_label_ex( 0.004f, 0.02f, 1.10f, col1, member[cn].name, 1.04f, 0.0f, 0, (1920.f/(float)XMB_TEXT_WIDTH), 15.0f, 0);//3.0f
+		print_label_ex( 0.000f, 0.02f, 1.10f, col1, member[cn].name, 1.04f, 0.0f, 0, (1920.f/(float)XMB_TEXT_WIDTH), 15.0f, 0);//3.0f
 		flush_ttf(buffer, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT);
 
 		u8 *xmb_dev_icon1=xmb_icon_dev;
