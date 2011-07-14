@@ -87,7 +87,7 @@
 #define MB(x) ((x)*1024*1024)	// 1 MB
 #define KB(x) ((x)*1024)		// 1 KB
 
-SYS_PROCESS_PARAM(1200, 0x80000)
+SYS_PROCESS_PARAM(1200, 0x100000)
 
 //colors (COLOR.INI)
 u32 COL_PS3DISC=0xff807000;
@@ -148,7 +148,7 @@ _meminfo meminfo;
 
 
 // mp3 related
-#define MP3_MEMORY_KB 384
+#define MP3_MEMORY_KB 512
 #define MP3_BUF (MP3_MEMORY_KB/2)
 #define SAMPLE_FREQUENCY        (44100)
 #define MAX_STREAMS             (4) //CELL_MS_MAX_STREAMS//(400)
@@ -857,7 +857,7 @@ t_dir_pane pane_r[MAX_PANE_SIZE]; //right directory pane
 int max_dir_l=0;
 int max_dir_r=0;
 
-#define MAX_PANE_SIZE_BARE 2560
+#define MAX_PANE_SIZE_BARE 3200
 typedef struct
 {
 	char 	name[128];
@@ -1009,6 +1009,7 @@ static _locales locales[] = {
 
 	{	3,	16,	 "TR",	"Turkish",		"Türkçe"		}, // ozayturay
 	{	4,	16,	 "RO",	"Romanian",		"Română"		}, // MihaiOlimpiu
+	{	2,	16,	 "GR",	"Greek",		"Ελληνικά"		}, // Nick97_Olympiak
 
 	{	6,	4,	 "RU",	"Russian",		"Русский"		}, // pvc1, thesixsouls
 	{	7,	4,	 "UA",	"Ukrainian",	"Українська"	}, // sanya007
@@ -1033,12 +1034,12 @@ static _locales locales[] = {
 	{	19,	4,	 "CN",	"Chinese (S)",	"简体中文"		}, // Lucky-star
 	{	20,	4,	 "CT",	"Chinese (T)",	"正體中文"		}, // Lucky-star
 	{	21,	16,	 "PE",	"Persian",		"ﻰﺳﺭﺎﭘ"			}, // ASTeam
+	{   25,	16,	 "AR",	"Arabic",		"ﺔﻴﺑﺮﻌﻟا"		}, // silent_4
 
-	{	2,	16,	 "GR",	"Greek",		"Ελληνικά (Incomplete)"		}, // Nick97_Olympiak
 	{	24,	16,	 "XX",	"Other",		"Other"			}
 
 //	{  13,	16,	 "HU",	"Hungarian",	"Magyar"		}, // Lajos Szalay
-//	{  22,	16,	 "AR",	"Arabic",		"ﺔﻴﺑﺮﻌﻟا"		}, // ???
+
 
 
 };
@@ -1789,12 +1790,7 @@ pad_ok:
 	else
 		cellPadSetPortSetting( pad_num, 0);
 
-	if(debug_mode)
-	{
-		get_free_memory();
-		sprintf(status_info, "(MEM: %.f) Debug Mode (English)", (double) (meminfo.avail/1024.0f));
-		//sprintf(status_info, "%i %i %i %i (MEM: %.f) %s", databuf.button[20], databuf.button[21], databuf.button[22], databuf.button[23], (double) (meminfo.avail/1024.0f), STR_DEBUG_MODE);
-	}
+	//sprintf(status_info, "%i %i %i %i (MEM: %.f) %s", databuf.button[20], databuf.button[21], databuf.button[22], databuf.button[23], (double) (meminfo.avail/1024.0f), STR_DEBUG_MODE);
 	//sprintf(www_info, "--- %i %i ", databuf.len, pad_num);
 
 	if(dev_type==CELL_PAD_DEV_TYPE_BD_REMOCON)
@@ -9051,7 +9047,7 @@ void delete_entries_content(t_menu_list *list, int *max, char *content_type)
 
 int ps3_home_scan(char *path, t_dir_pane *list, int *max)
 {
-	if((*max)>=MAX_PANE_SIZE || strlen(path)>sizeof(list[0].path) || strlen(path)>512) return 0;
+	if((*max)>=MAX_PANE_SIZE-1) {(*max)=(MAX_PANE_SIZE-1); return 0;}
 	DIR  *dir;
 	char *f= NULL;
 	struct CellFsStat s;
@@ -9097,6 +9093,7 @@ int ps3_home_scan(char *path, t_dir_pane *list, int *max)
 				}
 
 				(*max) ++;
+				if((*max)>=MAX_PANE_SIZE-1) {closedir(dir); (*max)=(MAX_PANE_SIZE-1); return 0;}
 			}
 
 
@@ -9112,7 +9109,7 @@ int ps3_home_scan(char *path, t_dir_pane *list, int *max)
 
 int ps3_home_scan_ext(char *path, t_dir_pane *list, int *max, char *_ext)
 {
-	if((*max)>=MAX_PANE_SIZE || strlen(path)>sizeof(list[0].path) || strlen(path)>512) return 0;
+	if((*max)>=(MAX_PANE_SIZE-1)) {(*max)=(MAX_PANE_SIZE-1);return 0;}
 	DIR  *dir;
 
    dir=opendir (path);
@@ -9143,7 +9140,7 @@ int ps3_home_scan_ext(char *path, t_dir_pane *list, int *max, char *_ext)
 			snprintf(list[*max ].name, sizeof(list[0].name)-1, "%s", entry->d_name);
 			snprintf(list[*max ].path, sizeof(list[0].path)-1, "%s", path);
 			(*max) ++;
-			if((*max)>=MAX_PANE_SIZE) break;
+			if((*max)>=MAX_PANE_SIZE-1) {closedir(dir); (*max)=(MAX_PANE_SIZE-1); return 0;}
 		}
 
 	}
@@ -9155,7 +9152,7 @@ int ps3_home_scan_ext(char *path, t_dir_pane *list, int *max, char *_ext)
 
 int ps3_home_scan_ext_bare(char *path, t_dir_pane_bare *list, int *max, char *_ext)
 {
-	if((*max)>=MAX_PANE_SIZE_BARE || strlen(path)>sizeof(list[0].path) || strlen(path)>512) return 0;
+	if((*max)>=(MAX_PANE_SIZE_BARE-1)) {(*max)=(MAX_PANE_SIZE_BARE-1);return 0;}
 	DIR  *dir;
 
    dir=opendir (path);
@@ -9186,7 +9183,7 @@ int ps3_home_scan_ext_bare(char *path, t_dir_pane_bare *list, int *max, char *_e
 			snprintf(list[*max ].name, sizeof(list[0].name)-1, "%s", entry->d_name);
 			snprintf(list[*max ].path, sizeof(list[0].path)-1, "%s", path);
 			(*max) ++;
-			if((*max)>=MAX_PANE_SIZE_BARE) break;
+			if((*max)>=MAX_PANE_SIZE_BARE-1) {closedir(dir); (*max)=(MAX_PANE_SIZE_BARE-1); return 0;}
 		}
 
 	}
@@ -9199,7 +9196,8 @@ int ps3_home_scan_ext_bare(char *path, t_dir_pane_bare *list, int *max, char *_e
 
 int ps3_home_scan_bare(char *path, t_dir_pane_bare *list, int *max)
 {
-	if((*max)>=MAX_PANE_SIZE_BARE || strlen(path)>sizeof(list[0].path) || strlen(path)>512) return 0;
+	if((*max)>=(MAX_PANE_SIZE_BARE-1)) {(*max)=(MAX_PANE_SIZE_BARE-1);return 0;}
+
 	DIR  *dir;
 
    dir=opendir (path);
@@ -9229,7 +9227,7 @@ int ps3_home_scan_bare(char *path, t_dir_pane_bare *list, int *max)
 			snprintf(list[*max ].name, sizeof(list[0].name)-1, "%s", entry->d_name);
 			snprintf(list[*max ].path, sizeof(list[0].path)-1, "%s", path);
 			(*max) ++;
-			if((*max)>=MAX_PANE_SIZE_BARE) break;
+			if((*max)>=MAX_PANE_SIZE_BARE-1) {closedir(dir); (*max)=(MAX_PANE_SIZE_BARE-1); return 0;}
 		}
 
 	}
@@ -9241,14 +9239,14 @@ int ps3_home_scan_bare(char *path, t_dir_pane_bare *list, int *max)
 
 int ps3_home_scan_bare2(char *path, t_dir_pane *list, int *max)
 {
-	if((*max)>=MAX_PANE_SIZE) return 0;
+	if((*max)>=MAX_PANE_SIZE-1) {(*max)=(MAX_PANE_SIZE-1); return 0;}
 	DIR  *dir;
 
    dir=opendir (path);
    if(!dir) return -1;
 
    while(1)
-		{
+	{
 		struct dirent *entry=readdir (dir);
 		if(!entry) break;
 
@@ -9264,13 +9262,13 @@ int ps3_home_scan_bare2(char *path, t_dir_pane *list, int *max)
 			snprintf(d1f, 511, "%s/%s", path, entry->d_name);
 			ps3_home_scan_bare2(d1f, list, max);
 			free(d1f);
-			}
+		}
 		else
 		{
 			snprintf(list[*max ].name, sizeof(list[0].name)-1, "%s", entry->d_name);
 			snprintf(list[*max ].path, sizeof(list[0].path)-1, "%s", path);
 			(*max) ++;
-			if((*max)>=MAX_PANE_SIZE) break;
+			if((*max)>=MAX_PANE_SIZE-1) {closedir(dir); (*max)=(MAX_PANE_SIZE-1); return 0;}
 		}
 
 	}
@@ -18819,7 +18817,6 @@ static void add_retro_column_thread_entry( uint64_t arg )
 
 	if(init_finished && is_retro_loading && xmb[8].init)
 	{
-
 		t_dir_pane_bare *pane =  (t_dir_pane_bare *) memalign(16, sizeof(t_dir_pane_bare)*MAX_PANE_SIZE_BARE);
 		if(pane!=NULL)
 		{
@@ -19134,6 +19131,7 @@ thumb_ok_fba:
 void add_photo_column()
 {
 	if(is_photo_loading || xmb[3].init) return;
+	if(is_video_loading || is_music_loading || is_photo_loading || is_retro_loading || is_game_loading) return;
 	is_photo_loading=1;
 	xmb[3].init=1;
 	sys_ppu_thread_create( &addpic_thr_id, add_photo_column_thread_entry,
@@ -19145,6 +19143,7 @@ void add_photo_column()
 void add_music_column()
 {
 	if(is_music_loading || xmb[4].init) return;
+	if(is_video_loading || is_music_loading || is_photo_loading || is_retro_loading || is_game_loading) return;
 	is_music_loading=1;
 	xmb[4].init=1;
 	sys_ppu_thread_create( &addmus_thr_id, add_music_column_thread_entry,
@@ -19156,7 +19155,7 @@ void add_music_column()
 void add_video_column()
 {
 	if(is_video_loading || xmb[5].init || !xmb[6].init || is_game_loading) return;
-//	if(is_video_loading || is_music_loading || is_photo_loading || is_retro_loading) return;
+	if(is_video_loading || is_music_loading || is_photo_loading || is_retro_loading || is_game_loading) return;
 	is_video_loading=1;
 	xmb[5].init=1;
 	sys_ppu_thread_create( &addvid_thr_id, add_video_column_thread_entry,
@@ -19170,6 +19169,7 @@ void add_emulator_column()
 	mod_xmb_member(xmb[8].member, 0, (char*)STR_XC1_REFRESH, (char*)STR_XC1_REFRESH3);
 	redraw_column_texts(8);
 	if(is_retro_loading || xmb[8].init) return;
+	if(is_video_loading || is_music_loading || is_photo_loading || is_retro_loading || is_game_loading) return;
 	is_retro_loading=1;
 
 	if(is_retro_loading)
@@ -20259,7 +20259,6 @@ void launch_web_browser(char *start_page)
 	{
 		dimc=0; dim=1;c_opacity_delta=-2; c_opacity=0x98; c_opacity2=0x98;
 		www_running = 1;
-		sprintf(status_info, "%s", "Web browser mode");
 		cellWebBrowserInitialize(system_callback, memory_container_web);
 		cellWebBrowserCreate2(&config_full, start_page);
 	}
@@ -25930,10 +25929,6 @@ skip_to_FM:
 
 			setRenderColor();
 
-			if(status_info[0] && debug_mode)
-				cellDbgFontPrintf( 0.01f, 0.98f, 0.5f,0x60606080, status_info);
-
-
 			if(patchmode==1	&& (c_opacity2>0x00))
 			{
 				if(cover_mode<3)
@@ -25992,6 +25987,8 @@ void flip(void)
 	cellSysutilCheckCallback();
 
 	cellDbgFontPrintf( 0.99f, 0.98f, 0.5f,0x10101010, payloadT);
+	if(status_info[0] && debug_mode)
+		cellDbgFontPrintf( 0.01f, 0.98f, 0.5f,0x60606080, status_info);
 	cellDbgFontDrawGcm();
 	cellConsolePoll();
 	cellGcmResetFlipStatus();
@@ -26169,6 +26166,15 @@ static void misc_thread_entry( uint64_t arg )
 	(void)arg;
 	while(init_finished)
 	{
+
+		if(debug_mode)
+		{
+			//if(!status_info[0])
+			{
+				get_free_memory();
+				sprintf(status_info, "(MEM: %.f) Debug Mode (English)", (double) (meminfo.avail/1024.0f));
+			}
+		}
 
 		if(force_mp3)
 		{
