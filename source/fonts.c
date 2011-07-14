@@ -18,7 +18,7 @@ static void* loadFileF( uint8_t* fname, size_t *size, int offset, int addSize );
 static void* fonts_malloc( void*obj, uint32_t size )
 {
 	obj=NULL;
-	return malloc( size );
+	return memalign(16, size );
 }
 static void  fonts_free( void*obj, void*p )
 {
@@ -54,7 +54,7 @@ static void* loadFileF( uint8_t* fname, size_t *size, int offset, int addSize )
 	fseek( fp, 0, SEEK_SET );
 	if ( size ) *size = file_size;
 
-	p = malloc( file_size + offset + addSize );
+	p = memalign(16, file_size + offset + addSize );
 	if ( p ) {
 		fread( (unsigned char*)p+offset, file_size, 1, fp );
 	}

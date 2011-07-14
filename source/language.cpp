@@ -607,7 +607,7 @@ static unsigned char s_pXC9_458	[]	= "Download Themes";
 static unsigned char s_pXC9_459	[]	= "Check for new downloadable themes";
 
 static unsigned char s_pXC9_460	[]	= "Visit multiMAN Forum";
-static unsigned char s_pXC9_461	[]	= "Browse psx-scene thread for multiMAN discussions";
+static unsigned char s_pXC9_461	[]	= "Browse PS3HAX thread for multiMAN discussions";
 
 static unsigned char s_pXC9_462	[]	= "View Online User Guide";
 static unsigned char s_pXC9_463	[]	= "Browse to GBATemp website for beginner's guide to multiMAN";
@@ -633,6 +633,18 @@ static unsigned char s_pGMEXTGD	[]	= "Ext Game Data";
 static unsigned char s_pGMFAV	[]	= "Favorite";
 static unsigned char s_pGMUSBP	[]	= "USB patch";
 
+static unsigned char s_pSIVER	[]	= "Version";
+static unsigned char s_pSIIP	[]	= "IP Address";
+static unsigned char s_pSINA	[]	= "Not Available";
+static unsigned char s_pSIHDD	[]	= "Free HDD space: %.2f GB";
+static unsigned char s_pSIMEM	[]	= "Free Memory: %.0f KB";
+
+static unsigned char s_pLGLOAD	[]	= "Load";
+static unsigned char s_pLGEXIT	[]	= "Exit";
+static unsigned char s_pLGNEXT	[]	= "Next Mode";
+static unsigned char s_pLGPREV	[]	= "Prev Mode";
+static unsigned char s_pLGGS	[]	= "Game Settings";
+static unsigned char s_pLGSS	[]	= "System Menu";
 
 
 static MMString s_MMStringDef[] = {
@@ -1183,7 +1195,20 @@ static MMString s_MMStringDef[] = {
   { sizeof ( s_pGMBDM		) - 1, s_pGMBDM			},
   { sizeof ( s_pGMEXTGD		) - 1, s_pGMEXTGD		},
   { sizeof ( s_pGMFAV		) - 1, s_pGMFAV			},
-  { sizeof ( s_pGMUSBP		) - 1, s_pGMUSBP		}  //480
+  { sizeof ( s_pGMUSBP		) - 1, s_pGMUSBP		}, //480
+
+  { sizeof ( s_pSIVER		) - 1, s_pSIVER			}, //481
+  { sizeof ( s_pSIIP		) - 1, s_pSIIP			},
+  { sizeof ( s_pSINA		) - 1, s_pSINA			},
+  { sizeof ( s_pSIHDD		) - 1, s_pSIHDD			},
+  { sizeof ( s_pSIMEM		) - 1, s_pSIMEM			},
+
+  { sizeof ( s_pLGLOAD		) - 1, s_pLGLOAD		}, //486
+  { sizeof ( s_pLGEXIT		) - 1, s_pLGEXIT		},
+  { sizeof ( s_pLGNEXT		) - 1, s_pLGNEXT		},
+  { sizeof ( s_pLGPREV		) - 1, s_pLGPREV		},
+  { sizeof ( s_pLGGS		) - 1, s_pLGGS			},
+  { sizeof ( s_pLGSS		) - 1, s_pLGSS			}, //491
 
 };
 

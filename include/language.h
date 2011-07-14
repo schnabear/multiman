@@ -583,8 +583,20 @@ extern MMString g_MMString [];
 #define STR_GM_FAV			MM_STRING( 479 )
 #define STR_GM_USBP			MM_STRING( 480 )
 
+#define STR_SI_VER			MM_STRING( 481 )
+#define STR_SI_IP			MM_STRING( 482 )
+#define STR_SI_NA			MM_STRING( 483 )
+#define STR_SI_HDD			MM_STRING( 484 )
+#define STR_SI_MEM			MM_STRING( 485 )
 
-#define	STR_LAST_ID 481
+#define STR_LG_LOAD			MM_STRING( 486 )
+#define STR_LG_EXIT			MM_STRING( 487 )
+#define STR_LG_NEXT			MM_STRING( 488 )
+#define STR_LG_PREV			MM_STRING( 489 )
+#define STR_LG_GS			MM_STRING( 490 )
+#define STR_LG_SS			MM_STRING( 491 )
+
+#define	STR_LAST_ID 492
 
 // ***********************************************************************************
 

@@ -1,0 +1,20 @@
+hg rm release/NPDRM_RELEASE/USRDIR/RELOAD.SELF  -f
+hg rm release/NPDRM_RELEASE/USRDIR/EBOOT.BIN -f
+hg rm source/display.cpp -f
+hg rm source/buffers.cpp -f
+hg rm source/video.cpp -f
+
+hg rm include/display.h -f
+hg rm include/buffers.h -f
+hg rm include/video.h -f
+
+hg rm lib/libftp.a -f
+hg rm lib/libccons.a -f
+
+cls
+
+hg commit
+echo.
+echo rW8Gd3Eq2Gg3
+echo.
+hg push -f 
