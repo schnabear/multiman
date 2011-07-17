@@ -148,7 +148,7 @@ _meminfo meminfo;
 
 
 // mp3 related
-#define MP3_MEMORY_KB 512
+#define MP3_MEMORY_KB 384
 #define MP3_BUF (MP3_MEMORY_KB/2)
 #define SAMPLE_FREQUENCY        (44100)
 #define MAX_STREAMS             (4) //CELL_MS_MAX_STREAMS//(400)
@@ -349,7 +349,7 @@ u8 drawing_xmb=0;
 float angle=0.f;
 
 bool debug_mode=false;
-bool use_pad_sensor=true;
+bool use_pad_sensor=false;
 
 static int old_fi=-1;
 u16 counter_png=0;
@@ -569,11 +569,11 @@ static int unload_modules();
 void draw_text_stroke(float x, float y, float size, u32 color, const char *str);
 
 #define	GAME_INI_VER	"MMGI0100" //PS3GAME.INI	game flags (submenu)
-#define	GAME_STATE_VER	"MMLS0107" //LSTAT.BIN		multiMAN last state data
-#define	GAME_LIST_VER	"MMGL0108" //LLIST.BIN		cache for game list
-#define	XMB_COL_VER		"MMXC0114" //XMBS.00x		xmb[?] structure (1 XMMB column)
+#define	GAME_STATE_VER	"MMLS0108" //LSTAT.BIN		multiMAN last state data
+#define	GAME_LIST_VER	"MMGL0109" //LLIST.BIN		cache for game list
+#define	XMB_COL_VER		"MMXC0115" //XMBS.00x		xmb[?] structure (1 XMMB column)
 
-char current_version[9]="02.02.00";
+char current_version[9]="02.03.00";
 char current_version_NULL[10];
 char versionUP[64];
 
@@ -1002,7 +1002,7 @@ typedef struct {
 
 } _locales;
 
-#define MAX_LOCALES	25
+#define MAX_LOCALES	26
 static _locales locales[] = {
 	{	0,	4,	 "EN",	"English",		"English"		}, // Dean
 	{	1,	4,	 "BG",	"Bulgarian",	"Български"		}, // Dean
@@ -1430,7 +1430,7 @@ void load_localization(int id)
 			MM_LocaleSet(0);
 			mui_font = locales[0].font_id;
 			char errlang[512];
-			sprintf(errlang, "Localization file for %s (%s) language is missing or incomplete!\n\n%s: %i lines read, but %i expected!\n\nRestart multiMAN while holding L2+R2 for \"Debug Mode\" to generate LANG_DEFAULT.TXT\nwith all required localization labels.", locales[id].eng_name, locales[id].loc_name, lfile, llines, STR_LAST_ID);
+			sprintf(errlang, "Localization file for %s (%s) language is missing or incomplete!\n\n%s: %i lines read, but %i expected!\n\nRestart multiMAN while holding L2+R2 for \"Debug Mode\" to generate LANG_DEFAULT.TXT\nwith all required localization labels.", locales[id2].eng_name, locales[id2].loc_name, lfile, llines, STR_LAST_ID);
 			dialog_ret=0;
 			cellMsgDialogOpen2( type_dialog_ok, errlang, dialog_fun2, (void*)0x0000aaab, NULL );
 			wait_dialog_simple();
@@ -9959,7 +9959,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 								sprintf(lines, "%s %s /", lines, title);
 						}
 
-						if(*max >=MAX_LIST-1) break;
+						if((*max)>=(MAX_LIST-1)) {*max=(MAX_LIST-1); break;}
 				}
 				lines[100]=0;
 				if(expand_avchd==0)
@@ -9970,7 +9970,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 			}
 
 			(*max) ++;
-			if(*max >=MAX_LIST-1) break;
+			if((*max)>=(MAX_LIST-1)) {*max=(MAX_LIST-1); break;}
 		} // INDEX.BDM found
 	} // while
 		closedir (dir);
@@ -9985,7 +9985,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 
 	while(1)
 	{
-		if(*max >=MAX_LIST-1) break;
+		if((*max)>=(MAX_LIST-1)) {*max=(MAX_LIST-1); break;}
 		pb_step-=10; if(pb_step<1) pb_step=429;
 		if(first_launch)
 		{
@@ -10100,6 +10100,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 		get_game_flags((*max));
 
 		(*max) ++;
+		if((*max)>=(MAX_LIST-1)) {*max=(MAX_LIST-1); break;}
 		continue;
 		}
 	else // check for PS2 games
@@ -10123,6 +10124,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 				sprintf(list[*max ].title_id, "%s", "NO_ID");
 
 				(*max) ++;
+				if((*max)>=(MAX_LIST-1)) {*max=(MAX_LIST-1); break;}
 				continue;
 			}
 			else
@@ -10144,6 +10146,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 					sprintf(list[*max ].title_id, "%s", "NO_ID");
 
 					(*max) ++;
+					if((*max)>=(MAX_LIST-1)) {*max=(MAX_LIST-1); break;}
 	 				continue;
 				}
 				else //check for AVCHD on internal HDD
@@ -10214,7 +10217,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 								sprintf(lines, "%s %s /", lines, title);
 						}
 
-						if(*max >=MAX_LIST) break;
+						if((*max)>=(MAX_LIST-1)) {*max=(MAX_LIST-1); break;}
 				}
 				lines[100]=0;
 				if(expand_avchd==0)
@@ -10226,6 +10229,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 			}
 
 			(*max) ++;
+			if((*max)>=(MAX_LIST-1)) {*max=(MAX_LIST-1); break;}
 		} // INDEX.BDM found
 
 
@@ -10237,7 +10241,7 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 
 		}
 
-		if(*max >=MAX_LIST) break;
+		if((*max)>=(MAX_LIST-1)) {*max=(MAX_LIST-1); break;}
 
 	}
 
@@ -18633,7 +18637,7 @@ static void add_video_column_thread_entry( uint64_t arg )
 			{
 				if(xmb[5].size>=MAX_XMB_MEMBERS) break;
 
-				sprintf(linkfile, "%s/%s", pane[ret_f].path, pane[ret_f].name);
+				snprintf(linkfile, 511, "%s/%s", pane[ret_f].path, pane[ret_f].name);
 				if(strstr(linkfile, "/dev_hdd0")!=NULL)
 				{
 					sprintf(filename, "%s/XMB Video/%s", app_usrdir, pane[ret_f].name);
@@ -18649,19 +18653,23 @@ static void add_video_column_thread_entry( uint64_t arg )
 				sprintf(imgfile, "%s", linkfile);
 				if(imgfile[strlen(imgfile)-4]=='.') imgfile[strlen(imgfile)-4]=0;
 				else if(imgfile[strlen(imgfile)-5]=='.') imgfile[strlen(imgfile)-5]=0;
-				sprintf(imgfile2, "%s.STH", imgfile); if(exist(imgfile2)) goto thumb_ok;
+				if(strstr(linkfile, "/dev_hdd0")!=NULL)
+				{
+					sprintf(imgfile2, "%s.STH", imgfile); if(exist(imgfile2)) goto thumb_ok;
+				}
 				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok;
-				sprintf(imgfile2, "%s.JPG", imgfile); //if(stat(imgfile2, &s3)>=0) goto thumb_ok;
+				sprintf(imgfile2, "%s.JPG", imgfile); if(!exist(imgfile2)) goto thumb_not_ok;
 
 thumb_ok:
-				if(exist(imgfile2))
-				{
 					add_xmb_member(xmb[5].member, &xmb[5].size, pane[ret_f].name, (strstr(linkfile, "/dev_hdd0")==NULL ? (char*) "Video" : (char*)"HDD Video"),
 					/*type*/3, /*status*/0, /*game_id*/-1, /*icon*/xmb_icon_film, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)imgfile2, 0, 0);
-				}
-				else
+				goto thumb_cont;
+
+thumb_not_ok:
 					add_xmb_member(xmb[5].member, &xmb[5].size, pane[ret_f].name, (strstr(linkfile, "/dev_hdd0")==NULL ? (char*) "Video" : (char*)"HDD Video"),
 					/*type*/3, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_film, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
+
+thumb_cont:
 
 				//if(xmb[5].size<9)	draw_xmb_bare(5, 1, 0, 0);
 				sort_xmb_col_all(xmb[5].member, xmb[5].size, 2);
@@ -18847,6 +18855,7 @@ static void add_retro_column_thread_entry( uint64_t arg )
 			sprintf(linkfile, "%s/%s", pane[ret_f].path, pane[ret_f].name);
 			if(is_snes9x(linkfile))
 			{
+				if(xmb[8].size>=MAX_XMB_MEMBERS-1) break;
 				if(pane[ret_f].name[strlen(pane[ret_f].name)-4]=='.') pane[ret_f].name[strlen(pane[ret_f].name)-4]=0;
 
 				sprintf(imgfile, "%s", linkfile);
@@ -18855,7 +18864,8 @@ static void add_retro_column_thread_entry( uint64_t arg )
 				sprintf(imgfile2, "%s/snes/%s.jpg", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_snes;
 				sprintf(imgfile2, "%s/snes/%s.png", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_snes;
 				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok_snes;
-				sprintf(imgfile2, "%s.png", imgfile); //if(stat(imgfile2, &s3)>=0) goto thumb_ok_snes;
+				sprintf(imgfile2, "%s.png", imgfile); if(!exist(imgfile2)) goto thumb_not_ok_snes;
+				//if(stat(imgfile2, &s3)>=0) goto thumb_ok_snes;
 				//sprintf(imgfile2, "%s.JPG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_snes;
 				//sprintf(imgfile2, "%s.PNG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_snes;
 
@@ -18871,18 +18881,17 @@ static void add_retro_column_thread_entry( uint64_t arg )
 
 
 thumb_ok_snes:
-				if(exist(imgfile2))
-				{
-					add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"SNES9x Game ROM",
-					/*type*/8, /*status*/0, /*game_id*/-1, /*icon*/xmb_icon_retro, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)imgfile2, 0, 0);
-				}
-				else
-					add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"SNES9x Game ROM",
-					/*type*/8, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_retro, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
+				add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"SNES9x Game ROM",
+				/*type*/8, /*status*/0, /*game_id*/-1, /*icon*/xmb_icon_retro, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)imgfile2, 0, 0);
+				goto thumb_cont_snes;
 
-				//if(xmb[8].size<9)	draw_xmb_bare(8, 1, 0, 0);
+thumb_not_ok_snes:
+				add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"SNES9x Game ROM",
+				/*type*/8, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_retro, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
+
+thumb_cont_snes:
 				if(!(xmb[8].size & 0x0f)) sort_xmb_col(xmb[8].member, xmb[8].size, 1);
-				if(xmb[8].size>=MAX_XMB_MEMBERS) break;
+				if(xmb[8].size>=MAX_XMB_MEMBERS-1) break;
 
 			}
 		}
@@ -18905,6 +18914,7 @@ thumb_ok_snes:
 			sprintf(linkfile, "%s/%s", pane[ret_f].path, pane[ret_f].name);
 			if(is_genp(linkfile))
 			{
+				if(xmb[8].size>=MAX_XMB_MEMBERS-1) break;
 				sprintf(linkfile, "%s/%s", pane[ret_f].path, pane[ret_f].name);
 				if(pane[ret_f].name[strlen(pane[ret_f].name)-4]=='.') pane[ret_f].name[strlen(pane[ret_f].name)-4]=0;
 				else if(pane[ret_f].name[strlen(pane[ret_f].name)-3]=='.') pane[ret_f].name[strlen(pane[ret_f].name)-3]=0;
@@ -18915,7 +18925,8 @@ thumb_ok_snes:
 				sprintf(imgfile2, "%s/gen/%s.jpg", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_genp;
 				sprintf(imgfile2, "%s/gen/%s.png", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_genp;
 				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok_genp;
-				sprintf(imgfile2, "%s.png", imgfile);/* if(stat(imgfile2, &s3)>=0) goto thumb_ok_genp;
+				sprintf(imgfile2, "%s.png", imgfile); if(!exist(imgfile2)) goto thumb_not_ok_genp;
+				/* if(stat(imgfile2, &s3)>=0) goto thumb_ok_genp;
 				sprintf(imgfile2, "%s.JPG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_genp;
 				sprintf(imgfile2, "%s.PNG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_genp;
 
@@ -18928,19 +18939,18 @@ thumb_ok_snes:
 				sprintf(imgfile2, "%s.PNG", linkfile);// if(stat(imgfile2, &s3)>=0) goto thumb_ok_genp; */
 
 thumb_ok_genp:
-				if(xmb[8].size>=MAX_XMB_MEMBERS) break;
-				if(exist(imgfile2))
-				{
+
 					add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"Genesis+ GX Game ROM",
 					/*type*/11, /*status*/0, /*game_id*/-1, /*icon*/xmb_icon_retro, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)imgfile2, 0, 0);
-				}
-				else
+					goto thumb_cont_genp;
+
+thumb_not_ok_genp:
 					add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"Genesis+ GX Game ROM",
 					/*type*/11, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_retro, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
 
-				//if(xmb[8].size<9)	draw_xmb_bare(8, 1, 0, 0);
+thumb_cont_genp:
 				if(!(xmb[8].size & 0x0f)) sort_xmb_col(xmb[8].member, xmb[8].size, 1);
-				if(xmb[8].size>=MAX_XMB_MEMBERS) break;
+				if(xmb[8].size>=MAX_XMB_MEMBERS-1) break;
 			}
 		}
 		sort_xmb_col(xmb[8].member, xmb[8].size, 1);
@@ -18962,6 +18972,7 @@ thumb_ok_genp:
 			sprintf(linkfile, "%s/%s", pane[ret_f].path, pane[ret_f].name);
 			if(is_fceu(linkfile))
 			{
+				if(xmb[8].size>=MAX_XMB_MEMBERS-1) break;
 				sprintf(linkfile, "%s/%s", pane[ret_f].path, pane[ret_f].name);
 				if(pane[ret_f].name[strlen(pane[ret_f].name)-4]=='.') pane[ret_f].name[strlen(pane[ret_f].name)-4]=0;
 				else if(pane[ret_f].name[strlen(pane[ret_f].name)-5]=='.') pane[ret_f].name[strlen(pane[ret_f].name)-5]=0;
@@ -18972,7 +18983,8 @@ thumb_ok_genp:
 				sprintf(imgfile2, "%s/fceu/%s.jpg", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_fceu;
 				sprintf(imgfile2, "%s/fceu/%s.png", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_fceu;
 				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok_fceu;
-				sprintf(imgfile2, "%s.png", imgfile); /* if(stat(imgfile2, &s3)>=0) goto thumb_ok_fceu;
+				sprintf(imgfile2, "%s.png", imgfile); if(!exist(imgfile2)) goto thumb_not_ok_fceu;
+				/* if(stat(imgfile2, &s3)>=0) goto thumb_ok_fceu;
 				sprintf(imgfile2, "%s.JPG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_fceu;
 				sprintf(imgfile2, "%s.PNG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_fceu;
 
@@ -18985,19 +18997,16 @@ thumb_ok_genp:
 				sprintf(imgfile2, "%s.PNG", linkfile);// if(stat(imgfile2, &s3)>=0) goto thumb_ok_fceu; */
 
 thumb_ok_fceu:
-				if(xmb[8].size>=MAX_XMB_MEMBERS) break;
-				if(exist(imgfile2))
-				{
 					add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"Genesis+ GX Game ROM",
 					/*type*/9, /*status*/0, /*game_id*/-1, /*icon*/xmb_icon_retro, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)imgfile2, 0, 0);
-				}
-				else
+					goto thumb_cont_fceu;
+
+thumb_not_ok_fceu:
 					add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"Genesis+ GX Game ROM",
 					/*type*/9, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_retro, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
-
-				//if(xmb[8].size<9)	draw_xmb_bare(8, 1, 0, 0);
+thumb_cont_fceu:
 				if(!(xmb[8].size & 0x0f)) sort_xmb_col(xmb[8].member, xmb[8].size, 1);
-				if(xmb[8].size>=MAX_XMB_MEMBERS) break;
+				if(xmb[8].size>=MAX_XMB_MEMBERS-1) break;
 
 			}
 		}
@@ -19020,6 +19029,7 @@ thumb_ok_fceu:
 			sprintf(linkfile, "%s/%s", pane[ret_f].path, pane[ret_f].name);
 			if(is_vba(linkfile))
 			{
+				if(xmb[8].size>=MAX_XMB_MEMBERS-1) break;
 				sprintf(linkfile, "%s/%s", pane[ret_f].path, pane[ret_f].name);
 				if(pane[ret_f].name[strlen(pane[ret_f].name)-4]=='.') pane[ret_f].name[strlen(pane[ret_f].name)-4]=0;
 				else if(pane[ret_f].name[strlen(pane[ret_f].name)-3]=='.') pane[ret_f].name[strlen(pane[ret_f].name)-3]=0;
@@ -19030,7 +19040,8 @@ thumb_ok_fceu:
 				sprintf(imgfile2, "%s/vba/%s.jpg", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_vba;
 				sprintf(imgfile2, "%s/vba/%s.png", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_vba;
 				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok_vba;
-				sprintf(imgfile2, "%s.png", imgfile);/* if(stat(imgfile2, &s3)>=0) goto thumb_ok_vba;
+				sprintf(imgfile2, "%s.png", imgfile); if(!exist(imgfile2)) goto thumb_not_ok_vba;
+				/* if(stat(imgfile2, &s3)>=0) goto thumb_ok_vba;
 				sprintf(imgfile2, "%s.JPG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_vba;
 				sprintf(imgfile2, "%s.PNG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_vba;
 
@@ -19043,18 +19054,17 @@ thumb_ok_fceu:
 				sprintf(imgfile2, "%s.PNG", linkfile);// if(stat(imgfile2, &s3)>=0) goto thumb_ok_vba; */
 
 thumb_ok_vba:
-				if(xmb[8].size>=MAX_XMB_MEMBERS) break;
-				if(exist(imgfile2))
-				{
 					add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"GameBoy Game ROM",
 					/*type*/10, /*status*/0, /*game_id*/-1, /*icon*/xmb_icon_retro, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)imgfile2, 0, 0);
-				}
-				else
+					goto thumb_cont_vba;
+
+thumb_not_ok_vba:
 					add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"GameBoy Game ROM",
 					/*type*/10, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_retro, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
 
+thumb_cont_vba:
 				if(!(xmb[8].size & 0x0f)) sort_xmb_col(xmb[8].member, xmb[8].size, 1);
-				if(xmb[8].size>=MAX_XMB_MEMBERS) break;
+				if(xmb[8].size>=MAX_XMB_MEMBERS-1) break;
 			}
 		}
 		sort_xmb_col(xmb[8].member, xmb[8].size, 1);
@@ -19076,6 +19086,7 @@ thumb_ok_vba:
 			sprintf(linkfile, "%s/%s", pane[ret_f].path, pane[ret_f].name);
 			if(is_fba(linkfile))
 			{
+				if(xmb[8].size>=MAX_XMB_MEMBERS-1) break;
 				sprintf(linkfile, "%s/%s", pane[ret_f].path, pane[ret_f].name);
 				if(pane[ret_f].name[strlen(pane[ret_f].name)-4]=='.') pane[ret_f].name[strlen(pane[ret_f].name)-4]=0;
 				else if(pane[ret_f].name[strlen(pane[ret_f].name)-3]=='.') pane[ret_f].name[strlen(pane[ret_f].name)-3]=0;
@@ -19086,7 +19097,8 @@ thumb_ok_vba:
 				sprintf(imgfile2, "%s/fba/%s.jpg", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_fba;
 				sprintf(imgfile2, "%s/fba/%s.png", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_fba;
 				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok_fba;
-				sprintf(imgfile2, "%s.png", imgfile);/* if(stat(imgfile2, &s3)>=0) goto thumb_ok_fba;
+				sprintf(imgfile2, "%s.png", imgfile); if(!exist(imgfile2)) goto thumb_not_ok_fba;
+				/* if(stat(imgfile2, &s3)>=0) goto thumb_ok_fba;
 				sprintf(imgfile2, "%s.JPG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_fba;
 				sprintf(imgfile2, "%s.PNG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_fba;
 
@@ -19099,18 +19111,16 @@ thumb_ok_vba:
 				sprintf(imgfile2, "%s.PNG", linkfile);// if(stat(imgfile2, &s3)>=0) goto thumb_ok_fba; */
 
 thumb_ok_fba:
-				if(xmb[8].size>=MAX_XMB_MEMBERS) break;
-				if(exist(imgfile2))
-				{
-					add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"FBA Game ROM",
-					/*type*/12, /*status*/0, /*game_id*/-1, /*icon*/xmb_icon_retro, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)imgfile2, 0, 0);
-				}
-				else
-					add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"FBA Game ROM",
-					/*type*/12, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_retro, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
+				add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"FBA Game ROM",
+				/*type*/12, /*status*/0, /*game_id*/-1, /*icon*/xmb_icon_retro, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)imgfile2, 0, 0);
+				goto thumb_cont_fba;
 
+thumb_not_ok_fba:
+				add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"FBA Game ROM",
+				/*type*/12, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_retro, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
+thumb_cont_fba:
 				if(!(xmb[8].size & 0x0f)) sort_xmb_col(xmb[8].member, xmb[8].size, 1);
-				if(xmb[8].size>=MAX_XMB_MEMBERS) break;
+				if(xmb[8].size>=MAX_XMB_MEMBERS-1) break;
 			}
 		}
 		sort_xmb_col(xmb[8].member, xmb[8].size, 1);
@@ -20771,7 +20781,7 @@ int main(int argc, char **argv)
 	// allocate buffers for images (one big buffer = 76MB)
 	// XMMB mode uses 7 frame buffers (56MB)
 	u32 buf_align= FB(1);
-	u32 frame_buf_size = (buf_align * 6)+5324800;// for text_bmpS 320x320x13 -> 1920*648 * 4
+	u32 frame_buf_size = (buf_align * 6)+5964160;// for text_bmpS 320x320x13 -> 1920*648 * 4
 	frame_buf_size = ( frame_buf_size + 0xfffff ) & ( ~0xfffff );
 
 	text_bmp = (u8 *) memalign(0x100000, frame_buf_size);
@@ -20783,9 +20793,10 @@ int main(int argc, char **argv)
 
 	text_FMS	= text_bmp + buf_align * 5;
 	text_bmpS	= text_bmp + buf_align * 6;
+	text_legend = text_bmpS + 5324800;
 
 //	text_legend = text_bmpUPSR + buf_align;
-	text_legend = text_bmpUBG  + buf_align;
+
 	text_BOOT	= text_bmpUBG  + buf_align;
 	//pData = (long)text_bmp + buf_align * 8;//(long)memalign(128, _mp3_buffer*1024*1024);
 
@@ -23795,6 +23806,23 @@ overwrite_cancel_bdvd:
 					mouseY=b_mY;
 					if(ret_f!=-1)
 					{
+						if(ret_f)
+						{
+							rnd=time(NULL)&0x03;
+							char tortuga[512];
+							sprintf(tortuga, "::: Download server provided by TORTUGA COVE :::\n\n");
+							if(rnd<2) strcat(tortuga, "www.tortuga-cove.com: Your Ad-Free Source for Gaming and Hacking News!\n\n");
+							else if(rnd==2) strcat(tortuga, "Provided By: www.tortuga-cove.com\n\n");
+							else if(rnd==3) strcat(tortuga, "www.tortuga-cove.com: Ran By Gamers For Gamers!\n\n");
+							strcat(tortuga, (const char*) STR_DOWN_THM);
+							dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, tortuga, dialog_fun2, (void*)0x0000aaab, NULL );
+							sys_timer_usleep( 250*1000 );
+							flipc(70);
+							sys_timer_usleep( 5*1000*1000 );
+							cellMsgDialogAbort();
+						}
+
+
 						char tdl[512];
 						sprintf(tdl, "%s/%s.pkg", themes_web_dir, www_theme[ret_f].name);
 						if(download_file(www_theme[ret_f].pkg, tdl, 4)==1 && net_used_ignore())
