@@ -229,7 +229,7 @@ int Fonts_OpenFonts( const CellFontLibrary*lib, Fonts_t* fonts, char* _app_usrdi
 			//cellFontSetScalePoint( &fonts->SystemFont[n], 18.f, 10.125f );
 
 			cellFontSetResolutionDpi( &fonts->SystemFont[n], 72, 72 );
-			cellFontSetScalePoint( &fonts->SystemFont[n], 28.f, 28.f );
+			cellFontSetScalePoint( &fonts->SystemFont[n], 32.f, 32.f );
 		}
 
 		for ( n=0; n < fonts->sysFontMax; n++ ) {
@@ -249,7 +249,7 @@ int Fonts_OpenFonts( const CellFontLibrary*lib, Fonts_t* fonts, char* _app_usrdi
 			//cellFontSetResolutionDpi( &fonts->SystemFont[n], 36, 36 );
 			//cellFontSetScalePoint( &fonts->SystemFont[n], 18.f, 10.125f );
 			cellFontSetResolutionDpi( &fonts->SystemFont[n], 72, 72 );
-			cellFontSetScalePoint( &fonts->SystemFont[n], 28.f, 28.f );
+			cellFontSetScalePoint( &fonts->SystemFont[n], 32.f, 32.f );
 		}
 	}
 
@@ -312,7 +312,7 @@ int Fonts_OpenFonts( const CellFontLibrary*lib, Fonts_t* fonts, char* _app_usrdi
 			if ( ret == CELL_OK ) {
 
 				cellFontSetResolutionDpi( &fonts->UserFont[n], 72, 72 );
-				cellFontSetScalePoint( &fonts->UserFont[n], 26.f, 26.f );
+				cellFontSetScalePoint( &fonts->UserFont[n], 32.f, 32.f );
 			}
 		}
 	}

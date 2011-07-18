@@ -347,6 +347,8 @@ bool is_game_loading=0;
 u8 is_any_xmb_column=0;
 u8 drawing_xmb=0;
 float angle=0.f;
+u8 a_dynamic=0;
+u8 a_dynamic2=0;
 
 bool debug_mode=false;
 bool use_pad_sensor=false;
@@ -1227,6 +1229,14 @@ mp3_playlist_type mp3_playlist[MAX_MP3];
 int max_mp3=0;
 int current_mp3=0;
 
+float angle_dynamic(float min, float max)
+{
+	if(angle<180.f)
+		return (float)((angle/180.f) * (max-min))+min;
+	else
+		return (float)(((360.f/angle) - 1.f) * (max-min))+min;
+}
+
 char *tmhour(int _hour)
 {
 	int th=_hour;
@@ -1867,6 +1877,7 @@ pad_out:
 
 	ss_timer=(time(NULL)-ss_timer_last);
 	ss_timer_last=time(NULL);
+	a_dynamic2=0;
 
 pad_repeat:
 
@@ -4936,6 +4947,52 @@ return ok;
 }
 */
 
+void find_jfif(char *name, int64_t *fileOffset, uint32_t *fileSize)
+{
+	FILE *fp = NULL;
+	unsigned len = KB(2);
+	unsigned char *mem = NULL;
+
+
+	if ((fp = fopen(name, "rb")) == NULL)
+		return;
+
+	mem = (unsigned char*) malloc(len); if (!mem) return;
+	fread((void *) mem, len, 1, fp);
+	fclose(fp);
+	u32 apic=0;
+	u32 apics=0;
+	int64_t jfif=0;
+
+	for(u32 n=0; n<len-10; n++)
+	{
+		if(mem[n]=='A' && mem[n+1]=='P' && mem[n+2]=='I' && mem[n+3]=='C')
+		{
+			apic= (mem[n+4]<<24) | (mem[n+5]<<16) | (mem[n+6]<<8) | (mem[n+7]);
+			apics=n+10;
+			break;
+		}
+	}
+	if(!apic) goto no_apic;
+
+	for(u32 n=apics; n<len-10; n++)
+	{
+		if(mem[n]==0xff && mem[n+1]==0xd8 && mem[n+2]==0xff && mem[n+3]==0xe0 && mem[n+9]==0x46)
+		{
+			jfif=n;
+			break;
+		}
+	}
+	if(!jfif) goto no_apic;
+
+	(*fileOffset)	= jfif;					// offset in mp3 file from where JPEG file starts
+	(*fileSize)		= apic-(jfif-apics);	// byte size of embeded JPEG file
+
+no_apic:
+	free(mem);
+	return;
+}
+
 int load_jpg_texture_th(u8 *data, char *name, uint16_t _DW)
 {
 	int ret, ok=-1;
@@ -4980,11 +5037,23 @@ int load_jpg_texture_th(u8 *data, char *name, uint16_t _DW)
     if(ret == CELL_OK){
 
             src.srcSelect  = CELL_JPGDEC_FILE;
+            src.streamPtr  = NULL;
+            src.streamSize = 0;
+
             src.fileName   = name;
             src.fileOffset = 0;
             src.fileSize   = 0;
-            src.streamPtr  = NULL;
-            src.streamSize = 0;
+			if(name[strlen(name)-1]=='3')// && name[strlen(name)-2]&0xDF)=='P') // mp3 with possible JFIF segment
+			{
+				find_jfif(name, /*int64_t*/&src.fileOffset, /*uint32_t*/&src.fileSize);
+				if(!src.fileOffset || !src.fileSize)
+				{	// no APIC/JFIF segment in mp3
+					jpg_w=0; jpg_h=0;
+					scale_icon_h=0;
+				    ret = cellJpgDecDestroy(mHandle);
+					return ret;
+				}
+			}
 
             src.spuThreadEnable = CELL_JPGDEC_SPU_THREAD_ENABLE;
 
@@ -7507,7 +7576,7 @@ void flush_ttf(uint8_t *buffer, uint32_t _V_WIDTH, uint32_t _V_HEIGHT)
 				weight = ttf_label[cl].weight;
 
 				scale  = 30.0f * ttf_label[cl].scale * (surfW/1920.0f) * ttf_label[cl].hscale;
-				scaley = 29.1f * ttf_label[cl].scale * (surfH/1080.0f) * ttf_label[cl].vscale;
+				scaley = 30.0f * ttf_label[cl].scale * (surfH/1080.0f) * ttf_label[cl].vscale;
 
 				Fonts_SetFontScale( cf, scale );
 				Fonts_SetFontEffectWeight( cf, weight );
@@ -16160,7 +16229,9 @@ void get_www_themes(theme_def *list, u8 *max)
 		char line[2048];
 
 		char update_server[256];
-		sprintf(update_server, "%s/themes_web/", url_base);
+		//sprintf(update_server, "%s/themes_web/", url_base);
+		sprintf(update_server, "%s", "http://ps3hbthemes.us/Themes/");
+
 
 		if(c_firmware>3.30f) sprintf(update_url,"%sthemes.bin", update_server);
 		if(c_firmware<3.40f) sprintf(update_url,"%sthemes315.bin", update_server);
@@ -17362,6 +17433,16 @@ void free_all_buffers()
 			xmb[3].member[n].icon=xmb_icon_photo;
 		}
 	}
+
+	for(n=0; n<xmb[4].size; n++)
+	{
+		if(xmb[4].member[n].icon!=xmb_icon_note)
+		{
+			xmb[4].member[n].icon_buf=-1;
+			xmb[4].member[n].status=0;
+			xmb[4].member[n].icon=xmb_icon_note;
+		}
+	}
 }
 
 void reset_xmb(u8 _flag)
@@ -17389,17 +17470,33 @@ int find_free_buffer(const int _col)
 		if(xmb_icon_buf[n].used==-1) return n;
 	}
 
-	if(xmb_icon==3)
+	if(xmb_icon==3 || xmb_icon==4)
 	{
-		for(n=0; n<xmb[3].size; n++)
+		if(xmb_icon==3)
 		{
-			if(xmb[3].member[n].icon!=xmb_icon_photo && (n<(xmb[3].first-3) || n>(xmb[3].first+7)))
+			for(n=0; n<xmb[3].size; n++)
 			{
-				xmb[3].member[n].icon_buf=-1;
-				xmb[3].member[n].status=0;
-				xmb[3].member[n].icon=xmb_icon_photo;
+				if(xmb[3].member[n].icon!=xmb_icon_photo && (n<(xmb[3].first-3) || n>(xmb[3].first+7)))
+				{
+					xmb[3].member[n].icon_buf=-1;
+					xmb[3].member[n].status=0;
+					xmb[3].member[n].icon=xmb_icon_photo;
+				}
 			}
 		}
+		else
+		{
+			for(n=0; n<xmb[4].size; n++)
+			{
+				if(xmb[4].member[n].icon!=xmb_icon_note && (n<(xmb[4].first-3) || n>(xmb[4].first+7)))
+				{
+					xmb[4].member[n].icon_buf=-1;
+					xmb[4].member[n].status=0;
+					xmb[4].member[n].icon=xmb_icon_note;
+				}
+			}
+		}
+
 	 	for(n=0; n<MAX_XMB_THUMBS; n++) xmb_icon_buf[n].used=-1;
 		return 0;
 	}
@@ -17491,12 +17588,6 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 
 					for(cn=first_xmb_mem; (cn<_xmb[_xmb_icon].size && cn3<cnmax); cn++)
 					{
-						/*if(egg && cn>=0)
-						{
-							if(_xmb[_xmb_icon].member[cn].name[0]!='L') continue;
-							else if(cn3==2) _xmb[_xmb_icon].first=cn;
-						}*/
-
 
 						cn3++;
 						if(cn<0) continue;
@@ -17573,6 +17664,7 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 							draw_xmb_title(xmb_txt_buf[xmb_txt_buf_max].data, _xmb[_xmb_icon].member, cn, COL_XMB_TITLE, COL_XMB_SUBTITLE, _xmb_icon);
 							xmb_txt_buf_max++;
 						}
+
 						if(_xmb[_xmb_icon].member[cn].data!=-1 && ((ss_timer<dim_setting && dim_setting) || _xmb[_xmb_icon].first==cn || dim_setting==0) && abs(_xmb_x_offset)<100)
 						{
 							u8 xo1=(_xmb_y_offset>0 ? 1 : 0);
@@ -17580,8 +17672,20 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 							if( ((_xmb_icon==6 || _xmb_icon==7) && ((cn>=_xmb[_xmb_icon].first-xo1 && cn<=_xmb[_xmb_icon].first+xo2 && _xmb_y_offset!=0) || cn==_xmb[_xmb_icon].first) )
 								|| (_xmb_icon!=6 && _xmb_icon!=7))
 							{
+								a_dynamic=(int)angle_dynamic(160, 255);
+								if(cn3==2 && _xmb_x_offset==0 && _xmb_y_offset==0 && _xmb[_xmb_icon].member[cn].data!=-1)
+								{
+									if(abs(a_dynamic-a_dynamic2)>5)
+									{
+										a_dynamic2=a_dynamic;
+										draw_xmb_title(text_legend, _xmb[_xmb_icon].member, cn, ((COL_XMB_TITLE & 0x00ffffff) | (a_dynamic<<24)), COL_XMB_SUBTITLE, _xmb_icon);
+									}
+									set_texture(text_legend, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT); //text
 
-								set_texture(xmb_txt_buf[_xmb[_xmb_icon].member[cn].data].data, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT); //text
+								}
+								else
+									set_texture(xmb_txt_buf[_xmb[_xmb_icon].member[cn].data].data, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT); //text
+
 								if(_xmb_icon!=6 && _xmb_icon!=7)
 									display_img(xpos+((_xmb_icon==3 || _xmb_icon==5 || _xmb_icon==8)?(230+(((V_WIDTH==720)?60:0))):(128+tw/2)), ypos+th/2-XMB_TEXT_HEIGHT/2, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT, 0.5f, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT); //(int)(XMB_TEXT_WIDTH*(1.f-abs((float)_xmb_x_offset)/200.f))
 								else
@@ -17614,13 +17718,13 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 							}
 							else
 							{
-								if(strstr(_xmb[_xmb_icon].member[cn].icon_path,".JPG")!=NULL)
+								if(strstr(_xmb[_xmb_icon].member[cn].icon_path,".JPG")!=NULL || strstr(_xmb[_xmb_icon].member[cn].icon_path,".mp3")!=NULL || strstr(_xmb[_xmb_icon].member[cn].icon_path,".MP3")!=NULL)
 									load_jpg_threaded( _xmb_icon, cn);
 								else
 									load_png_threaded( _xmb_icon, cn);
 							}
 						}
-						if(_xmb[_xmb_icon].member[cn].status==1 || (_xmb[_xmb_icon].member[cn].status==0 && (_recursive || key_repeat)) || (_xmb[_xmb_icon].member[cn].status!=2 && (is_video_loading || is_music_loading || is_photo_loading || is_retro_loading || is_game_loading || is_any_xmb_column)) )
+						if(_xmb[_xmb_icon].member[cn].status==1 || (_xmb[_xmb_icon].member[cn].status==0 && (_recursive || key_repeat)) || (_xmb[_xmb_icon].member[cn].status!=2 && (is_video_loading || is_music_loading || is_photo_loading || is_retro_loading || is_game_loading || is_any_xmb_column)))
 						{
 							tw=128; th=128;
 							if(cn3!=2) {tw/=2; th/=2;}
@@ -18661,8 +18765,10 @@ static void add_video_column_thread_entry( uint64_t arg )
 				sprintf(imgfile2, "%s.JPG", imgfile); if(!exist(imgfile2)) goto thumb_not_ok;
 
 thumb_ok:
+				if(strlen(imgfile2)>sizeof(xmb[5].member[0].icon_path)-1) goto thumb_not_ok;
 					add_xmb_member(xmb[5].member, &xmb[5].size, pane[ret_f].name, (strstr(linkfile, "/dev_hdd0")==NULL ? (char*) "Video" : (char*)"HDD Video"),
 					/*type*/3, /*status*/0, /*game_id*/-1, /*icon*/xmb_icon_film, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)imgfile2, 0, 0);
+
 				goto thumb_cont;
 
 thumb_not_ok:
@@ -18798,8 +18904,12 @@ static void add_music_column_thread_entry( uint64_t arg )
 				if(pane[ret_f].name[skip_first]==' ') skip_first++;
 
 
-				add_xmb_member(xmb[4].member, &xmb[4].size, pane[ret_f].name+skip_first, (strstr(linkfile, "/dev_hdd0")==NULL ? (char*) "Music" : (char*)"HDD Music"),
-				/*type*/4, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_note, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
+				if(strlen(linkfile)<sizeof(xmb[3].member[0].icon_path)-1 && (strstr(linkfile, ".mp3")!=NULL || strstr(linkfile, ".MP3")!=NULL))
+					add_xmb_member(xmb[4].member, &xmb[4].size, pane[ret_f].name+skip_first, (strstr(linkfile, "/dev_hdd0")==NULL ? (char*) "Music" : (char*)"HDD Music"),
+					/*type*/4, /*status*/0, /*game_id*/-1, /*icon*/xmb_icon_note, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)linkfile, 0, 0);
+				else
+					add_xmb_member(xmb[4].member, &xmb[4].size, pane[ret_f].name+skip_first, (strstr(linkfile, "/dev_hdd0")==NULL ? (char*) "Music" : (char*)"HDD Music"),
+					/*type*/4, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_note, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
 				//if(xmb[4].size<9)	draw_xmb_bare(4, 1, 0, 0);
 				sort_xmb_col(xmb[4].member, xmb[4].size, 0);
 				delete_xmb_dubs(xmb[4].member, &xmb[4].size);
@@ -20406,8 +20516,8 @@ u8 read_pad_info()
 		{
 			if(xmb_slide_step!=0)
 			{
-				if(xmb_slide >0) {if(xmb_icon>2) xmb_icon--; if(xmb_icon==2) free_all_buffers(); xmb_slide=0;draw_xmb_icon_text(xmb_icon);}
-				if(xmb_slide <0) {if(xmb_icon<MAX_XMB_ICONS-2) xmb_icon++; if(xmb_icon==4) free_all_buffers(); xmb_slide=0; draw_xmb_icon_text(xmb_icon);}
+				if(xmb_slide >0) {if(xmb_icon>2) xmb_icon--;  free_all_buffers(); xmb_slide=0;draw_xmb_icon_text(xmb_icon);}
+				if(xmb_slide <0) {if(xmb_icon<MAX_XMB_ICONS-2) xmb_icon++; free_all_buffers(); xmb_slide=0; draw_xmb_icon_text(xmb_icon);}
 				if(xmb_icon!=1) xmb_slide_step=15;
 				if(xmb_icon==2) {repeat_counter1=120; repeat_counter2=repeat_key_delay;repeat_counter3=1;repeat_counter3_inc=0.f;}
 			}
@@ -20438,8 +20548,8 @@ u8 read_pad_info()
 		{
 			if(xmb_slide_step!=0)
 			{
-				if(xmb_slide >0) {if(xmb_icon>2) xmb_icon--; if(xmb_icon==2) free_all_buffers(); xmb_slide=0; draw_xmb_icon_text(xmb_icon);}
-				if(xmb_slide <0) {if(xmb_icon<MAX_XMB_ICONS-2) xmb_icon++; if(xmb_icon==4) free_all_buffers(); xmb_slide=0;draw_xmb_icon_text(xmb_icon);}
+				if(xmb_slide >0) {if(xmb_icon>2) xmb_icon--; free_all_buffers(); xmb_slide=0; draw_xmb_icon_text(xmb_icon);}
+				if(xmb_slide <0) {if(xmb_icon<MAX_XMB_ICONS-2) xmb_icon++; free_all_buffers(); xmb_slide=0;draw_xmb_icon_text(xmb_icon);}
 				xmb_slide_step=-15;
 				if(xmb_icon!=MAX_XMB_ICONS-1) xmb_slide_step=-15;
 				if(xmb_icon==MAX_XMB_ICONS-2) {repeat_counter1=120; repeat_counter2=repeat_key_delay;repeat_counter3=1;repeat_counter3_inc=0.f;}
@@ -26115,6 +26225,7 @@ static void jpg_thread_entry( uint64_t arg )
 	{
 		int _xmb_icon=arg&0xf;
 		int cn=arg>>8;
+		if(cn<xmb[_xmb_icon].size)
 		if(xmb[_xmb_icon].member[cn].status==1)
 		{
 			scale_icon_h=176;
@@ -26130,7 +26241,9 @@ static void jpg_thread_entry( uint64_t arg )
 				xmb[_xmb_icon].member[cn].status=2;
 				if(_xmb_icon==5) xmb[_xmb_icon].member[cn].icon=xmb_icon_film;
 				else if(_xmb_icon==3) xmb[_xmb_icon].member[cn].icon=xmb_icon_photo;
+				else if(_xmb_icon==4) xmb[_xmb_icon].member[cn].icon=xmb_icon_note;
 				else if(_xmb_icon==8) xmb[_xmb_icon].member[cn].icon=xmb_icon_retro;
+
 			}
 		}
 	}
