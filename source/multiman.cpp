@@ -4957,7 +4957,7 @@ void find_jfif(char *name, int64_t *fileOffset, uint32_t *fileSize)
 	if ((fp = fopen(name, "rb")) == NULL)
 		return;
 
-	mem = (unsigned char*) malloc(len); if (!mem) return;
+	mem = (unsigned char*) malloc(len); if (!mem) {fclose(fp); return;}
 	fread((void *) mem, len, 1, fp);
 	fclose(fp);
 	u32 apic=0;
