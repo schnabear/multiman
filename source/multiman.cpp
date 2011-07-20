@@ -1004,7 +1004,7 @@ typedef struct {
 
 } _locales;
 
-#define MAX_LOCALES	26
+#define MAX_LOCALES	27
 static _locales locales[] = {
 	{	0,	4,	 "EN",	"English",		"English"		}, // Dean
 	{	1,	4,	 "BG",	"Bulgarian",	"Български"		}, // Dean
@@ -1016,6 +1016,7 @@ static _locales locales[] = {
 	{	6,	4,	 "RU",	"Russian",		"Русский"		}, // pvc1, thesixsouls
 	{	7,	4,	 "UA",	"Ukrainian",	"Українська"	}, // sanya007
 	{	5,	16,	 "PL",	"Polish",		"Polski"		}, // djtom, Bolec
+	{	26,	16,	 "CZ",	"Czech",		"Čeština"		}, // varinek, Mutagen
 
 	{	10,	4,	 "DE",	"German",		"Deutsch"		}, // flip
 	{	11,	4,	 "FR",	"French",		"Français"		}, // Guilouz
@@ -5043,7 +5044,7 @@ int load_jpg_texture_th(u8 *data, char *name, uint16_t _DW)
             src.fileName   = name;
             src.fileOffset = 0;
             src.fileSize   = 0;
-			if(name[strlen(name)-1]=='3')// && name[strlen(name)-2]&0xDF)=='P') // mp3 with possible JFIF segment
+			if(name[strlen(name)-1]=='3') // MP3 file with possible APIC segment
 			{
 				find_jfif(name, /*int64_t*/&src.fileOffset, /*uint32_t*/&src.fileSize);
 				if(!src.fileOffset || !src.fileSize)
@@ -13189,20 +13190,22 @@ CellMSMP3FrameHeader Hdr;
 		if(-1==cellMSMP3GetFrameInfo(pData,&Hdr)) return (-1);	// Invalid MP3 header
 
 		tSize+=Hdr.PacketSize;	// Update total file size
+
 		if ((Hdr.ID3==0)&&(Hdr.Tag==0))
-			tTime+=Hdr.PacketTime;	// Update total playing time (in seconds)
-
-		pData+=Hdr.PacketSize;	// Move forward to next packet
-
-		if (tSize>=_mp3_buffer || tSize>=force_mp3_size)
 		{
+			tTime+=Hdr.PacketTime;	// Update total playing time (in seconds)
 			*_mp3_freq=Hdr.Frequency;
 			mp3_durr=(int)tTime;
 			mp3_packet=Hdr.PacketSize;
 			mp3_packet_time=Hdr.PacketTime+0.001f;
+			pData+=Hdr.PacketSize;	// Move forward to next packet
 			return 1;
 		}
+
+		if (tSize>=_mp3_buffer || tSize>=force_mp3_size)
+			return 1;
 	}
+	return -1;
 }
 
 //sprintf(mp3_now_playing,"%d Hz, (%imin %2.2isec) [%s]", Hdr.Frequency, ((int) tTime / 60), ((int) tTime % 60), mp3filename);
@@ -20999,7 +21002,7 @@ int main(int argc, char **argv)
 	//sys_vm_memory_map(MB(32), MB(vm_real_size), SYS_MEMORY_CONTAINER_ID_INVALID, SYS_MEMORY_PAGE_SIZE_64K, SYS_VM_POLICY_AUTO_RECOMMENDED, &vm);
 	//sys_vm_touch(vm, MB(vm_real_size));
 
-	pData = (char*) memalign(16, _mp3_buffer); //allocate 2 buffers for mp3 playback
+	pData = (char*) memalign(128, _mp3_buffer); //allocate 2 buffers for mp3 playback
 	pDataB = pData;
 
 	multiStreamStarted = StartMultiStream();

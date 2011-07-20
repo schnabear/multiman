@@ -50,7 +50,7 @@ static int audioInitCell(void)
 		cellAudioQuit();
 		return -1;
 	}
-	 
+
 	ret = cellAudioGetPortConfig(portNum, &portConfig);
 	if (ret != CELL_OK)
 	{
@@ -99,11 +99,11 @@ long InitialiseAudio( const long nStreams, const long nmaxSubs, int &_nPortNumbe
 	CellMSSystemConfig cfg;
 
 
-	uint8_t prios[8] = {1, 0, 0, 0, 0, 0, 0, 0};
+	uint8_t prios[8] = {8, 8, 8, 8, 0, 0, 0, 0};
 	cfg.channelCount=nStreams;
 	cfg.subCount=nmaxSubs;
 	cfg.dspPageCount=0;
-	cfg.flags=CELL_MS_NOFLAGS;
+	cfg.flags=CELL_MS_DISABLE_SPU_PRINTF_SERVER | CELL_MS_TD_ONLY_256;
 
 
     _nPortNumber = audioInitCell();
