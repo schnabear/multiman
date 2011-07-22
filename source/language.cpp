@@ -66,8 +66,8 @@ static unsigned char s_pDownCover	[]	= "Downloading cover, please wait!";
 static unsigned char s_pDownFile	[]	= "Downloading file, please wait!";
 static unsigned char s_pDownTheme	[]	= "Downloading theme, please wait!";
 
-static unsigned char s_pDownMSG0	[]	= "\nDownloaded %.1f of %.3f MB. Remaining: %imin %2.2isec (/\\ to cancel)\nSave path: %s";
-static unsigned char s_pDownMSG1	[]	= "Downloaded %1.2f of %1.2f KB. Remaining: %imin %2.2isec\n\nPress /\\ to cancel download";
+static unsigned char s_pDownMSG0	[]	= "\nDownloaded %.1f of %.2f MB. Remaining: %imin %2.2isec (/\\ to cancel)\nSave path: %s";
+static unsigned char s_pDownMSG1	[]	= "Downloaded %.2f of %.2f KB. Remaining: %i:%2.2i min\n\nPress /\\ to cancel download";
 static unsigned char s_pDownMSG2	[]	= "Downloaded %.0f of %.0f KB. Remaining: %i:%2.2i min";
 
 static unsigned char s_pParamVer	[]	= "Game requires PS3 firmware version %.2f.\n\nDo you want to change PARAM.SFO version to %.2f?";

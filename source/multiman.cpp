@@ -1004,7 +1004,7 @@ typedef struct {
 
 } _locales;
 
-#define MAX_LOCALES	27
+#define MAX_LOCALES	29
 static _locales locales[] = {
 	{	0,	4,	 "EN",	"English",		"English"		}, // Dean
 	{	1,	4,	 "BG",	"Bulgarian",	"Български"		}, // Dean
@@ -1017,6 +1017,7 @@ static _locales locales[] = {
 	{	7,	4,	 "UA",	"Ukrainian",	"Українська"	}, // sanya007
 	{	5,	16,	 "PL",	"Polish",		"Polski"		}, // djtom, Bolec
 	{	26,	16,	 "CZ",	"Czech",		"Čeština"		}, // varinek, Mutagen
+	{   27,	16,	 "HU",	"Hungarian",	"Magyar"		}, // JohnDoeHun
 
 	{	10,	4,	 "DE",	"German",		"Deutsch"		}, // flip
 	{	11,	4,	 "FR",	"French",		"Français"		}, // Guilouz
@@ -1032,6 +1033,7 @@ static _locales locales[] = {
 	{	15,	4,	 "FI",	"Finnish",		"Suomi"			}, // Jeggu
 	{	22,	4,	 "NL",	"Dutch",		"Nederlands"	}, // GuardianSoul
 	{	16,	16,	 "WE",	"Welsh",		"Cymraeg"		}, // bropesda
+	{	28,	16,	 "CA",	"Catalan",		"Català"		}, // albert (A. R.)
 
 	{	18,	4,	 "JP",	"Japanese",		"日本語"			}, // zch
 	{	19,	4,	 "CN",	"Chinese (S)",	"简体中文"		}, // Lucky-star
@@ -1041,7 +1043,7 @@ static _locales locales[] = {
 
 	{	24,	16,	 "XX",	"Other",		"Other"			}
 
-//	{  13,	16,	 "HU",	"Hungarian",	"Magyar"		}, // Lajos Szalay
+
 
 
 
@@ -3620,7 +3622,8 @@ if (!fid) {goto quit;}
 
 memset(buffer, 0x00, sizeof(buffer));
 while (localRecv != 0) {
-if (cellHttpRecvResponse(trans, buffer, sizeof(buffer) - 1, &localRecv) < 0) {
+
+if (cellHttpRecvResponse(trans, buffer, sizeof(buffer) - 1, &localRecv) < 0 || mm_shutdown) {
 	fclose(fid);
 	goto quit;
 }
@@ -3718,7 +3721,7 @@ if(show_progress==3){
 }
 
 	if(show_progress!=0){ cellMsgDialogAbort(); flip(); }
-	if(global_device_bytes==0) remove(save_path);
+	if(global_device_bytes==0 || mm_shutdown) remove(save_path);
 return ret;
 }
 
@@ -3771,7 +3774,7 @@ int download_file_th(const char *http_file, const char *save_path, int params)
 	http_active=true;
 	memset(buffer, 0x00, sizeof(buffer));
 	while (localRecv != 0) {
-		if (cellHttpRecvResponse(trans, buffer, sizeof(buffer) - 1, &localRecv) < 0) {
+		if (cellHttpRecvResponse(trans, buffer, sizeof(buffer) - 1, &localRecv) < 0 || mm_shutdown) {
 			fclose(fid);
 			goto quit_th;
 		}
@@ -3793,7 +3796,7 @@ quit_th:
 	if (httpPool) free(httpPool);
 	if (uriPool) free(uriPool);
 
-	if(received_bytes==0) remove(save_path);
+	if(received_bytes==0 || mm_shutdown) remove(save_path);
 	http_active=false;
 return ret;
 }
