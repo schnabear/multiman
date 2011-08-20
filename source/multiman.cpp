@@ -1005,9 +1005,9 @@ typedef struct {
 
 } _locales;
 
-#define MAX_LOCALES	30
+#define MAX_LOCALES	31
 static _locales locales[] = {
-	{	0,	4,	 "EN",	"English",		"English"		}, // Dean
+	{	0,	4,	 "EN",	"English",		"English"		}, // multiMAN
 	{	1,	4,	 "BG",	"Bulgarian",	"Български"		}, // Dean
 
 	{	3,	16,	 "TR",	"Turkish",		"Türkçe"		}, // ozayturay
@@ -1042,6 +1042,7 @@ static _locales locales[] = {
 	{	20,	4,	 "CT",	"Chinese (T)",	"正體中文"		}, // Lucky-star
 	{	21,	16,	 "PE",	"Persian",		"ﻰﺳﺭﺎﭘ"			}, // ASTeam
 	{   25,	16,	 "AR",	"Arabic",		"ﺔﻴﺑﺮﻌﻟا"		}, // silent_4
+	{	30,	16,	 "IN",	"Indonesian",	"Indonesian"	}, // aquarius
 
 	{	24,	16,	 "XX",	"Other",		"Other"			}
 
