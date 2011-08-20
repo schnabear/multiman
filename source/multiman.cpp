@@ -343,6 +343,7 @@ sys_ppu_thread_t pngdec_thr_id;
 const int32_t misc_thr_prio  = 1600;
 const size_t app_stack_size  = 32768;
 
+bool is_caching=0;
 bool is_game_loading=0;
 u8 is_any_xmb_column=0;
 u8 drawing_xmb=0;
@@ -575,7 +576,7 @@ void draw_text_stroke(float x, float y, float size, u32 color, const char *str);
 #define	GAME_LIST_VER	"MMGL0109" //LLIST.BIN		cache for game list
 #define	XMB_COL_VER		"MMXC0115" //XMBS.00x		xmb[?] structure (1 XMMB column)
 
-char current_version[9]="02.03.00";
+char current_version[9]="02.04.00";
 char current_version_NULL[10];
 char versionUP[64];
 
@@ -1004,7 +1005,7 @@ typedef struct {
 
 } _locales;
 
-#define MAX_LOCALES	29
+#define MAX_LOCALES	30
 static _locales locales[] = {
 	{	0,	4,	 "EN",	"English",		"English"		}, // Dean
 	{	1,	4,	 "BG",	"Bulgarian",	"Български"		}, // Dean
@@ -1034,6 +1035,7 @@ static _locales locales[] = {
 	{	22,	4,	 "NL",	"Dutch",		"Nederlands"	}, // GuardianSoul
 	{	16,	16,	 "WE",	"Welsh",		"Cymraeg"		}, // bropesda
 	{	28,	16,	 "CA",	"Catalan",		"Català"		}, // albert (A. R.)
+	{	29,	16,	 "GL",	"Galician",		"Galego"		}, // ser8210
 
 	{	18,	4,	 "JP",	"Japanese",		"日本語"			}, // zch
 	{	19,	4,	 "CN",	"Chinese (S)",	"简体中文"		}, // Lucky-star
@@ -1042,10 +1044,6 @@ static _locales locales[] = {
 	{   25,	16,	 "AR",	"Arabic",		"ﺔﻴﺑﺮﻌﻟا"		}, // silent_4
 
 	{	24,	16,	 "XX",	"Other",		"Other"			}
-
-
-
-
 
 };
 
@@ -2110,6 +2108,19 @@ bool is_snes9x(char *rom)
 		return false;
 }
 
+void launch_self(char *self, char *rom)
+{
+	if(!net_used_ignore()) return;
+	char* launchargv[2];
+	memset(launchargv, 0, sizeof(launchargv));
+
+	int len = strlen(rom);
+	launchargv[0] = (char*)malloc(len + 1); strcpy(launchargv[0], rom);
+	launchargv[1] = (char*)malloc(len + 1); strcpy(launchargv[1], rom);
+	unload_modules();
+	sys_game_process_exitspawn2((char*)self, (const char**)launchargv, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_512K);
+}
+
 void launch_snes_emu(char *rom)
 {
 	if(!net_used_ignore()) return;
@@ -2797,19 +2808,19 @@ termination2X:
 			set_texture( text_FMS, 1920, 48); display_img(0, 47, 1920, 60, 1920, 48, -0.15f, 1920, 48);	display_img(0, 952, 1920, 76, 1920, 48, -0.15f, 1920, 48);time ( &rawtime );	timeinfo = localtime ( &rawtime );	cellDbgFontPrintf( 0.83f, 0.89f, 0.7f ,0xc0a0a0a0, "%02d/%02d/%04d\n %s:%02d:%02d ", timeinfo->tm_mday, timeinfo->tm_mon+1, timeinfo->tm_year+1900, tmhour(timeinfo->tm_hour), timeinfo->tm_min, timeinfo->tm_sec);
 			set_texture( text_bmpIC, 320, 320);  display_img(800, 200, 320, 176, 320, 176, 0.0f, 320, 320);
 			if(	strstr(path_new, "/ps3_home/video")!=NULL ) {
-				cellDbgFontPrintf( 0.35f, 0.45f, 0.8f, 0xc0c0c0c0, "Adding files to video library...\n\nPlease wait!\n\n[%s]",tr); cellDbgFontDrawGcm();
+				cellDbgFontPrintf( 0.35f, 0.45f, 0.8f, 0xc0c0c0c0, "Adding files to video library...\n\nPlease wait!\n\n[%s]",tr);
 				flip();
 		 		video_export(tr, path_name, 0);
 			}
 			else if(	strstr(path_new, "/ps3_home/music")!=NULL )
 				{
-					cellDbgFontPrintf( 0.35f, 0.45f, 0.8f, 0xc0c0c0c0, "Adding files to music library...\n\nPlease wait!\n\n[%s]",tr); cellDbgFontDrawGcm();
+					cellDbgFontPrintf( 0.35f, 0.45f, 0.8f, 0xc0c0c0c0, "Adding files to music library...\n\nPlease wait!\n\n[%s]",tr);
 					flip();
 			 		music_export(tr, path_name, 0);
 				}
 			else if(	strstr(path_new, "/ps3_home/photo")!=NULL )
 				{
-					cellDbgFontPrintf( 0.35f, 0.45f, 0.8f, 0xc0c0c0c0, "Adding files to photo library...\n\nPlease wait!\n\n[%s]",tr); cellDbgFontDrawGcm();
+					cellDbgFontPrintf( 0.35f, 0.45f, 0.8f, 0xc0c0c0c0, "Adding files to photo library...\n\nPlease wait!\n\n[%s]",tr);
 					flip();
 			 		photo_export(tr, path_name, 0);
 				}
@@ -2858,7 +2869,6 @@ int network_put(char *command, char *server_name, int server_port, char *net_fil
 		sprintf(string1, "Establishing server connection, please wait!\n\nContacting %s...", server_name);
 		ClearSurface();
 		cellDbgFontPrintf( 0.28f, 0.45f, 0.8f, 0xc0c0c0c0, string1);
-		cellDbgFontDrawGcm();
 		flip();
 	}
 
@@ -3159,7 +3169,6 @@ int network_com(char *command, char *server_name, int server_port, char *net_fil
 			sprintf(string1, "Establishing server connection, please wait!\n\nContacting %s...", server_name);
 		ClearSurface();
 		cellDbgFontPrintf( 0.28f, 0.45f, 0.8f, 0xc0c0c0c0, string1);
-		cellDbgFontDrawGcm();
 		flip();
 	}
 
@@ -3541,7 +3550,7 @@ int download_file(const char *http_file, const char *save_path, int show_progres
 	cellDbgFontDrawGcm();
 	}
 
-if(show_progress>0 && show_progress!=3) {
+if(show_progress>0 && show_progress!=3 && progress_bar) {
 cellMsgDialogOpen2(
 	CELL_MSGDIALOG_TYPE_SE_TYPE_NORMAL
 	|CELL_MSGDIALOG_TYPE_BUTTON_TYPE_NONE
@@ -3641,7 +3650,7 @@ if( ( ((int)(global_device_bytes*100ULL/copy_global_bytes)) - lastINC2)>0)
 	lastINC2=(int) (global_device_bytes*100ULL / copy_global_bytes);
 	if(lastINC<lastINC2) {lastINC3=lastINC2-lastINC; lastINC=lastINC2;}
 
-	if(show_progress!=0 && show_progress!=3){
+	if(show_progress!=0 && show_progress!=3 && progress_bar){
 		if(lastINC3>0) cellMsgDialogProgressBarInc(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE,lastINC3);
 	}
 
@@ -3685,7 +3694,7 @@ if(lastINC3>3 || (time(NULL)-seconds2)>1 || (show_progress==3 && www_running))
 	cellDbgFontDrawGcm();
 	seconds2= (int) (time(NULL));
 	sprintf(string1, (const char*) STR_DOWN_MSG2,((double) global_device_bytes)/(1024.0),((double) copy_global_bytes)/(1024.0), (eta/60), eta % 60);
-	if(show_progress!=3)
+	if(show_progress!=3 && progress_bar)
 		cellMsgDialogProgressBarSetMsg(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE, string1);
 	flip();
 }
@@ -3720,7 +3729,7 @@ if(show_progress==3){
 		state_read=3;
 }
 
-	if(show_progress!=0){ cellMsgDialogAbort(); flip(); }
+	if(show_progress!=0 && progress_bar){ cellMsgDialogAbort(); flip(); }
 	if(global_device_bytes==0 || mm_shutdown) remove(save_path);
 return ret;
 }
@@ -4004,7 +4013,7 @@ CellConsoleInputProcessorResult _cellConsoleQuitXMB
     cellConsolePrintf(uiConnection, "\nShutting down multiMAN...\n");
 	unload_modules();
     cellConsolePrintf(uiConnection, "Done!\n\n");
-	sys_process_exit(1);
+	exit(0);
 
     return CELL_CONSOLE_INPUT_PROCESSED;
 }
@@ -6092,7 +6101,7 @@ DECL_WEBBROWSER_SYSTEM_CALLBACK(system_callback, cb_type, userdata)
 		break;
 
 	case CELL_SYSUTIL_REQUEST_EXITGAME:
-		unload_modules(); sys_process_exit(1); break;
+		unload_modules(); exit(0); break;
 
 	default:
 		break;
@@ -6108,7 +6117,7 @@ static void sysutil_callback( uint64_t status, uint64_t param, void * userdata )
 	{
 
 	case CELL_SYSUTIL_REQUEST_EXITGAME:
-		unload_modules(); sys_process_exit(1); break;
+		unload_modules(); exit(0); break;
 
 	case CELL_SYSUTIL_OSKDIALOG_LOADED:
 		break;
@@ -9783,13 +9792,8 @@ void fill_entries_from_device_pfs(char *path, t_menu_list *list, int *max, u32 f
 	if ((*max) < 0)
 		*max = 0;
 
-//	sprintf(string2, "Will check dir: [%s]", path); dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, string2, dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
-//	if (PfsFileGetInfo(path, &info) != 0) return;
-//	sprintf(string2, "Will read dir: [%s]", path); dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, string2, dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
 	dir = PfsFileFindFirst(path, &entry);
-//	sprintf(string2, "READ dir: [%s]", path); dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, string2, dialog_fun2, (void*)0x0000aaab, NULL );	wait_dialog();
 	if (!dir) {	is_game_loading=0;	return; }
-
 
 	do {
 		if (!strcmp(entry.FileName, ".") ||
@@ -9808,7 +9812,6 @@ void fill_entries_from_device_pfs(char *path, t_menu_list *list, int *max, u32 f
 			set_texture( text_bmpIC, 320, 320);  display_img(800, 200, 320, 176, 320, 176, 0.0f, 320, 320);
 
 			cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string2);
-			//if(first_launch) cellDbgFontPrintf( 0.30f, 0.80f, 1.0f, 0x90909090, multi_loading);
 			flip();
 		}
 		skip_entry++; if( skip_entry>10) skip_entry=0; //(first_launch && skip_entry>3 ) ||
@@ -9962,7 +9965,6 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 				set_texture( text_bmpIC, 320, 320);  display_img(800, 200, 320, 176, 320, 176, 0.0f, 320, 320);
 
 				cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string2);
-				cellDbgFontDrawGcm();
 				flip();
 			}
 		}
@@ -10101,10 +10103,6 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 			if(strstr(path, "/dev_hdd0")!=NULL && exist(file) && cover_mode!=8) load_texture(text_bmpIC, file, 320);
 
 			if(cover_mode!=8)
-				//draw_whole_xmb(1);
-				//draw_xmb_bare(xmb_icon, 2, 0, 0);
-				//max_ttf_label+=0;
-			//else
 			{
 				sprintf(string2, "Scanning, please wait!\n\n[%s/%s]", path, entry->d_name);
 				ClearSurface();
@@ -10112,8 +10110,6 @@ void fill_entries_from_device(const char *path, t_menu_list *list, int *max, u32
 				set_texture( text_bmpIC, 320, 320);  display_img(800, 200, 320, 176, 320, 176, 0.0f, 320, 320);
 
 				cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string2);
-				//if(first_launch) cellDbgFontPrintf( 0.30f, 0.80f, 1.0f, 0x90909090, multi_loading);
-				cellDbgFontDrawGcm();
 				flip();
 			}
 		}
@@ -10948,7 +10944,6 @@ if(lastINC3>0 || (time(NULL)-seconds2)!=0 || use_symlinks==1)
 	cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xc0c0c0c0, "Press /\\ to abort");
 	if(lastINC3>0) cellMsgDialogProgressBarInc(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE,lastINC3);
  	cellMsgDialogProgressBarSetMsg(CELL_MSGDIALOG_PROGRESSBAR_INDEX_SINGLE, string1);
-	cellDbgFontDrawGcm();
 	seconds2= (int) (time(NULL));
 	flip();
 }
@@ -10970,7 +10965,6 @@ if(lastINC3>0 || (time(NULL)-seconds2)!=0 || use_symlinks==1)
 		ClearSurface();
 		cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xffffffff, string1);
 		cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xffffffff, "Press /\\ to abort");
-		cellDbgFontDrawGcm();
 		flip();
 		sys_timer_usleep(2*1000000);
 		}
@@ -11311,13 +11305,14 @@ void cache_png(char *path, char *title_id)
 {
 		char src[512], dst[255], tmp1[512], tmp2[512];
 
-
 		if(strstr (title_id, "AVCHD")!=NULL || strstr (title_id,"NO_ID")!=NULL) sprintf(src, "%s/BOOT.PNG", app_usrdir); else sprintf(src, "%s", path);
 		mkdir(cache_dir, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
 
 		FILE *fpA; char raw_texture[512];
 		sprintf(raw_texture, "%s/%s_320.PNG", cache_dir, title_id);
 		if(exist(raw_texture)) return;
+
+		is_caching=1;
 
 		if(!(strstr (title_id, "AVCHD")!=NULL || strstr (title_id,"NO_ID")!=NULL))
 		{
@@ -11328,7 +11323,7 @@ void cache_png(char *path, char *title_id)
 			file_copy((char *)tmp2, (char*)dst, 0);
 		}
 
-		memset(text_bmp, 0x50, FB(1));
+		memset(text_bmp, 0x00, FB(1));
 
 		if(strstr(path, "/pvd_usb")!=NULL)
 		{
@@ -11472,6 +11467,9 @@ void cache_png(char *path, char *title_id)
 		}
 
 //just_leave:
+		memset(text_bmp, 0x00, FB(1));
+		memset(text_FONT, 0x00, FB(1));
+		is_caching=0;
 		return;
 }
 
@@ -11734,7 +11732,6 @@ static int _my_game_copy_pfsm(char *path, char *path2)
 					draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x101010ff);
 					cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
 					cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xc0c0c0c0, "Press /\\ to abort");
-					cellDbgFontDrawGcm();
 					seconds2= (int) (time(NULL));
 					flip();
 				}
@@ -11999,7 +11996,7 @@ int my_game_copy(char *path, char *path2)
 	else
 	{
 		for(flipF = 0; flipF<60; flipF++) {
-		sprintf(string1, "Preparing, please wait!");ClearSurface();	cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string1);	cellDbgFontDrawGcm(); flip();
+		sprintf(string1, "Preparing, please wait!");ClearSurface();	cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string1);	flip();
 		}
 	}
 
@@ -12175,7 +12172,6 @@ int my_game_delete(char *path)
 //			draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x200020ff);
 			cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
 			cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xc0c0c0c0, "Hold /\\ to Abort");
-			cellDbgFontDrawGcm();
 			flip();
 		}
 			pad_read();
@@ -12307,7 +12303,6 @@ if(lastINC3>0 || (time(NULL)-seconds2)!=0 )
 	draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x101010ff);
 	cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
 	cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xc0c0c0c0, "Press /\\ to abort");
-	cellDbgFontDrawGcm();
 	flip();
 	seconds2= (int) (time(NULL));
 }
@@ -12355,15 +12350,15 @@ int copy_nr(char *path, char *path_new, char *path_name) // recursive to single 
 	sprintf(string1, "Preparing, please wait!");
 	ClearSurface();
 	cellDbgFontPrintf( 0.3f, 0.45f, 0.8f, 0xc0c0c0c0, string1);
-	cellDbgFontDrawGcm();	flip();
-		file_counter=0;	global_device_bytes=0;abort_copy=0;
-		if(strstr(path,"/dev_hdd0")!=NULL)
-				my_game_test(path, 0);
-			else
-				my_game_test(path, 1);
-		copy_file_counter=file_counter;
-		copy_global_bytes=global_device_bytes;
-		lastINC=0; lastINC3=0; lastINC2=0;
+	flip();
+	file_counter=0;	global_device_bytes=0;abort_copy=0;
+	if(strstr(path,"/dev_hdd0")!=NULL)
+			my_game_test(path, 0);
+		else
+			my_game_test(path, 1);
+	copy_file_counter=file_counter;
+	copy_global_bytes=global_device_bytes;
+	lastINC=0; lastINC3=0; lastINC2=0;
 
 if(abort_copy==1)
 	sprintf(string1, (const char*)STR_COPY4, copy_file_counter, (double)(copy_global_bytes/(1024.0*1024.0*1024.0)));
@@ -12418,21 +12413,21 @@ ret3=cellMsgDialogOpen2(
 			set_texture( text_bmpIC, 320, 320);  display_img(800, 200, 320, 176, 320, 176, 0.0f, 320, 320);
 			if((strstr(tr, ".avi")!=NULL || strstr(tr, ".AVI")!=NULL || strstr(tr, ".m2ts")!=NULL || strstr(tr, ".M2TS")!=NULL || strstr(tr, ".mts")!=NULL || strstr(tr, ".MTS")!=NULL || strstr(tr, ".m2t")!=NULL || strstr(tr, ".M2T")!=NULL || strstr(tr, ".divx")!=NULL || strstr(tr, ".DIVX")!=NULL || strstr(tr, ".mpg")!=NULL || strstr(tr, ".MPG")!=NULL || strstr(tr, ".mpeg")!=NULL || strstr(tr, ".MPEG")!=NULL || strstr(tr, ".mp4")!=NULL || strstr(tr, ".MP4")!=NULL || strstr(tr, ".vob")!=NULL || strstr(tr, ".VOB")!=NULL || strstr(tr, ".wmv")!=NULL || strstr(tr, ".WMV")!=NULL || strstr(tr, ".ts")!=NULL || strstr(tr, ".TS")!=NULL || strstr(tr, ".mov")!=NULL || strstr(tr, ".MOV")!=NULL) )
 			{
-				cellDbgFontPrintf( 0.35f, 0.45f, 0.8f, 0xc0c0c0c0, "Adding files to video library...\n\nPlease wait!\n\n[ %s ]",tr); cellDbgFontDrawGcm();
+				cellDbgFontPrintf( 0.35f, 0.45f, 0.8f, 0xc0c0c0c0, "Adding files to video library...\n\nPlease wait!\n\n[ %s ]",tr);
 				flip();
 		 		video_export(tr, path_name, 0);
 			}
 
 			if(strstr(tr, ".mp3")!=NULL || strstr(tr, ".MP3")!=NULL || strstr(tr, ".wav")!=NULL || strstr(tr, ".WAV")!=NULL || strstr(tr, ".aac")!=NULL || strstr(tr, ".AAC")!=NULL)
 			{
-				cellDbgFontPrintf( 0.35f, 0.45f, 0.8f, 0xc0c0c0c0, "Adding files to music library...\n\nPlease wait!\n\n[ %s ]",tr); cellDbgFontDrawGcm();
+				cellDbgFontPrintf( 0.35f, 0.45f, 0.8f, 0xc0c0c0c0, "Adding files to music library...\n\nPlease wait!\n\n[ %s ]",tr);
 				flip();
 		 		music_export(tr, path_name, 0);
 			}
 
 			if(strstr(tr, ".jpg")!=NULL || strstr(tr, ".JPG")!=NULL || strstr(tr, ".jpeg")!=NULL || strstr(tr, ".JPEG")!=NULL || strstr(tr, ".png")!=NULL || strstr(tr, ".PNG")!=NULL)
 			{
-				cellDbgFontPrintf( 0.35f, 0.45f, 0.8f, 0xc0c0c0c0, "Adding files to photo library...\n\nPlease wait!\n\n[ %s ]",tr); cellDbgFontDrawGcm();
+				cellDbgFontPrintf( 0.35f, 0.45f, 0.8f, 0xc0c0c0c0, "Adding files to photo library...\n\nPlease wait!\n\n[ %s ]",tr);
 				flip();
 		 		photo_export(tr, path_name, 0);
 			}
@@ -13644,7 +13639,7 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 				draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
 				cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
 				cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xc0c0c0c0, "Hold /\\ to Abort");
-				cellDbgFontDrawGcm();
+
 				flip();
 
 				my_game_test( my_txt_file, 0);
@@ -13672,7 +13667,7 @@ void draw_dir_pane( t_dir_pane *list, int pane_size, int first_to_show, int max_
 					cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xffffffff, "Press [ ] to continue");
 					vflip++;
 
-					cellDbgFontDrawGcm();
+
 					flip();
 					pad_read();
 					if (new_pad & BUTTON_SQUARE)
@@ -14199,18 +14194,17 @@ quit_viewer:
 					dialog_ret=0;
 					cellMsgDialogOpen2( type_dialog_ok, (const char*)STR_PS2DISC, dialog_fun2, (void*)0x0000aaab, NULL );
 					wait_dialog();
-					unload_modules(); sys_process_exit(1);
+					unload_modules(); exit(0);
 				}
 
-				if(strstr(list[e].name, ".pkg")!=NULL || strstr(list[e].name, ".PKG")!=NULL)
+				if((strstr(list[e].name, ".pkg")!=NULL || strstr(list[e].name, ".PKG")!=NULL) && !exist(string_cat(this_pane, "/PS3_GAME")))
 				{
-
 					syscall_mount(this_pane, mount_bdvd);
 					dialog_ret=0;
 					cellMsgDialogOpen2( type_dialog_yes_no, (const char*)STR_PKGXMB, dialog_fun1, (void*)0x0000aaaa, NULL );
 					wait_dialog();
 					if(dialog_ret!=1) {reset_mount_points(); goto cancel_exit;}
-					unload_modules(); sys_process_exit(1);
+					unload_modules(); exit(0);
 				}
 
 				if(strstr(my_mp3_file, "/USRDIR/EBOOT.BIN")!=NULL && strstr(my_mp3_file, "/net_host")==NULL)
@@ -14254,7 +14248,7 @@ quit_viewer:
 					draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.9f, 0xd0000080);
 					cellDbgFontPrintf( 0.10f, 0.10f, 1.0f, 0xffffffff, string1);
 					setRenderColor();
-					cellDbgFontDrawGcm();
+
 					flip();
 
 					if(osk_dialog==1 || osk_dialog==-1) break;
@@ -14320,7 +14314,7 @@ pass_ok_2:
 					write_last_play( my_mp3_file, just_path, just_title, (char *) just_title_id, 0);
 					unload_modules();
 					syscall_mount(just_path, mount_bdvd);
-					sys_process_exit(1);
+					exit(0);
 					break;
 				}
 
@@ -14432,7 +14426,7 @@ pass_ok_2:
 		cellMsgDialogAbort();
 		syscall_mount2((char *)usb_save, (char *)just_path);
 		unload_modules();
-		sys_process_exit(1); break;
+		exit(0); break;
 
 	}
 	else
@@ -14548,7 +14542,7 @@ retry_showtime:
 					{
 						unload_modules();
 						sys_game_process_exitspawn2((char *) my_mp3_file, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_128K);
-						sys_process_exit(1);
+						exit(0);
 					}
 				}
 
@@ -15224,7 +15218,7 @@ cancel_exit:
 								dialog_ret=0;
 								cellMsgDialogOpen2( type_dialog_ok, string1, dialog_fun2, (void*)0x0000aaab, NULL );
 								wait_dialog();
-								unload_modules(); sys_process_exit(1);
+								unload_modules(); exit(0);
 
 							}
 							else
@@ -16235,9 +16229,7 @@ void get_www_themes(theme_def *list, u8 *max)
 		char line[2048];
 
 		char update_server[256];
-		//sprintf(update_server, "%s/themes_web/", url_base);
-		sprintf(update_server, "%s", "http://ps3hbthemes.us/Themes/");
-
+		sprintf(update_server, "%s/themes_web/", url_base);
 
 		if(c_firmware>3.30f) sprintf(update_url,"%sthemes.bin", update_server);
 		if(c_firmware<3.40f) sprintf(update_url,"%sthemes315.bin", update_server);
@@ -16441,7 +16433,7 @@ void check_for_update()
 								if(net_used_ignore()){
 								syscall_mount2( (char *) "/app_home", (char *) usb_save);
 								unload_modules();
-								sys_process_exit(1);
+								exit(0);
 							}
 						}
 					else
@@ -16629,7 +16621,7 @@ if(get_param_sfo_field((char *)game_param_sfo, (char *)"APP_VER", (char *)temp_v
 								if(net_used_ignore()) {
 								syscall_mount2( (char *) "/app_home", (char *) usb_save);
 								unload_modules();
-								sys_process_exit(1);
+								exit(0);
 							}
 						}
 					else
@@ -20613,17 +20605,20 @@ void draw_whole_xmb(u8 mode)
 		ClearSurface();
 	}
 
-	if((xmb_icon>1 && xmb_icon<6) || xmb_icon==8) xmb_bg_counter--;
+	if((xmb_icon>1 && xmb_icon<6 && !is_game_loading) || xmb_icon==8) xmb_bg_counter--;
 	if(xmb_icon==5 && xmb[5].init==0) add_video_column();// && xmb_bg_counter<100
 	else if(xmb_icon==4 && xmb[4].init==0) add_music_column();
 	else if(xmb_icon==3 && xmb[3].init==0) add_photo_column();
 	else if(xmb_icon==8 && xmb[8].init==0) add_emulator_column();
 
-	if(xmb_slide_step!=0 || xmb_slide_step_y!=0 || (xmb_game_bg==0 && xmb_cover==0)) xmb_bg_show=0;
+	if(xmb_slide_step!=0 || xmb_slide_step_y!=0 || (xmb_game_bg==0 && xmb_cover==0) || is_game_loading) xmb_bg_show=0;
 	if(!use_drops) if(xmb_sparks==1 || (xmb_sparks==2 && xmb_bg_show==0)) draw_stars();
 
-	if(!xmb_bg_show) set_texture( text_bmp, 1920, 1080); else set_texture( text_FONT, 1920, 1080);
-	display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+	if(!is_caching)
+	{
+		if(!xmb_bg_show || is_game_loading) set_texture( text_bmp, 1920, 1080); else set_texture( text_FONT, 1920, 1080);
+		display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+	}
 
 	if(use_drops) if(xmb_sparks==1 || (xmb_sparks==2 && xmb_bg_show==0)) draw_stars();
 
@@ -20659,11 +20654,11 @@ void draw_whole_xmb(u8 mode)
 	}
 	if( (xmb_icon==6 || xmb_icon==7) && xmb[xmb_icon].size) // && max_menu_list>0
 	{
-		if(xmb_bg_counter>0 && !xmb_bg_show) xmb_bg_counter--;
+		if(xmb_bg_counter>0 && !xmb_bg_show && !is_game_loading) xmb_bg_counter--;
 		if(xmb_bg_counter==0 && !xmb_bg_show && xmb_slide_step==0 && xmb_slide_step_y==0 && (xmb_game_bg==1 || xmb_cover==1) && (xmb_icon!=6 || (xmb_icon==6 && xmb[xmb_icon].first)) && !is_game_loading)
 		{
 			sprintf(filename, "%s/%s_1920.PNG", cache_dir, menu_list[xmb[xmb_icon].member[xmb[xmb_icon].first].game_id].title_id);
-			if(exist(filename) && xmb_game_bg==1)
+			if(exist(filename) && xmb_game_bg==1 && strstr(filename, "AVCHD_1920.PNG")==NULL && strstr(filename, "NO_ID_1920.PNG")==NULL)
 			{
 				//load_png_partial(text_FONT, filename, 1920, 90, 0);
 				//load_png_texture(text_FONT, filename, 1920);
@@ -20800,16 +20795,16 @@ int main(int argc, char **argv)
 	int one_time=1;
 
 	ret = cellSysmoduleLoadModule( CELL_SYSMODULE_GCM_SYS );
-	if (ret != CELL_OK) sys_process_exit(1);
+	if (ret != CELL_OK) exit(0);
 	else unload_mod|=8;
 
 	host_addr = memalign(MB(1), MB(1));
 	//cellGcmInitSystemMode(CELL_GCM_SYSTEM_MODE_IOMAP_512MB);
-	if(cellGcmInit(KB(128), MB(1), host_addr) != CELL_OK) sys_process_exit(1);
-	if(initDisplay()!=0) sys_process_exit(1);
+	if(cellGcmInit(KB(128), MB(1), host_addr) != CELL_OK) exit(0);
+	if(initDisplay()!=0) exit(0);
 	initShader();
 	setDrawEnv();
-	if(setRenderObject()) sys_process_exit(1);
+	if(setRenderObject()) exit(0);
 	ret = cellPadInit(8);
 	setRenderTarget();
 	initFont();
@@ -20858,13 +20853,13 @@ int main(int argc, char **argv)
 	{
 
 			sprintf(string1x, "multiMAN (referred hereafter as \"software\"), its author, partners, and associates do not condone piracy. multiMAN is a hobby project, distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY, without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\nDo you accept this binding agreement (1/3)?");
-			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string1x, dialog_fun1, (void*)0x0000aaaa, NULL );	wait_dialog(); if(dialog_ret!=1) sys_process_exit(1);
+			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string1x, dialog_fun1, (void*)0x0000aaaa, NULL );	wait_dialog(); if(dialog_ret!=1) exit(0);
 
 			sprintf(string2x, "The software is intended solely for educational and testing purposes, and while it may allow the user to create copies of legitimately acquired and/or owned content, it is required that such user actions must comply with local, federal and country legislation.\n\nFurthermore, the author of this software, its partners and associates shall assume NO responsibility, legal or otherwise implied, for any misuse of, or for any loss that may occur while using multiMAN.\n\nDo you accept this binding agreement (2/3)?");
-			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string2x, dialog_fun1, (void*)0x0000aaaa, NULL ); wait_dialog();	if(dialog_ret!=1) sys_process_exit(1);
+			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string2x, dialog_fun1, (void*)0x0000aaaa, NULL ); wait_dialog();	if(dialog_ret!=1) exit(0);
 
 			sprintf(string3x, "You are solely responsible for complying with the applicable laws in your country and you must cease using this software should your actions during multiMAN operation lead to or may lead to infringement or violation of the rights of the respective content copyright holders.\n\nmultiMAN is not licensed, approved or endorsed by \"Sony Computer Entertainment, Inc.\" (SCEI) or any other party.\n\nDo you understand and accept this binding agreement?");
-			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string3x, dialog_fun1, (void*)0x0000aaaa, NULL ); wait_dialog();	if(dialog_ret!=1) sys_process_exit(1);
+			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string3x, dialog_fun1, (void*)0x0000aaaa, NULL ); wait_dialog();	if(dialog_ret!=1) exit(0);
 
 			FILE *fpA;
 			fpA = fopen ( disclaimer, "w" );
@@ -20891,7 +20886,7 @@ int main(int argc, char **argv)
 	sprintf(current_version_NULL, "%s", current_version);
 	sys_spu_initialize(6, 0);
 	ret = load_modules();
-	if(ret!=CELL_OK && ret!=0) sys_process_exit(1);
+	if(ret!=CELL_OK && ret!=0) exit(0);
 	cellSysutilEnableBgmPlayback();
 
 	// allocate buffers for images (one big buffer = 76MB)
@@ -20901,7 +20896,7 @@ int main(int argc, char **argv)
 	frame_buf_size = ( frame_buf_size + 0xfffff ) & ( ~0xfffff );
 
 	text_bmp = (u8 *) memalign(0x100000, frame_buf_size);
-	if(map_rsx_memory( text_bmp, frame_buf_size)) sys_process_exit(1);
+	if(map_rsx_memory( text_bmp, frame_buf_size)) exit(0);
 
 	text_bmpUBG	= text_bmp + buf_align * 1; //2! x 1920x1080 XMB ICONS
 	text_bmpUPSR= text_bmp + buf_align * 3; //1  x 1920x1080 XMB TEXTS
@@ -20989,7 +20984,7 @@ int main(int argc, char **argv)
 		MEMORY_CONTAINER_SIZE_ACTIVE = MEMORY_CONTAINER_SIZE - (2 * 1024 * 1024);
 		ret = sys_memory_container_create( &memory_container, MEMORY_CONTAINER_SIZE_ACTIVE);
 	}
-	if(ret!=CELL_OK) sys_process_exit(1);
+	if(ret!=CELL_OK) exit(0);
 
 	//cellFsChmod(argv[0], 0666);
 	url_base[ 0]=0x68; url_base[ 1]=0x74; url_base[ 2]=0x74; url_base[ 3]=0x70;
@@ -21046,11 +21041,6 @@ int main(int argc, char **argv)
 
 	if(is_reloaded || exist(list_file))
 	{
-
-//		ClearSurface(); draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
-//		cellDbgFontPrintf( 0.28f, 0.85f, 1.0f, 0x90909090, "multiMAN is parsing last state data...");
-//		cellDbgFontDrawGcm(); setRenderColor();	flip();
-		//is_reloaded=0;
 
 		FILE *flist;
 		flist = fopen(list_file, "rb");
@@ -21365,7 +21355,7 @@ int main(int argc, char **argv)
 
 	sc36_path_patch=0;
 
-    payload = -1;  // 0->psgroove  1->hermesV3/V4  2->PL3
+    payload = -1;  // 0->psgroove  1->hermes  2->PL3
 	payloadT[0]=0x20;
 
 	if(sys8_enable(0) > 0)
@@ -21636,7 +21626,7 @@ int main(int argc, char **argv)
 	if (meminfo.avail<16777216) // Quit if less than 16MB RAM available (at least 12 required for copy operations + 4 to be on the safe side)
 	{
 			dialog_ret=0; cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_ERR_NOMEM, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
-			unload_modules(); sys_process_exit(1);
+			unload_modules(); exit(0);
 	}
 
 	if(debug_mode)
@@ -21740,6 +21730,8 @@ start_of_loop:
 				{
 					c_opacity_delta=16;	dimc=0; dim=1;
 					dev_changed=1;
+					xmb_bg_counter=200;
+					xmb_bg_show=0;
 
 					if( ((fdevices>>11) & 1) && hide_bd==0)
 					{
@@ -21933,7 +21925,7 @@ start_of_loop:
 					else
 					{	delete_entries(menu_list, &max_menu_list, (1<<find_device)); dev_removed=1; }
 
-					if(cover_mode<3 || cover_mode>5) draw_legend=1;
+					if((cover_mode<3 || cover_mode>5) && cover_mode!=8) draw_legend=1;
 
 					forcedevices &= ~ (1<<find_device);
 					fdevices_old&= ~ (1<<find_device);
@@ -22792,6 +22784,8 @@ switch_ntfs:
 				pfs_mode(1);
 				dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, (const char*) STR_PLEASE_WAIT, dialog_fun2, (void*)0x0000aaab, NULL );
 				flipc(60); sys_timer_usleep(6000*1000);
+				if(cover_mode==8) memcpy(text_FONT, text_bmp, 8294400);
+				xmb_bg_counter=200; xmb_bg_show=0;
 				cellMsgDialogAbort();
 				forcedevices=0xFFFE;
 				goto start_of_loop;
@@ -23147,6 +23141,8 @@ refresh_list:
 		old_fi=-1;
 		counter_png=0;
 		forcedevices=0xFFFF;
+		if(cover_mode==8) memcpy(text_FONT, text_bmp, 8294400);
+		xmb_bg_counter=200; xmb_bg_show=0;
 		max_menu_list=0;
 
 		//if(cover_mode==8) reset_xmb(1);
@@ -23215,7 +23211,7 @@ update_title:
 					sys_game_process_exitspawn2((char*) reload_self, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 				}
 			}
-			if(ret_f==6 && net_used_ignore()) {unload_modules(); sys_process_exit(1);}
+			if(ret_f==6 && net_used_ignore()) {unload_modules(); exit(0);}
 
 			if(ret_f==7) goto refresh_list_0;
 			if( (ret_f==8 || ret_f==9)  && net_used_ignore() ) {
@@ -23301,7 +23297,6 @@ test_title:
 				draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.0f, 0x10101080);
 				cellDbgFontPrintf( 0.07f, 0.07f, 1.2f, 0xc0c0c0c0, string1);
 				cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xc0c0c0c0, "Hold /\\ to Abort");
-				cellDbgFontDrawGcm();
 				flip();
 
 				my_game_test( menu_list[game_sel].path, 0);
@@ -23329,7 +23324,6 @@ test_title:
 			cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xffffffff, "Press [ ] to continue");
 			vflip++;
 
-			cellDbgFontDrawGcm();
 			flip();
 			pad_read();
 			if (new_pad & BUTTON_SQUARE)
@@ -23417,7 +23411,6 @@ delete_title:
 
 					vflip++;
 
-					cellDbgFontDrawGcm();
 					flip();
 
 					pad_read();
@@ -23642,8 +23635,6 @@ copy_title:
 
 					vflip++;
 
-					cellDbgFontDrawGcm();
-
 					flip();
 
 					pad_read();
@@ -23830,9 +23821,6 @@ copy_from_bluray:
 						cellDbgFontPrintf( 0.5f-0.15f, 1.0f-0.07*2.0f, 1.2f, 0xc0c0c0c0, "Press [ ] to continue");
 						vflip++;
 
-						cellDbgFontDrawGcm();
-
-
 						flip();
 
 						pad_read();
@@ -23926,7 +23914,7 @@ overwrite_cancel_bdvd:
 						{
 							rnd=time(NULL)&0x03;
 							char tortuga[512];
-							sprintf(tortuga, "::: Download server provided by TORTUGA COVE :::\n\n");
+							sprintf(tortuga, "::: Download service provided by TORTUGA COVE :::\n\n");
 							if(rnd<2) strcat(tortuga, "www.tortuga-cove.com: Your Ad-Free Source for Gaming and Hacking News!\n\n");
 							else if(rnd==2) strcat(tortuga, "Provided By: www.tortuga-cove.com\n\n");
 							else if(rnd==3) strcat(tortuga, "www.tortuga-cove.com: Ran By Gamers For Gamers!\n\n");
@@ -23949,7 +23937,7 @@ overwrite_cancel_bdvd:
 							cellMsgDialogOpen2( type_dialog_yes_no, string1, dialog_fun1, (void*)0x0000aaaa, NULL );
 							wait_dialog();
 							if(dialog_ret!=1) {reset_mount_points(); goto cancel_theme_exit;}
-							unload_modules(); sys_process_exit(1);
+							unload_modules(); exit(0);
 						};
 					}
 				}
@@ -23984,7 +23972,7 @@ cancel_theme_exit:
 					sys_game_process_exitspawn2((char*) reload_self, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 				}
 			}
-			if(xmb[1].first==8 && net_used_ignore()) {unload_modules(); sys_process_exit(1);}
+			if(xmb[1].first==8 && net_used_ignore()) {unload_modules(); exit(0);}
 		}
 
 		if(xmb_icon==2 && (xmb[2].member[xmb[2].first].option_size || xmb[2].first<3) ) //settings
@@ -24334,8 +24322,6 @@ retry_showtime_xmb:
 				sprintf(image_file, "%s", xmb[xmb_icon].member[current_image].file_path);
 				if(strstr(image_file, ".jpg")!=NULL || strstr(image_file, ".JPG")!=NULL || strstr(image_file, ".jpeg")!=NULL || strstr(image_file, ".JPEG")!=NULL)
 				{
-						//cellDbgFontDrawGcm(); ClearSurface();
-
 						if(pic_reload!=0){
 							cellDbgFontDrawGcm();
 							pic_zoom=-1.0f;
@@ -24664,7 +24650,6 @@ start_title:
 					draw_square(-1.0f, 1.0f, 2.0f, 2.0f, 0.9f, 0xd0000080);
 					cellDbgFontPrintf( 0.10f, 0.10f, 1.0f, 0xffffffff, string1);
 					setRenderColor();
-					cellDbgFontDrawGcm();
 					flip();
 
 					if(osk_dialog==1 || osk_dialog==-1) break;
@@ -24745,7 +24730,7 @@ pass_ok:
  						unload_modules();
 						sprintf(string1, "%s", menu_list[game_sel].path);
 						syscall_mount( string1, mount_bdvd);
- 						sys_process_exit(1); break;
+ 						exit(0); break;
 					}
 				}
 
@@ -24754,7 +24739,7 @@ pass_ok:
 			{
 				reset_mount_points();
 				ret = unload_modules();
-				sys_process_exit(1);
+				exit(0);
 			}
 		}
 
@@ -24809,7 +24794,7 @@ pass_ok:
 			{
 				syscall_mount2((char *)"/dev_bdvd", (char *)menu_list[game_sel].path);
 				ret = unload_modules();
-				sys_process_exit(1); break;
+				exit(0); break;
 			}
 			else goto skip_1;
 		} //BDMV
@@ -24871,7 +24856,7 @@ pass_ok:
 			syscall_mount2((char *)usb_save, (char *)menu_list[game_sel].path);
 
 			ret = unload_modules();
-			sys_process_exit(1); break;
+			exit(0); break;
 
 			}
 		else
@@ -24958,7 +24943,7 @@ pass_ok:
 				{
 					unload_modules();
 					syscall_mount( (char *) "/dev_bdvd", mount_bdvd);
-					sys_process_exit(1); break;
+					exit(0); break;
 				}
 			}
 			}
@@ -25225,7 +25210,7 @@ again_sc8:
 							if(ret)
 							{
 								if(use_cache) mount_with_cache(menu_list[game_sel].path, max_joined, menu_list[game_sel].user, menu_list[game_sel].title_id);
-								unload_modules(); sys_process_exit(1);
+								unload_modules(); exit(0);
 							}
 							else
 							{
@@ -25333,7 +25318,7 @@ cancel_mount2:
 						sprintf(fileboot, "%s", menu_list[game_sel].path);
 						if(use_cache) mount_with_cache(menu_list[game_sel].path, max_joined, menu_list[game_sel].user, menu_list[game_sel].title_id);
 						else mount_with_ext_data(menu_list[game_sel].path, menu_list[game_sel].user);//syscall_mount(fileboot, mount_bdvd);
-						sys_process_exit(1);
+						exit(0);
 					}
 
 				}
@@ -25349,7 +25334,7 @@ cancel_mount2:
 							ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );
 							wait_dialog();
 							syscall_mount( menu_list[game_sel].path, mount_bdvd);
-							ret = unload_modules();	exit(0);//sys_process_exit(1);
+							ret = unload_modules();	exit(0);//exit(0);
 						}
 
 					if(strstr(menu_list[game_sel].content,"PS2")!=NULL && payload!=0)
@@ -25395,7 +25380,7 @@ cancel_mount2:
 							ret = cellMsgDialogOpen2( type_dialog_ok, filename, dialog_fun2, (void*)0x0000aaab, NULL );
 							wait_dialog();
 
-							ret = unload_modules();	sys_process_exit(1);
+							ret = unload_modules();	exit(0);
 						}
 					else
 						{
@@ -25558,7 +25543,7 @@ skip_to_FM:
 				sprintf(filename, "%s", "\r\n"); fputs (filename,  flist );
 			}
 			fclose(flist);
-			unload_modules(); sys_process_exit(1); break;
+			unload_modules(); exit(0); break;
 		}
 	}
 
@@ -25864,7 +25849,7 @@ skip_to_FM:
 			if(dialog_ret==1)
 			{
 				reset_mount_points();
-				unload_modules(); sys_process_exit(1); break;
+				unload_modules(); exit(0); break;
 			}
 			new_pad=0;
 		}
@@ -26122,7 +26107,7 @@ skip_to_FM:
 
 	reset_mount_points();
 	ret = unload_modules();
-	sys_process_exit(1);
+	//exit(0);
 	return 0;
 } //end of main
 
@@ -26316,11 +26301,8 @@ static void misc_thread_entry( uint64_t arg )
 
 		if(debug_mode)
 		{
-			//if(!status_info[0])
-			{
-				get_free_memory();
-				sprintf(status_info, "(MEM: %.f) Debug Mode (English)", (double) (meminfo.avail/1024.0f));
-			}
+			get_free_memory();
+			sprintf(status_info, "(MEM: %.f) Debug Mode (English)", (double) (meminfo.avail/1024.0f));
 		}
 
 		if(force_mp3)
