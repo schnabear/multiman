@@ -754,7 +754,7 @@ char mouseInfo[128];//char mouseInfo2[128];
 	u8 *xmb_icon_film	=	NULL;
 	u8 *xmb_icon_photo	=	NULL;
 	u8 *xmb_icon_update	=	NULL;
-	//u8 *xmb_icon_restart=	NULL;
+	u8 *xmb_icon_logo	=	NULL;
 	u8 *xmb_icon_dev	=	NULL;
 	u8 *xmb_icon_ss		=	NULL;
 	u8 *xmb_icon_showtime	=	NULL;
@@ -20033,7 +20033,7 @@ void add_web_column()
 		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)STR_XC9_THM, (char*)STR_XC9_THM1,
 				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_theme, 128, 128, /*f_path*/(char*)"http://ps3.spiffy360.com/themes.php?category=3", /*i_path*/(char*)"/", 0, 0);
 		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)STR_XC9_HOME, (char*)STR_XC9_HOME1,
-				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb[1].data, 128, 128, /*f_path*/(char*)"http://www.ps3hax.net/showthread.php?t=24701", /*i_path*/(char*)"/", 0, 0);
+				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_logo, 408, 180, /*f_path*/(char*)"http://www.ps3hax.net/showthread.php?t=24701", /*i_path*/(char*)"/", 0, 0);
 		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)STR_XC9_HELP, (char*)STR_XC9_HELP1,
 				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb[9].data, 128, 128, /*f_path*/(char*)"http://gbatemp.net/t291170-multiman-beginner-s-guide", /*i_path*/(char*)"/", 0, 0);
 		add_xmb_member(xmb[9].member, &xmb[9].size, (char*)STR_XC9_SUPP, (char*)STR_XC9_SUPP1,
@@ -20062,6 +20062,7 @@ void init_xmb_icons(t_menu_list *list, int max, int sel)
 			load_texture(text_DROPS, auraBG, 256);
 		else use_drops=false;
 
+		sprintf(auraBG, "%s/MMLOGO1.PNG", app_usrdir); if(exist(auraBG)) load_texture(xmb_icon_logo, auraBG, 408);
 
 		if(cover_mode==8)
 		{
@@ -20946,8 +20947,10 @@ int main(int argc, char **argv)
 //====================================================================
 	text_MSG		=	text_FMS+(63*65536); // Legend pop-up in XMMB mode (300x70) (63->64)
 	text_INFO		=	text_FMS+(65*65536); // Info pop-up in XMMB mode (300x70) (65->66)
+
 //	text_???		=	text_FMS+(67*65536); //
 //	text_???LAST	=	text_FMS+(125*65536);// end of text_FMS frame buffer
+	xmb_icon_logo	=	text_FMS+(121*65536);
 //====================================================================
 
 	u32 buf_align2= (320 * 320 * 4);
