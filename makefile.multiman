@@ -17,7 +17,7 @@ APPID	= BLES80608
 MAKE_SELF_WC = make_self_wc
 PSN_PKG_NPDRM = psn_package_npdrm
 
-CONTENT_ID=MM4PS3-$(APPID)_00-MULTIMANAGER0203
+CONTENT_ID=MM4PS3-$(APPID)_00-MULTIMANAGER0204
 
 PPU_SRCS = $(MM)graphics.cpp $(MM)language.cpp $(MM)multiman.cpp $(MM)peek_poke.cpp $(MM)mm.cpp $(MM)hvcall.cpp $(MM)syscall36.cpp $(MM)syscall8.c $(MM)fonts.c $(MM)fonts_render.c $(MM)mscommon.cpp 
 PPU_SRCS += $(VPSHADER_PPU_OBJS) $(FPSHADER_PPU_OBJS) 
