@@ -490,3 +490,5 @@ Berikutnya Modus
 Sebelumnya Modus
 Pengaturan permainan
 Sistem Menu
+Set as Wallpaper
+Restore Wallpaper

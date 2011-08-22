@@ -695,6 +695,11 @@ char xmbicons[64];
 char xmbicons2[64];
 char xmbdevs[64];
 char xmbbg[64];
+char xmbbg_user_jpg[64];
+char xmbbg_user_png[64];
+int  xmbbg_user_w=1920;
+int  xmbbg_user_h=1080;
+bool xmbbg_user_bg=false;
 //char playBGL[64];
 char playBGR[64];
 char avchdIN[64];
@@ -839,6 +844,7 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 int open_list_menu(char *_caption, int _width, t_opt_list *list, int _max, int _x, int _y, int _max_entries, int _centered);
 int open_dd_menu(char *_caption, int _width, t_opt_list *list, int _max, int _x, int _y, int _max_entries);
 int context_menu(char *_cap, int _type, char *c_pane, char *o_pane);
+int open_side_menu(int _top);
 
 #define MAX_PANE_SIZE 2560
 typedef struct
@@ -1123,25 +1129,25 @@ xmbopt __attribute__((aligned(8)));
 #define MAX_XMB_MEMBERS 3200
 typedef struct __xmbmem
 {
-	u8 type; //0 unkn, 1 ps3 game, 2 AVCHD/Blu-ray video from gamelist, 3 showtime vid, 4 music, 5 photo, 6 function, 7 setting, 8 snes rom, 9 fceu rom, 10 vba rom, 11 genp rom, 12 fbanext
-	u8 status; //0 idle, 1 loading, 2 loaded
-	bool is_checked;
-	int game_id; //pointer to menu_list[id]
-	u8 game_split;
-	u32 game_user_flags;
-	char name[192];
-	char subname[128];
-	u8 option_size;
-	u8 option_selected;
-	char optionini[20];
+	u8		type;	// 0 unkn, 1 ps3 game, 2 AVCHD/Blu-ray video from gamelist, 3 showtime vid, 4 music, 5 photo, 6 function, 7 setting, 8 snes rom, 9 fceu rom, 10 vba rom, 11 genp rom, 12 fbanext
+	u8		status; // 0 idle, 1 loading, 2 loaded
+	bool	is_checked;
+	int		game_id; //pointer to menu_list[id]
+	u8		game_split;
+	u32		game_user_flags;
+	char	name[192];
+	char	subname[128];
+	u8		option_size;
+	u8		option_selected;
+	char	optionini[20];
 	xmbopt	option[MAX_XMB_OPTIONS];
-	int	data; //pointer to text image (xmbtexts) xmb_txt_buf
-	int icon_buf;
-	u8	*icon; //pointer to icon image
-	u16	iconw;
-	u16	iconh;
-	char file_path[256]; //path to entry file
-	char icon_path[128]; //path to entry icon
+	int		data; //index in pointer array to text image stripe (xmbtexts) xmb_txt_buf
+	int		icon_buf;
+	u8		*icon; //pointer to icon image
+	u16		iconw;
+	u16		iconh;
+	char	file_path[256]; //path to entry file
+	char	icon_path[128]; //path to entry icon
 }
 xmbmem __attribute__((aligned(16)));
 
@@ -1231,7 +1237,8 @@ mp3_playlist_type mp3_playlist[MAX_MP3];
 int max_mp3=0;
 int current_mp3=0;
 
-float angle_dynamic(float min, float max)
+float angle_dynamic(float min, float max)   // angle global var changes each flip (0 to 359 degrees)
+											// 3.6 degrees per flip
 {
 	if(angle<180.f)
 		return (float)((angle/180.f) * (max-min))+min;
@@ -1402,7 +1409,12 @@ void wait_dialog()
 
 	cellMsgDialogClose(60.0f);
 	setRenderColor();
-
+	if(cover_mode==8 && init_finished)
+		for(int jw=0; jw<40; jw++)
+		{
+			draw_whole_xmb(xmb_icon);
+			sys_timer_usleep(1668);
+		}
 }
 
 void wait_dialog_simple()
@@ -1571,7 +1583,7 @@ static void pad_motor( u8 m1, u8 m2)
 		_CellPadActParam[0].reserved[5]=0;
 		for(u8 n=0;n<7;n++)
 			cellPadSetActDirect(n, &_CellPadActParam[0]);
-		sys_timer_usleep(500*1000);
+		sys_timer_usleep(250*1000);
 		use_motor=false;
 }
 
@@ -2117,9 +2129,9 @@ void launch_self(char *self, char *rom)
 
 	int len = strlen(rom);
 	launchargv[0] = (char*)malloc(len + 1); strcpy(launchargv[0], rom);
-	launchargv[1] = (char*)malloc(len + 1); strcpy(launchargv[1], rom);
+	launchargv[1] = NULL;
 	unload_modules();
-	sys_game_process_exitspawn2((char*)self, (const char**)launchargv, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_512K);
+	exitspawn((const char*)self, (char* const*)launchargv, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_512K);
 }
 
 void launch_snes_emu(char *rom)
@@ -2137,9 +2149,9 @@ void launch_snes_emu(char *rom)
 
 	int len = strlen(rom);
 	launchargv[0] = (char*)malloc(len + 1); strcpy(launchargv[0], rom);
-	launchargv[1] = (char*)malloc(len + 1); strcpy(launchargv[1], rom);
+	launchargv[1] = NULL;
 	unload_modules();
-	sys_game_process_exitspawn2((char*)snes_self, (const char**)launchargv, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_512K);
+	exitspawn((const char*)snes_self, (char* const*)launchargv, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_512K);
 }
 
 bool is_genp(char *rom)
@@ -2216,9 +2228,9 @@ void launch_genp_emu(char *rom)
 
 	int len = strlen(rom);
 	launchargv[0] = (char*)malloc(len + 1); strcpy(launchargv[0], rom);
-	launchargv[1] = (char*)malloc(len + 1); strcpy(launchargv[1], rom);
+	launchargv[1] = NULL;
 	unload_modules();
-	sys_game_process_exitspawn2((char*)genp_self, (const char**)launchargv, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_512K);
+	exitspawn((const char*)genp_self, (char* const*)launchargv, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_512K);
 }
 
 
@@ -2237,9 +2249,9 @@ void launch_fceu_emu(char *rom)
 
 	int len = strlen(rom);
 	launchargv[0] = (char*)malloc(len + 1); strcpy(launchargv[0], rom);
-	launchargv[1] = (char*)malloc(len + 1); strcpy(launchargv[1], rom);
+	launchargv[1] = NULL;
 	unload_modules();
-	sys_game_process_exitspawn2((char*)fceu_self, (const char**)launchargv, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_512K);
+	exitspawn((const char*)fceu_self, (char* const*)launchargv, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_512K);
 }
 
 void launch_vba_emu(char *rom)
@@ -2257,9 +2269,9 @@ void launch_vba_emu(char *rom)
 
 	int len = strlen(rom);
 	launchargv[0] = (char*)malloc(len + 1); strcpy(launchargv[0], rom);
-	launchargv[1] = (char*)malloc(len + 1); strcpy(launchargv[1], rom);
+	launchargv[1] = NULL;
 	unload_modules();
-	sys_game_process_exitspawn2((char*)vba_self, (const char**)launchargv, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_512K);
+	exitspawn((const char*)vba_self, (char* const*)launchargv, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_512K);
 }
 
 void launch_fba_emu(char *rom)
@@ -2277,9 +2289,9 @@ void launch_fba_emu(char *rom)
 
 	int len = strlen(rom);
 	launchargv[0] = (char*)malloc(len + 1); strcpy(launchargv[0], rom);
-	launchargv[1] = (char*)malloc(len + 1); strcpy(launchargv[1], rom);
+	launchargv[1] = NULL;
 	unload_modules();
-	sys_game_process_exitspawn2((char*)fba_self, (const char**)launchargv, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_512K);
+	exitspawn((const char*)fba_self, (char* const*)launchargv, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_512K);
 }
 
 void get_game_flags(int _game_sel)
@@ -3666,7 +3678,7 @@ if(lastINC3>3 || (time(NULL)-seconds2)>1 || (show_progress==3 && www_running))
 		{
 			draw_xmb_clock(xmb_clock, 0);
 			set_texture( text_bmp, 1920, 1080);
-			display_img(0, 0, 1920, 1080, 1920, 1080, 0.0f, 1920, 1080);
+			display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.0f, 1920, 1080);
 		}
 		else
 		{
@@ -4065,7 +4077,7 @@ CellConsoleInputProcessorResult _cellConsoleRESTART
 	{
 		cellConsolePrintf(uiConnection, "Re-spawning [RELOAD.SELF]...\n");
 		unload_modules();
-		sys_game_process_exitspawn2((char*) reload_self, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
+		exitspawn((const char*) reload_self, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 	}
 
 
@@ -7759,9 +7771,13 @@ void draw_reqd_flags(u32 gflags, bool is_locked, int selected)
 
 int open_submenu(uint8_t *buffer, int *_game_sel)
 {
+	(void) buffer;
 	xmb_bg_show=0;
 	xmb_bg_counter=200;
-	memcpy(text_FONT, buffer, FB(1));
+	char label[256];
+
+	sprintf(label, "%s/%s_1920.PNG", cache_dir, menu_list[*_game_sel].title_id);
+	if(exist(label))	load_texture(text_FONT, label, 1920); else memset(text_FONT, 0, FB(1));
 
 	u8 _menu_font=15;
 	float y_scale=0.5;
@@ -7772,7 +7788,6 @@ int open_submenu(uint8_t *buffer, int *_game_sel)
 	}
 
 reload_submenu:
-	char label[256];
 	float x, y, top_o;
 	int m;
 
@@ -14308,7 +14323,8 @@ pass_ok_2:
 						unload_modules();
 //						if(payload==0)
 						syscall_mount(just_path, mount_bdvd);
-						sys_game_process_exitspawn2((char *) my_mp3_file, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_128K);
+						exitspawn((const char *) my_mp3_file, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_128K);
+
 //						else sys_game_process_exitspawn2((char *) "/app_home/PS3_GAME/USRDIR/EBOOT.BIN", NULL, NULL, NULL, 0, 3071, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 					}
 
@@ -14521,7 +14537,7 @@ retry_showtime:
 							{
 								unload_modules();
 								sprintf(filename, "%s/SHOWTIME.SELF", app_usrdir);
-								sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
+								exitspawn((const char*)filename, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 							}
 						}
 						else
@@ -14542,7 +14558,7 @@ retry_showtime:
 					else
 					{
 						unload_modules();
-						sys_game_process_exitspawn2((char *) my_mp3_file, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_128K);
+						exitspawn((const char *) my_mp3_file, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_128K);
 						exit(0);
 					}
 				}
@@ -16037,6 +16053,7 @@ if ( fp != NULL )
 
 		if(strstr (line,"theme_sound=0")!=NULL) theme_sound=0;
 		if(strstr (line,"theme_sound=1")!=NULL) theme_sound=1;
+		if(strstr (line,"theme_sound=2")!=NULL) theme_sound=2;
 
 		if(strstr (line,"display_mode=0")!=NULL && line[0]=='d') display_mode=0;
 		if(strstr (line,"display_mode=1")!=NULL && line[0]=='d') display_mode=1;
@@ -16683,7 +16700,7 @@ void slide_xmb_left(int _xmb_icon)
 		if(!use_drops && xmb_sparks!=0) draw_stars();
 
 		set_texture( text_bmp, 1920, 1080);
-		display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+		display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
 		if(use_drops && xmb_sparks!=0) draw_stars();
 
 		draw_xmb_clock(xmb_clock, 0);
@@ -16710,7 +16727,7 @@ void slide_xmb_right()
 			if(!use_drops && xmb_sparks!=0) draw_stars();
 
 			set_texture( text_bmp, 1920, 1080);
-			display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+			display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
 			if(use_drops && xmb_sparks!=0) draw_stars();
 
 			draw_xmb_clock(xmb_clock, 0);
@@ -16723,6 +16740,31 @@ void slide_xmb_right()
 		xmb_slide=0;
 		xmb_slide_step=0;
 		xmb_sublevel=0;
+}
+
+void load_xmb_bg()
+{
+	memset(text_bmp, 0, 8294400);
+	xmbbg_user_bg=true;
+	if(exist(xmbbg_user_png))
+		load_texture(text_bmp, xmbbg_user_png, 1920);
+	else if(exist(xmbbg_user_jpg))
+		load_texture(text_bmp, xmbbg_user_jpg, 1920);
+	else
+	{
+		load_texture(text_bmp, xmbbg, 1920);
+		xmbbg_user_bg=false;
+	}
+	xmbbg_user_w=png_w;
+	xmbbg_user_h=png_h;
+
+	if(!xmbbg_user_w || !xmbbg_user_h)
+	{
+		load_texture(text_bmp, xmbbg, 1920);
+		xmbbg_user_bg=false;
+		xmbbg_user_w=png_w;
+		xmbbg_user_h=png_h;
+	}
 }
 
 void select_theme()
@@ -16769,8 +16811,7 @@ void select_theme()
 
 				draw_xmb_clock(xmb_clock, 1);
 				draw_xmb_icon_text(xmb_icon);
-				memset(text_bmp, 0, 8294400);
-				load_texture(text_bmp, xmbbg, 1920);
+				load_xmb_bg();
 			}
 		}
 		slide_xmb_right();
@@ -17170,12 +17211,25 @@ void apply_theme (const char *theme_file, const char *theme_path)
 	remove(th2_file);
 	if(exist(filename)) { file_copy(filename, th2_file, 0); }
 	if((exist(th2_file) && is_theme_playing) && theme_sound)
-		main_mp3((char*)th2_file);
-	else
+	{
+		if(theme_sound==2 && xmb[4].size)
 		{
-			if(is_theme_playing)
-			stop_audio(5);
+			for(int ci2=1; ci2<MAX_MP3; ci2++)
+			{
+				sprintf(mp3_playlist[ci2].path, "%s", xmb[4].member[rndv(xmb[4].size)].file_path);
+			}
+			max_mp3=MAX_MP3-1;
+			current_mp3=rndv(MAX_MP3);
+			main_mp3((char*)mp3_playlist[current_mp3].path);
 		}
+		else
+			main_mp3((char*)th2_file);
+	}
+	else
+	{
+		if(is_theme_playing)
+		stop_audio(5);
+	}
 
 	sprintf(th_file, "%s", "COLOR.INI"); sprintf(filename, "%s/%s", theme_path, th_file);
 	sprintf(th2_file, "%s/%s", app_usrdir, th_file); remove(th2_file);
@@ -17915,7 +17969,7 @@ void draw_xmb_bare(u8 _xmb_icon, u8 _all_icons, bool recursive, int _sub_level)
 	ClearSurface();
 	if(!use_drops && xmb_sparks!=0) draw_stars();
 	set_texture( text_bmp, 1920, 1080);
-	display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+	display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
 	if(use_drops && xmb_sparks!=0) draw_stars();
 	draw_xmb_clock(xmb_clock, (_all_icons!=2 ? _xmb_icon : -1));
 
@@ -18321,7 +18375,7 @@ int open_theme_menu(char *_caption, int _width, theme_def *list, int _max, int _
 		if(!use_drops && xmb_sparks!=0) draw_stars();
 
 		set_texture( text_bmp, 1920, 1080);
-		display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+		display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
 		if(use_drops && xmb_sparks!=0) draw_stars();
 
 		draw_xmb_clock(xmb_clock, 0);
@@ -18468,7 +18522,7 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 			if(!use_drops && xmb_sparks!=0) draw_stars();
 
 			set_texture( text_bmp, 1920, 1080);
-			display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+			display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
 			if(use_drops && xmb_sparks!=0) draw_stars();
 
 			draw_xmb_clock(xmb_clock, 0);
@@ -18581,7 +18635,7 @@ int open_list_menu(char *_caption, int _width, t_opt_list *list, int _max, int _
 		if(!use_drops && xmb_sparks!=0) draw_stars();
 
 		set_texture( text_bmp, 1920, 1080);
-		display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+		display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
 		if(use_drops && xmb_sparks!=0) draw_stars();
 
 		draw_xmb_clock(xmb_clock, 0);
@@ -18602,6 +18656,96 @@ int open_list_menu(char *_caption, int _width, t_opt_list *list, int _max, int _
 	}
 
 	return -1;
+}
+
+int open_side_menu(int _top)
+{
+	int _width=600;
+	int _height=1080;
+	int sel=5;
+
+	u8 *text_LIST = text_FONT;
+
+	// create opacity 'gradient' left-to-right from ~94% to ~18%, RGB: #4a5254
+	for(int fsr2=0; fsr2<_height; fsr2++)
+	{
+		for(int fsr=4; fsr<_width; fsr++)
+			*(uint32_t*) ( (u8*)(text_LIST)+((fsr+fsr2*_width)*4 ))=0x54524a00|( 0xf0-(int)( 240.f*((float)fsr/1.15f)/(float)_width) );
+
+		*(uint32_t*) ( (u8*)(text_LIST)+((0+fsr2*_width)*4 ))=0x54524af0;
+		*(uint32_t*) ( (u8*)(text_LIST)+((1+fsr2*_width)*4 ))=0x747474f0;
+		*(uint32_t*) ( (u8*)(text_LIST)+((2+fsr2*_width)*4 ))=0x949494f0;
+		*(uint32_t*) ( (u8*)(text_LIST)+((3+fsr2*_width)*4 ))=0x646464f0;
+	}
+
+	// print menu entries
+	max_ttf_label=0;
+	for(int n=0; n<opt_list_max; n++)
+		print_label_ex( 0.133f, (float)(n*40.f+(float)_top)/1080.f, 1.2f, (opt_list[n].label[0]!=' ' ? 0xff000000 : 0xf0e5e5e5), opt_list[n].label+1, 1.04f, 0.0f, mui_font, 0.68f/((float)(_width/1920.f)), (0.7f)/((float)(_height/1080.f)), 0);
+	flush_ttf(text_LIST, _width, _height);
+
+	for(int fsr=1860; fsr>1320; fsr-=60) // slide in the side menu
+	{
+		ClearSurface();
+		draw_whole_xmb(0);
+		set_texture(text_LIST, _width, _height);	display_img(fsr, 0, 1920-fsr, _height, _width, _height, -0.3f, _width, _height);
+		flip();
+	}
+
+	while(1)
+	{
+		xmb_bg_counter=200;
+		ss_timer_last=time(NULL)-300;
+		repeat_counter1=repeat_init_delay;
+		pad_read();
+		key_repeat=0;
+		if ( (new_pad & BUTTON_TRIANGLE) || (new_pad & BUTTON_CIRCLE) ) {sel=-1; break;}
+		if ( (new_pad & BUTTON_CROSS) && opt_list[sel].label[0]==' ')  break;
+
+		if ( (new_pad & BUTTON_DOWN))
+		{
+			for(int n=0;n<15;n++)
+			{
+				sel++;
+				if(sel>=opt_list_max) sel=0;
+				if(opt_list[sel].label[0]!='-') break;
+			}
+		}
+
+		if ( (new_pad & BUTTON_UP))
+		{
+			for(int n=0;n<15;n++)
+			{
+				sel--;
+				if(sel<0) sel=opt_list_max-1;
+				if(opt_list[sel].label[0]!='-') break;
+			}
+		}
+
+		ClearSurface();
+
+		draw_whole_xmb(0);
+		set_texture(text_LIST, _width, _height);	display_img(1320, 0, _width, _height, _width, _height, -0.3f, _width, _height);
+		set_texture(xmb_icon_star_small, 32, 32);
+		if(opt_list[sel].label[0]!=' ')
+			display_img_angle(1352, sel*40+_top, 32, 32, 32, 32, -0.4f, 32, 32, angle);
+		else
+			display_img(1352, sel*40+_top, 32, 32, 32, 32, -0.4f, 32, 32);
+
+		flip();
+	}
+
+	for(int fsr=1320; fsr<=1920; fsr+=60) // slide out
+	{
+		ClearSurface();
+		draw_whole_xmb(0);
+		set_texture(text_LIST, _width, _height);
+		display_img(fsr, 0, 1920-fsr, _height, _width, _height, -0.3f, _width, _height);
+		flip();
+	}
+
+	return sel;
+
 }
 
 int open_dd_menu(char *_caption, int _width, t_opt_list *list, int _max, int _x, int _y, int _max_entries)
@@ -19625,7 +19769,8 @@ void add_settings_column()
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_THM, (char*)STR_XC2_THM1,	(char*)"theme_sound");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,						(char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,							(char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC_MUS,								(char*)"2");
 		xmb[2].member[xmb[2].size-1].option_selected=theme_sound;
 
 
@@ -20065,10 +20210,8 @@ void init_xmb_icons(t_menu_list *list, int max, int sel)
 		sprintf(auraBG, "%s/MMLOGO1.PNG", app_usrdir); if(exist(auraBG)) load_texture(xmb_icon_logo, auraBG, 408);
 
 		if(cover_mode==8)
-		{
-			memset(text_bmp, 0, 8294400);
-			load_texture(text_bmp, xmbbg, 1920);
-		}
+			load_xmb_bg();
+
 
 		reset_xmb(0);
 
@@ -20618,8 +20761,16 @@ void draw_whole_xmb(u8 mode)
 
 	if(!is_caching)
 	{
-		if(!xmb_bg_show || is_game_loading) set_texture( text_bmp, 1920, 1080); else set_texture( text_FONT, 1920, 1080);
-		display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+		if(!xmb_bg_show || is_game_loading)
+		{
+			set_texture( text_bmp, 1920, 1080);
+			display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
+		}
+		else
+		{
+			set_texture( text_FONT, 1920, 1080);
+			display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+		}
 	}
 
 	if(use_drops) if(xmb_sparks==1 || (xmb_sparks==2 && xmb_bg_show==0)) draw_stars();
@@ -20855,13 +21006,13 @@ int main(int argc, char **argv)
 	{
 
 			sprintf(string1x, "multiMAN (referred hereafter as \"software\"), its author, partners, and associates do not condone piracy. multiMAN is a hobby project, distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY, without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\nDo you accept this binding agreement (1/3)?");
-			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string1x, dialog_fun1, (void*)0x0000aaaa, NULL );	wait_dialog(); if(dialog_ret!=1) exit(0);
+			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string1x, dialog_fun1, (void*)0x0000aaaa, NULL );	wait_dialog_simple(); if(dialog_ret!=1) exit(0);
 
 			sprintf(string2x, "The software is intended solely for educational and testing purposes, and while it may allow the user to create copies of legitimately acquired and/or owned content, it is required that such user actions must comply with local, federal and country legislation.\n\nFurthermore, the author of this software, its partners and associates shall assume NO responsibility, legal or otherwise implied, for any misuse of, or for any loss that may occur while using multiMAN.\n\nDo you accept this binding agreement (2/3)?");
-			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string2x, dialog_fun1, (void*)0x0000aaaa, NULL ); wait_dialog();	if(dialog_ret!=1) exit(0);
+			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string2x, dialog_fun1, (void*)0x0000aaaa, NULL ); wait_dialog_simple();	if(dialog_ret!=1) exit(0);
 
 			sprintf(string3x, "You are solely responsible for complying with the applicable laws in your country and you must cease using this software should your actions during multiMAN operation lead to or may lead to infringement or violation of the rights of the respective content copyright holders.\n\nmultiMAN is not licensed, approved or endorsed by \"Sony Computer Entertainment, Inc.\" (SCEI) or any other party.\n\nDo you understand and accept this binding agreement?");
-			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string3x, dialog_fun1, (void*)0x0000aaaa, NULL ); wait_dialog();	if(dialog_ret!=1) exit(0);
+			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string3x, dialog_fun1, (void*)0x0000aaaa, NULL ); wait_dialog_simple();	if(dialog_ret!=1) exit(0);
 
 			FILE *fpA;
 			fpA = fopen ( disclaimer, "w" );
@@ -20908,10 +21059,7 @@ int main(int argc, char **argv)
 	text_bmpS	= text_bmp + buf_align * 6;
 	text_legend = text_bmpS + 5324800;
 
-//	text_legend = text_bmpUPSR + buf_align;
-
 	text_BOOT	= text_bmpUBG  + buf_align;
-	//pData = (long)text_bmp + buf_align * 8;//(long)memalign(128, _mp3_buffer*1024*1024);
 
 //====================================================================
 	xmb_icon_globe	=	text_FMS+( 9*65536);
@@ -20949,8 +21097,10 @@ int main(int argc, char **argv)
 	text_INFO		=	text_FMS+(65*65536); // Info pop-up in XMMB mode (300x70) (65->66)
 
 //	text_???		=	text_FMS+(67*65536); //
+//	text_???		=	text_FMS+(120*65536);//
+
+	xmb_icon_logo	=	text_FMS+(121*65536);// 121-125
 //	text_???LAST	=	text_FMS+(125*65536);// end of text_FMS frame buffer
-	xmb_icon_logo	=	text_FMS+(121*65536);
 //====================================================================
 
 	u32 buf_align2= (320 * 320 * 4);
@@ -21040,8 +21190,6 @@ int main(int argc, char **argv)
 	sprintf(fba_roms, "%s", "/dev_hdd0/game/FBAN00000/USRDIR/roms");
 
 	u32 reload_fdevices=0;
-
-
 
 	if(is_reloaded || exist(list_file))
 	{
@@ -21152,10 +21300,6 @@ int main(int argc, char **argv)
 	}
 
 
-
-
-//	int reloaded_menu_list=max_menu_list;
-
 		sprintf(string1,  "%s/COLOR.INI", app_usrdir);
 		if(exist(string1))
 			sprintf(color_ini,  "%s/COLOR.INI", app_usrdir);
@@ -21233,6 +21377,7 @@ int main(int argc, char **argv)
 		}
 	}
 
+	//pad_motor(1,16);
 	parse_ini(options_ini,0);
 
 	if(debug_mode)
@@ -21263,6 +21408,8 @@ int main(int argc, char **argv)
 	sprintf(xmbicons2,	"%s/XMB2.PNG", app_usrdir);
 	sprintf(xmbdevs,	"%s/XMB64.PNG", app_usrdir);
 	sprintf(xmbbg,		"%s/XMBBG.PNG", app_usrdir);
+	sprintf(xmbbg_user_jpg,		"%s/XMBBGU.JPG", app_usrdir);
+	sprintf(xmbbg_user_png,		"%s/XMBBGU.PNG", app_usrdir);
 
 	sprintf(filename, "%s/XMBR.PNG", app_usrdir); remove(filename);
 
@@ -21270,15 +21417,6 @@ int main(int argc, char **argv)
 	load_texture(text_DOX, filename, dox_width);
 
 	sprintf(playBGR, "%s/PICPA.PNG",app_usrdir);
-
-/*	sprintf(blankBG, "/dev_hdd0/game/%s/PIC0.PNG",app_path);
-	sprintf(filename, "%s/XMB0.PNG",app_usrdir);
-	if(exist(filename) && stat(blankBG, &s2)<0 ) file_copy(filename, blankBG, 0);
-
-	sprintf(blankBG, "/dev_hdd0/game/%s/PIC1.PNG",app_path);
-	sprintf(filename, "%s/XMB1.PNG",app_usrdir);
-	if(exist(filename) && stat(blankBG, &s2)<0 ) file_copy(filename, blankBG, 0); */
-
 	sprintf(blankBG, "%s/ICON0.PNG", app_homedir);
 	sprintf(filename, "%s/ICON0.PNG", app_usrdir);
 	if(exist(filename)) file_copy(filename, blankBG, 0);
@@ -21358,6 +21496,7 @@ int main(int argc, char **argv)
 	mkdir(game_cache_dir, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
 
 	sc36_path_patch=0;
+	//pad_motor(0,0);
 
     payload = -1;  // 0->psgroove  1->hermes  2->PL3
 	payloadT[0]=0x20;
@@ -21591,12 +21730,30 @@ int main(int argc, char **argv)
 
 	if(theme_sound && multiStreamStarted)
 	{
-		sprintf(bootmusic,  "%s/SOUND.BIN", app_usrdir);
-		if(exist(bootmusic))
+		if(theme_sound==2 && xmb[4].size)
 		{
-			main_mp3((char*)bootmusic);
-			main_mp3_th(bootmusic, 0);
-			force_mp3=false;
+			for(int ci2=1; ci2<MAX_MP3; ci2++)
+				sprintf(mp3_playlist[ci2].path, "%s", xmb[4].member[rndv(xmb[4].size)].file_path);
+
+			max_mp3=MAX_MP3-1;
+			current_mp3=time(NULL)&(MAX_MP3-1);
+			sprintf(bootmusic,  "%s", mp3_playlist[current_mp3].path);
+			if(exist(bootmusic))
+			{
+				main_mp3((char*)bootmusic);
+				main_mp3_th(bootmusic, 0);
+				force_mp3=false;
+			}
+		}
+		else
+		{
+			sprintf(bootmusic,  "%s/SOUND.BIN", app_usrdir);
+			if(exist(bootmusic))
+			{
+				main_mp3((char*)bootmusic);
+				main_mp3_th(bootmusic, 0);
+				force_mp3=false;
+			}
 		}
 	}
 
@@ -21611,6 +21768,7 @@ int main(int argc, char **argv)
 
 	net_avail=cellNetCtlGetInfo(16, &net_info);
 	init_finished=1;
+
 
 
 	sys_ppu_thread_create( &download_thr_id, download_thread_entry,
@@ -23118,7 +23276,7 @@ from_fm:
 				if(dialog_ret==1){
 
 					unload_modules();
-					sys_game_process_exitspawn2((char*) reload_self, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
+					exitspawn((const char*) reload_self, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 				}
 			}
 		}
@@ -23193,8 +23351,8 @@ update_title:
 			{
 				load_texture(text_FMS, xmbicons, 128);
 				load_texture(xmb_icon_retro, xmbicons2, 128);
-				memset(text_bmp, 0, 8294400);
-				load_texture(text_bmp, xmbbg, 1920);
+				load_xmb_bg();
+
 				if(ret_f==11) {cover_mode=8; xmb_icon=2; init_xmb_icons(menu_list, max_menu_list, game_sel ); }
 			}
 			if(cover_mode==4) {load_legend(text_legend, legend);init_xmb_icons(menu_list, max_menu_list, game_sel );}
@@ -23212,7 +23370,7 @@ update_title:
 				if(exist(reload_self))
 				{
 					unload_modules();
-					sys_game_process_exitspawn2((char*) reload_self, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
+					exitspawn((const char*) reload_self, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 				}
 			}
 			if(ret_f==6 && net_used_ignore()) {unload_modules(); exit(0);}
@@ -23241,7 +23399,7 @@ retry_showtime_mm:
 						{
 							unload_modules();
 							sprintf(filename, "%s/SHOWTIME.SELF", app_usrdir);
-							sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
+							exitspawn((const char*)filename, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 						}
 						else
 						{
@@ -23265,7 +23423,7 @@ retry_showtime_mm:
 			if(ret_f==12 && exist(helpMME) && net_used_ignore())
 			{
 				unload_modules();
-				sys_game_process_exitspawn2((char*) helpMME, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
+				exitspawn((const char*) helpMME, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 			}
 			goto force_reload;
 		}
@@ -23880,6 +24038,216 @@ copy_from_bluray:
 			xmb[6].init=0; xmb[7].init=0;
 		}
 
+	// open side menu
+	if ( (new_pad & BUTTON_TRIANGLE) && cover_mode==8 &&
+			(
+			(xmb_icon==5 && (xmb[xmb_icon].member[xmb[xmb_icon].first].type==3 || xmb[xmb_icon].first==1)) //showtime video
+			|| (xmb_icon==8 && xmb[xmb_icon].first) // ROM
+			|| (xmb_icon==3 && xmb[xmb_icon].size)  // PHOTO
+			|| (xmb_icon==4 && xmb[xmb_icon].size)  // MUSIC
+			)
+		)
+	{
+			while(xmb_slide || xmb_slide_y){draw_whole_xmb(xmb_icon);}
+			new_pad=0;
+
+			opt_list_max=0;
+
+			for(int n=0; n<15; n++)
+			{
+				sprintf(opt_list[opt_list_max].label, "-");	sprintf(opt_list[opt_list_max].value, "-"); opt_list_max++;
+			}
+
+			if(xmb_icon==3)
+			{
+				sprintf(opt_list[0].label, " %s", STR_SIDE_SW);
+				sprintf(opt_list[0].value, "%s", "setwp");
+				sprintf(opt_list[1].label, " %s", STR_SIDE_RW);
+				sprintf(opt_list[1].value, "%s", "resetwp");
+				if(!xmbbg_user_bg) opt_list[1].label[0]='!';
+			}
+
+			if(xmb_icon==5 && xmb[xmb_icon].first==1)
+			{
+				sprintf(opt_list[0].label, " %s", STR_GM_UPDATE);
+				sprintf(opt_list[0].value, "%s", "update_st");
+			}
+
+			if(xmb_icon==8)
+			{
+				sprintf(opt_list[0].label, "!%s", STR_GM_UPDATE);
+				sprintf(opt_list[0].value, "%s", "update_emu");
+			}
+
+			if(xmb_icon==3)								  sprintf(opt_list[5].label, "%s", (char*) STR_POP_PHOTO	+ 1);
+			else if(xmb_icon==4)						  sprintf(opt_list[5].label, "%s", (char*) STR_POP_MUSIC	+ 1);
+			else if(xmb_icon==5 && xmb[xmb_icon].first<2) sprintf(opt_list[5].label, "%s", (char*) STR_POP_ST	+ 1);
+			else if(xmb_icon==5 && xmb[xmb_icon].first>1) sprintf(opt_list[5].label, "%s", (char*) STR_POP_VIDEO	+ 1);
+			else if(xmb_icon==8 && xmb[xmb_icon].first)   sprintf(opt_list[5].label, "%s", (char*) STR_POP_ROM	+ 1);
+					opt_list[5].label[0]=' ';
+			sprintf(opt_list[5].value, "%s", "action");
+
+			if((xmb_icon==5 && xmb[xmb_icon].first!=1) || (xmb_icon==3 || xmb_icon==4 || xmb_icon==8))
+			{
+				sprintf(opt_list[7].label, " %s", STR_CM_RENAME);
+				sprintf(opt_list[7].value, "%s", "rename");
+
+				sprintf(opt_list[8].label, " %s", STR_CM_DELETE);
+				sprintf(opt_list[8].value, "%s", "delete");
+
+				if(!lock_fileman)
+				{
+					sprintf(opt_list[10].label, " %s", STR_XC1_FILEMAN);
+					sprintf(opt_list[10].value, "%s", "fileman");
+				}
+
+				if( strstr(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path, "/dev_hdd0/video/")!=NULL ||
+					strstr(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path, "/dev_hdd0/photo/")!=NULL ||
+					strstr(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path, "/dev_hdd0/music/")!=NULL ||
+					disable_options==1 || disable_options==3 ||
+					(is_video_loading || is_music_loading || is_photo_loading || is_retro_loading || is_game_loading || is_any_xmb_column)
+					)
+				{
+					opt_list[8].label[0]='!'; //del
+					opt_list[7].label[0]='!'; //ren
+				}
+			}
+
+			if(xmb_icon==3 || xmb_icon==4 || xmb_icon==8)
+			{
+				sprintf(opt_list[2].label, " %s", STR_XC1_REFRESH);
+				sprintf(opt_list[2].value, "%s", "refresh");
+				if( (is_video_loading || is_music_loading || is_photo_loading || is_retro_loading || is_game_loading || is_any_xmb_column))
+					opt_list[2].label[0]='!'; //refresh
+			}
+
+
+			//opt_list_max=9;
+			int ret_f=open_side_menu(340);
+			new_pad=0;
+			ss_timer=0;
+			ss_timer_last=time(NULL);
+			xmb_bg_counter=200;
+
+			if(ret_f!=-1)
+			{
+				if(!strcmp(opt_list[ret_f].value, "action")) { new_pad=BUTTON_CROSS; goto overwrite_cancel_bdvd;}
+
+				else if(!strcmp(opt_list[ret_f].value, "delete"))
+				{
+					pad_motor(1,250);
+					sprintf(filename, (const char*) STR_DEL_FILE, xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
+					dialog_ret=0;
+					cellMsgDialogOpen2( type_dialog_yes_no, filename, dialog_fun1, (void*)0x0000aaaa, NULL );
+					wait_dialog();
+					if(dialog_ret==1)
+					{
+						remove(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
+						xmb[xmb_icon].member[xmb[xmb_icon].first].is_checked=false;
+					}
+				}
+				else if(!strcmp(opt_list[ret_f].value, "setwp"))
+				{
+					if(strstr(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path, ".PNG")!=NULL || strstr(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path, ".png")!=NULL)
+						file_copy(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path, xmbbg_user_png, 0);
+					else
+						file_copy(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path, xmbbg_user_jpg, 0);
+					load_xmb_bg();
+				}
+				else if(!strcmp(opt_list[ret_f].value, "resetwp"))
+				{
+					remove(xmbbg_user_png);
+					remove(xmbbg_user_jpg);
+					load_xmb_bg();
+				}
+				else if(!strcmp(opt_list[ret_f].value, "refresh"))
+				{
+					if( !(is_video_loading || is_music_loading || is_photo_loading || is_retro_loading || is_game_loading || is_any_xmb_column))
+						xmb[xmb_icon].init=0;
+				}
+				else if(!strcmp(opt_list[ret_f].value, "update_st"))
+				{
+check_st_again:
+					cellMsgDialogAbort();
+					sprintf(filename, "%s/SHOWTIME.SELF", app_usrdir);
+					sprintf(string1, "%s/SHOWTIME.SELF", url_base);
+					download_file(string1, filename, 1);
+					sprintf(filename, "%s/SHOWTIME.SELF", app_usrdir);
+					if(!exist(filename))
+					{
+						dialog_ret=0;
+						cellMsgDialogOpen2( type_dialog_yes_no, (const char*) STR_DL_ST, dialog_fun1, (void*)0x0000aaaa, NULL );
+						wait_dialog();
+						if(dialog_ret==1) goto check_st_again;
+					}
+
+				}
+				else if(!strcmp(opt_list[ret_f].value, "rename"))
+				{
+					//xmb[xmb_icon].member[xmb[xmb_icon].first].file_path
+					char si_path[512];
+					char si_name[512];
+					sprintf(si_path, "%s", xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
+					char *pch=strrchr(si_path,'/');
+					sprintf(si_name, "%s", pch+1);
+					si_path[pch-si_path]=0;
+
+					OutputInfo.result = CELL_OSKDIALOG_INPUT_FIELD_RESULT_OK;
+					OutputInfo.numCharsResultString = 128;
+					OutputInfo.pResultString = Result_Text_Buffer;
+					open_osk(1, (char*) si_name);
+					is_any_xmb_column=xmb_icon;
+					while(1){
+						draw_whole_xmb(xmb_icon);
+						if(osk_dialog==1 || osk_dialog==-1) break;
+						}
+					ClearSurface();
+					flip(); ClearSurface();
+					flipc(30);
+					is_any_xmb_column=0;
+					osk_open=0;
+					if(osk_dialog!=0)
+					{
+						sprintf(new_file_name, "%S", (wchar_t*)OutputInfo.pResultString);
+						if(strlen(new_file_name)>0)
+						{
+							sprintf(new_file_name, "%s/%S", si_path, (wchar_t*)OutputInfo.pResultString);
+							rename(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path, new_file_name);
+							sprintf(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path, "%s", new_file_name);
+							sprintf(new_file_name, "%S", (wchar_t*)OutputInfo.pResultString);
+
+								 if(new_file_name[strlen(new_file_name)-3]=='.') new_file_name[strlen(new_file_name)-3]=0;
+							else if(new_file_name[strlen(new_file_name)-4]=='.') new_file_name[strlen(new_file_name)-4]=0;
+							else if(new_file_name[strlen(new_file_name)-5]=='.') new_file_name[strlen(new_file_name)-5]=0;
+							int skip_first=0;
+							for(u8 c=0; c<strlen(new_file_name); c++)
+								if(new_file_name[c]>0x40) {skip_first=c; break;}
+							for(u8 c=skip_first; c<strlen(new_file_name); c++)
+								if(new_file_name[c]=='(' || new_file_name[c]=='[') {new_file_name[c]=0;  break;}
+							for(u8 c=skip_first; c<strlen(new_file_name); c++)
+								if(new_file_name[c]=='_') {new_file_name[c]=0x20;}
+							if(new_file_name[skip_first]==' ') skip_first++;
+
+							mod_xmb_member(xmb[xmb_icon].member, xmb[xmb_icon].first, (char*)new_file_name+skip_first, (char*)xmb[xmb_icon].member[xmb[xmb_icon].first].subname);
+							redraw_column_texts(xmb_icon);
+						}
+					}
+				}
+				else if(!strcmp(opt_list[ret_f].value, "fileman"))
+				{
+					sprintf(current_left_pane, "%s", xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
+					char *pch=strrchr(current_left_pane,'/');
+					current_left_pane[pch-current_left_pane]=0;
+					goto open_file_manager;
+				}
+
+			}
+			new_pad=0;
+			ss_timer=0;
+			ss_timer_last=time(NULL);
+			xmb_bg_counter=200;
+	}
+
 overwrite_cancel_bdvd:
 	join_copy=0;
 	if (
@@ -23965,7 +24333,7 @@ cancel_theme_exit:
 			if(xmb[1].first==6 && exist(helpMME) && net_used_ignore())
 			{
 				unload_modules();
-				sys_game_process_exitspawn2((char*) helpMME, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
+				exitspawn((const char*) helpMME, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 			}
 			if(xmb[1].first==7 && net_used_ignore()) {
 				char reload_self[128];
@@ -23973,7 +24341,7 @@ cancel_theme_exit:
 				if(exist(reload_self))
 				{
 					unload_modules();
-					sys_game_process_exitspawn2((char*) reload_self, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
+					exitspawn((const char*) reload_self, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 				}
 			}
 			if(xmb[1].first==8 && net_used_ignore()) {unload_modules(); exit(0);}
@@ -24147,10 +24515,23 @@ xmb_pin_ok2:
 				if(is_theme_playing && !theme_sound)
 					stop_audio(5);
 
-				if(is_theme_playing && theme_sound)
-						sprintf(filename, "%s/SOUND.BIN", app_usrdir);
-						if(exist(filename))
-							main_mp3((char*)filename);
+				if(is_theme_playing && theme_sound==1)
+				{
+					sprintf(filename, "%s/SOUND.BIN", app_usrdir);
+					if(exist(filename))
+						main_mp3((char*)filename);
+				}
+				if(theme_sound==2 && xmb[4].size)
+				{
+					stop_audio(5);
+					for(int ci2=1; ci2<MAX_MP3; ci2++)
+						sprintf(mp3_playlist[ci2].path, "%s", xmb[4].member[rndv(xmb[4].size)].file_path);
+
+					max_mp3=MAX_MP3-1;
+					current_mp3=rndv(MAX_MP3);
+					main_mp3((char*)mp3_playlist[current_mp3].path);
+				}
+
 			}
 
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "user_font")) redraw_column_texts(xmb_icon);
@@ -24244,7 +24625,7 @@ retry_showtime_xmb:
 				{
 					unload_modules();
 					sprintf(filename, "%s/SHOWTIME.SELF", app_usrdir);
-					sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
+					exitspawn((const char*)filename, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 				}
 
 				FILE *flist;
@@ -24257,7 +24638,7 @@ retry_showtime_xmb:
 				{
 					unload_modules();
 					sprintf(filename, "%s/SHOWTIME.SELF", app_usrdir);
-					sys_game_process_exitspawn2(filename, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
+					exitspawn((const char*)filename, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 				}
 			}
 			else
@@ -24299,7 +24680,7 @@ retry_showtime_xmb:
 				else if(xmb[xmb_icon].member[xmb[xmb_icon].first].type== 9) launch_fceu_emu(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
 				else if(xmb[xmb_icon].member[xmb[xmb_icon].first].type==10) launch_vba_emu (xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
 				else if(xmb[xmb_icon].member[xmb[xmb_icon].first].type==11) launch_genp_emu(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
-				else if(xmb[xmb_icon].member[xmb[xmb_icon].first].type==12) launch_fba_emu(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
+				else if(xmb[xmb_icon].member[xmb[xmb_icon].first].type==12) launch_fba_emu (xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
 			}
 		}
 
@@ -24622,7 +25003,7 @@ check_from_start2:
 				use_analog=0;
 
 				}
-				load_texture(text_bmp, xmbbg, 1920);
+				load_xmb_bg();
 				}
 
 
@@ -24724,7 +25105,7 @@ pass_ok:
 						sprintf(string1, "%s", menu_list[game_sel].path);
 						sprintf(fileboot, "%s/PS3_GAME/USRDIR/EBOOT.BIN", menu_list[game_sel].path);
 						syscall_mount( string1, mount_bdvd);
-						sys_game_process_exitspawn2((char *) fileboot, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_128K);
+						exitspawn((const char *) fileboot, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_128K);
 //						sys_game_process_exitspawn2((char *) "/app_home/PS3_GAME/USRDIR/EBOOT.BIN", NULL, NULL, NULL, 0, 1001, SYS_PROCESS_PRIMARY_STACK_SIZE_128K);
 
 					}
@@ -25257,7 +25638,7 @@ cancel_mount2:
 					if(exist(filename))
 					{
 						unload_modules();
-						sys_game_process_exitspawn2((char *) filename, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
+						exitspawn((const char *) filename, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 					}
 
 					if(strstr(menu_list[game_sel].path, "/dev_usb")==NULL && ((menu_list[game_sel].user & IS_BDMIRROR) || (menu_list[game_sel].user & IS_USB && !(menu_list[game_sel].user & IS_HDD)) ) )
@@ -25312,7 +25693,7 @@ cancel_mount2:
 						sprintf(fileboot, "%s", menu_list[game_sel].path);
 						if(use_cache) mount_with_cache(menu_list[game_sel].path, max_joined, menu_list[game_sel].user, menu_list[game_sel].title_id);
 						else mount_with_ext_data(menu_list[game_sel].path, menu_list[game_sel].user); //syscall_mount(fileboot, mount_bdvd);
-						sys_game_process_exitspawn2((char *) filename2, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
+						exitspawn((const char *) filename2, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
 
 					}
 					else

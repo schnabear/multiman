@@ -596,7 +596,10 @@ extern MMString g_MMString [];
 #define STR_LG_GS			MM_STRING( 490 )
 #define STR_LG_SS			MM_STRING( 491 )
 
-#define	STR_LAST_ID 492
+#define STR_SIDE_SW			MM_STRING( 492 )
+#define STR_SIDE_RW			MM_STRING( 493 )
+
+#define	STR_LAST_ID 494
 
 // ***********************************************************************************
 

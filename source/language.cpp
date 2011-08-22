@@ -646,6 +646,9 @@ static unsigned char s_pLGPREV	[]	= "Prev Mode";
 static unsigned char s_pLGGS	[]	= "Game Settings";
 static unsigned char s_pLGSS	[]	= "System Menu";
 
+static unsigned char s_SIDESW	[]	= "Set as Wallpaper";
+static unsigned char s_SIDERW	[]	= "Restore Wallpaper";
+
 
 static MMString s_MMStringDef[] = {
  { sizeof ( s_pDebugMode  ) - 1, s_pDebugMode	}, //0
@@ -1209,6 +1212,9 @@ static MMString s_MMStringDef[] = {
   { sizeof ( s_pLGPREV		) - 1, s_pLGPREV		},
   { sizeof ( s_pLGGS		) - 1, s_pLGGS			},
   { sizeof ( s_pLGSS		) - 1, s_pLGSS			}, //491
+
+  { sizeof ( s_SIDESW		) - 1, s_SIDESW			}, //492
+  { sizeof ( s_SIDERW		) - 1, s_SIDERW			}, //493
 
 };
 
