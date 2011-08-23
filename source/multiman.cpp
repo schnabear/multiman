@@ -21348,7 +21348,7 @@ int main(int argc, char **argv)
 
 	sprintf(string1, "%s/LICDIR/LIC.DAT", app_homedir);	remove(string1);
 	sprintf(string1, "%s/LICDIR", app_homedir);	rmdir(string1);
-	sprintf(string1, "%s/TROPDIR", app_homedir); my_game_delete(string1); rmdir(string1);
+	//sprintf(string1, "%s/TROPDIR", app_homedir); my_game_delete(string1); rmdir(string1);
 
 	pad_read();pad_read();
 	debug_mode = ( (new_pad | old_pad) & (BUTTON_R2 | BUTTON_L2) );
@@ -25673,7 +25673,7 @@ cancel_mount2:
 						char s_source[512];
 						char s_destination[512];
 						sprintf(s_source, "%s/PS3_GAME/TROPDIR", menu_list[game_sel].path);
-						sprintf(s_destination, "%s/TROPDIR", app_usrdir);
+						sprintf(s_destination, "%s/TROPDIR", app_homedir);
 						mkdir(s_destination, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); cellFsChmod(s_destination, 0777);
 						sprintf(s_destination, "%s/TROPDIR", app_homedir);
 						my_game_copy((char*)s_source, (char*)s_destination);
