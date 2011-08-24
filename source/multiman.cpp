@@ -359,7 +359,7 @@ u16 counter_png=0;
 u8 is_reloaded=0;
 u32 fdevices=0;
 u32 fdevices_old=0;
-
+bool side_menu_open=false;
 //int sub_menu_open=0;
 int pb_step=429;
 bool never_used_pfs=1;
@@ -793,6 +793,7 @@ char this_pane[256], other_pane[256];
  u8 expand_avchd=1;
  u8 mount_bdvd=1;
  u8 mount_hdd1=1;
+ u8 mount_dev_blind=0;
 
  u8 animation=3;
  int direct_launch=1;
@@ -3855,7 +3856,8 @@ void download_cover(char *title_id, char *name)
 	//if(download_file(covers_url, string1x, 2)==0) net_avail=-1;
 }
 
-//u64 ret2 = syscall_837(837, (u64)"CELL_FS_IOS:USB_MASS_STORAGE000", (u64)"CELL_FS_UDF", (u64)"/dev_usb006", 0, 0, 0, 0, 0);
+//u64 ret2 = syscall_8(837, (u64)"CELL_FS_IOS:USB_MASS_STORAGE000", (u64)"CELL_FS_UDF", (u64)"/dev_usb006", 0, 0, 0, 0, 0);
+
 static uint64_t syscall_837(const char *device, const char *format, const char *point, u32 a, u32 b, u32 c, void *buffer, u32 len)
 {
 	system_call_8(837, (u64)device, (u64)format, (u64)point, a, b, c, (u64)buffer, len);
@@ -3866,6 +3868,18 @@ static uint64_t syscall_838(const char *device)
 {
 	system_call_1(838, (u64)device);
 	return_to_user_prog(uint64_t);
+}
+
+u64 mount_dev_flash()
+{
+	u64 ret2 = syscall_837("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0, 0, 0, 0, 0);
+	return ret2;
+}
+
+u64 unmount_dev_flash()
+{
+	u64 ret2 = syscall_838((const char*)"/dev_blind");
+	return ret2;
 }
 
 /*******************/
@@ -18251,7 +18265,7 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 			}
 		}
 
-		if((xmb_icon==6 || xmb_icon==8) && xmb[xmb_icon].member[xmb[xmb_icon].first].game_id!=-1) game_sel=xmb[xmb_icon].member[xmb[xmb_icon].first].game_id;
+		if((xmb_icon==6 || xmb_icon==8 || xmb_icon==5) && xmb[xmb_icon].member[xmb[xmb_icon].first].game_id!=-1) game_sel=xmb[xmb_icon].member[xmb[xmb_icon].first].game_id;
 	}
 
 	if(xmb_slide_step_y!=0) //sliding horizontally (inverted XMMB)
@@ -18660,6 +18674,7 @@ int open_list_menu(char *_caption, int _width, t_opt_list *list, int _max, int _
 
 int open_side_menu(int _top)
 {
+	side_menu_open=true;
 	int _width=600;
 	int _height=1080;
 	int sel=5;
@@ -18744,6 +18759,7 @@ int open_side_menu(int _top)
 		flip();
 	}
 
+	side_menu_open=false;
 	return sel;
 
 }
@@ -19568,8 +19584,8 @@ void parse_settings()
 
 		else if(!strcmp(oini, "bd_emulator"))		bd_emulator		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 
-		else if(!strcmp(oini, "repeat_init_delay"))		repeat_init_delay		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
-		else if(!strcmp(oini, "repeat_key_delay"))		repeat_key_delay		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "repeat_init_delay"))	repeat_init_delay	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "mount_dev_blind"))	mount_dev_blind		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 
 //		else if(!strcmp(oini, "parental_pass"))		sprintf(parental_pass, "%s", xmb[2].member[n].option[xmb[2].member[n].option_selected].value);
 
@@ -19912,6 +19928,12 @@ void add_settings_column()
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,					(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,					(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=mount_hdd1;
+
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_DEVBLIND, (char*)STR_XC2_DEVBLIND1,	(char*)"mount_dev_blind");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,					(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,					(char*)"1");
+		xmb[2].member[xmb[2].size-1].option_selected=mount_dev_blind;
+
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_EMU, (char*)STR_XC2_EMU1,	(char*)"bd_emulator");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_NONE,		(char*)"0");
@@ -20449,12 +20471,15 @@ void draw_xmb_icon_text(int _xmb_icon)
 
 void draw_stars()
 {
+	int right_border=1919;
+	if(side_menu_open) right_border=1319;
 
 	if(use_drops) set_texture(text_DROPS, 256, 256);
 
 	for(int n=0; n<(use_drops?64:MAX_STARS); n++)
 	{
 		int move_star= rndv(10);
+		if(stars[n].x>1319 && side_menu_open) stars[n].x=(int) ((float)stars[n].x*0.6875f);
 
 		if(use_drops)
 		{
@@ -20465,9 +20490,9 @@ void draw_stars()
 			else
 				{stars[n].y+=16; }
 
-			if(stars[n].x>1919 || stars[n].y>1016)
+			if(stars[n].x>right_border || stars[n].y>1016)
 			{
-				stars[n].x=rndv(28);
+				stars[n].x=rndv(((right_border-128)/64));
 				stars[n].y=rndv(256);
 				stars[n].bri=rndv(200);
 				stars[n].size=rndv(XMB_SPARK_SIZE)+1;
@@ -20476,7 +20501,7 @@ void draw_stars()
 		else
 		{
 
-			draw_square(((float)stars[n].x/1920.0f-0.5f)*2.0f, (0.5f-(float)stars[n].y/1080.0f)*2.0f, (stars[n].size/1920.f), (stars[n].size/1080.f), 0.0f, ( (XMB_SPARK_COLOR&0xffffff00) | stars[n].bri));
+			draw_square(((float)stars[n].x/1920.f-0.5f)*2.0f, (0.5f-(float)stars[n].y/1080.0f)*2.0f, (stars[n].size/1920.f), (stars[n].size/1080.f), 0.0f, ( (XMB_SPARK_COLOR&0xffffff00) | stars[n].bri));
 
 			if(move_star==4)
 				{stars[n].x++; }
@@ -20489,9 +20514,9 @@ void draw_stars()
 				{stars[n].y+=2; }
 
 			if(move_star>6) stars[n].bri-=4;
-			if(stars[n].x>1919 || stars[n].y>1079 || stars[n].x<1 || stars[n].y<1 || stars[n].bri<4)
+			if(stars[n].x>right_border || stars[n].y>1079 || stars[n].x<1 || stars[n].y<1 || stars[n].bri<4)
 			{
-				stars[n].x=rndv(1920);
+				stars[n].x=rndv(right_border+1);
 				if(cover_mode==8) stars[n].y=rndv(360)+360;
 				else stars[n].y=rndv(1080);
 				stars[n].bri=rndv(222);
@@ -21378,6 +21403,7 @@ int main(int argc, char **argv)
 	}
 
 	//pad_motor(1,16);
+	if(exist((char*)"/dev_blind")) mount_dev_blind=1;
 	parse_ini(options_ini,0);
 
 	if(debug_mode)
@@ -21521,7 +21547,7 @@ int main(int argc, char **argv)
 			payload=0;
 			if(peekq(0x8000000000346690ULL) == 0x80000000002BE570ULL && peekq(0x80000000002D8538ULL) == 0x7FA3EB784BFDAD60ULL)
 			{
-				pokeq(0x80000000002D8498ULL, 0x38A000064BD7623DULL ); // 09 symbols search
+				pokeq(0x80000000002D8498ULL, 0x38A000074BD7623DULL ); // 09 symbols search
 				pokeq(0x80000000002D8504ULL, 0x38A000024BD761D1ULL ); // 0x002D7800 (/app_home) 2 search
 //				enable_sc36();
 			}//D
@@ -24482,6 +24508,12 @@ xmb_pin_ok2:
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "xmb_cover_column")) {free_all_buffers(); xmb[6].init=0; xmb[7].init=0; init_xmb_icons(menu_list, max_menu_list, game_sel );}
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "confirm_with_x")) {set_xo();xmb_legend_drawn=0;}
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "display_mode") || !strcmp(xmb[2].member[xmb[2].first].optionini, "hide_bd")) forcedevices=(1<<11);//0x0800;
+
+			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "mount_dev_blind"))
+			{
+				if(mount_dev_blind) mount_dev_flash(); else unmount_dev_flash();
+			}
+
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "bd_emulator") && xmb[2].member[xmb[2].first].option_selected==1 && !bdemu2_present)
 			{
 				if(c_firmware==3.55f)
@@ -25014,7 +25046,7 @@ check_from_start2:
 
 	}
 
-	if (new_pad & BUTTON_CROSS && game_sel>=0 && (((mode_list==0) && max_menu_list>0)) && strstr(menu_list[game_sel].path,"/pvd_usb")==NULL && ( (cover_mode!=8 && cover_mode!=4) || ((cover_mode==8 || cover_mode==4) && ( (xmb_icon==6 && xmb[xmb_icon].member[xmb[xmb_icon].first].type==1 && xmb[xmb_icon].size>1) || (xmb_icon==7  && xmb[xmb_icon].size) || (xmb_icon==5 && xmb[xmb_icon].member[xmb[xmb_icon].first].type==2)))) ) {
+	if (new_pad & BUTTON_CROSS && game_sel>=0 && (((mode_list==0) && max_menu_list>0)) && strstr(menu_list[game_sel].path,"/pvd_usb")==NULL && ( (cover_mode!=8 && cover_mode!=4) || ((cover_mode==8 || cover_mode==4) && ( (xmb_icon==6 && xmb[xmb_icon].member[xmb[xmb_icon].first].type==1 && xmb[xmb_icon].size>1) || (xmb_icon==7  && xmb[xmb_icon].size) || ((xmb_icon==5 || xmb_icon==6) && xmb[xmb_icon].member[xmb[xmb_icon].first].type==2)))) ) {
 
 start_title:
 		join_copy=0;
@@ -25732,6 +25764,7 @@ cancel_mount2:
 						ret2 = syscall_838("/dev_ps2disc");
 						ret2 = syscall_837("CELL_FS_IOS:BDVD_DRIVE", "CELL_FS_UDF", "/dev_ps2disc", 0, 1, 0, 0, 0);
 						ret2 = syscall_837("CELL_FS_IOS:BDVD_DRIVE", "CELL_FS_UDF", "/dev_bdvd", 0, 1, 0, 0, 0);
+
 						syscall_mount( menu_list[game_sel].path, mount_bdvd);
 
 //	ret2 = syscall_837("CELL_FS_IOS:BDVD_DRIVE", "CELL_FS_SIMPLE", "/dev_ps2disc", 0, 1, 0, 0, 0);

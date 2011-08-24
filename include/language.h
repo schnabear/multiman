@@ -599,7 +599,10 @@ extern MMString g_MMString [];
 #define STR_SIDE_SW			MM_STRING( 492 )
 #define STR_SIDE_RW			MM_STRING( 493 )
 
-#define	STR_LAST_ID 494
+#define	STR_XC2_DEVBLIND	MM_STRING( 494 )
+#define	STR_XC2_DEVBLIND1	MM_STRING( 495 )
+
+#define	STR_LAST_ID 496
 
 // ***********************************************************************************
 

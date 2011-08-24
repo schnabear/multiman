@@ -649,6 +649,8 @@ static unsigned char s_pLGSS	[]	= "System Menu";
 static unsigned char s_SIDESW	[]	= "Set as Wallpaper";
 static unsigned char s_SIDERW	[]	= "Restore Wallpaper";
 
+static unsigned char s_pXC2_494	[]	= "Write Access to /dev_flash";
+static unsigned char s_pXC2_495	[]	= "Mount /dev_flash as /dev_blind with write permissions.";
 
 static MMString s_MMStringDef[] = {
  { sizeof ( s_pDebugMode  ) - 1, s_pDebugMode	}, //0
@@ -1215,6 +1217,9 @@ static MMString s_MMStringDef[] = {
 
   { sizeof ( s_SIDESW		) - 1, s_SIDESW			}, //492
   { sizeof ( s_SIDERW		) - 1, s_SIDERW			}, //493
+
+  { sizeof ( s_pXC2_494		) - 1, s_pXC2_494		},
+  { sizeof ( s_pXC2_495		) - 1, s_pXC2_495		}
 
 };
 

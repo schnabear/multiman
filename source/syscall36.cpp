@@ -24,20 +24,20 @@ void unmap_lv1()
 	if (mmap_lpar_addr != 0) lv1_undocumented_function_115(mmap_lpar_addr);
 }
 
-int lv2launch(u64 addr) { 
-	system_call_8(9, (u64) addr, 0,0,0,0,0,0,0); 
+int lv2launch(u64 addr) {
+	system_call_8(9, (u64) addr, 0,0,0,0,0,0,0);
 	return_to_user_prog(int);
 }
 
 void hermes_payload_341(void)
 {
-	if( Lv2Syscall1(6, 0x8000000000017CE0ULL) == 0x7C6903A64E800420ULL) return;  	
+	if( Lv2Syscall1(6, 0x8000000000017CE0ULL) == 0x7C6903A64E800420ULL) return;
     int l, n;
 
-    for(l = 0; l < 25; l++) 
+    for(l = 0; l < 25; l++)
 	{
         u8 * p = (u8 *) bdemu;
-        for(n = 0; n < 3840; n += 8) 
+        for(n = 0; n < 3840; n += 8)
 		{
             static u64 value;
             memcpy(&value, &p[n], 8);
@@ -49,7 +49,7 @@ void hermes_payload_341(void)
         Lv2Syscall2(7, 0x8000000000017CE0ULL , 0x7C6903A64E800420ULL);
         __asm__("sync");
     }
-	if(Lv2Syscall1(6, 0x8000000000017CE0ULL) == 0x7C6903A64E800420ULL)    	
+	if(Lv2Syscall1(6, 0x8000000000017CE0ULL) == 0x7C6903A64E800420ULL)
 		lv2launch(0x80000000007e0000ULL);
     __asm__("sync");
 }
@@ -68,7 +68,7 @@ void psgroove_main(int enable)
 		unmap_lv1();
 		remove_new_poke();
 
-		if(enable==0) 
+		if(enable==0)
 		{
 		    int n=0;
 			u64 val=0x0000000000000000ULL;
@@ -80,7 +80,7 @@ void psgroove_main(int enable)
 			// 27 @ 2BE4A0 (D8)
 		    for(n = 0; n < 0xd8; n += 8) {  memcpy(&val, &p[n], 8); Lv2Syscall2(7, 0x80000000002BE4A0ULL + (u64) n, ~val); }
 
-			Lv2Syscall2(7, 0x80000000002D8498ULL, 0x38A000064BD7623DULL ); // 06 symbols search /dev_b
+			Lv2Syscall2(7, 0x80000000002D8498ULL, 0x38A000074BD7623DULL ); // 06 symbols search /dev_b
 			Lv2Syscall2(7, 0x80000000002D8504ULL, 0x38A000024BD761D1ULL ); // 0x002D7800 (/app_home) 2 search
 
 		}
@@ -112,7 +112,7 @@ void hermes_payload_355(int enable)
 		unmap_lv1();
 		remove_new_poke();
 
-		if(enable==0) 
+		if(enable==0)
 		{
 		    int n=0;
 			u64 val=0x0000000000000000ULL;
