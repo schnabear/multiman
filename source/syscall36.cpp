@@ -3,7 +3,7 @@
 #include "hvcall.h"
 #include "mm.h"
 #include <string.h>
-#include <psl1ght/lv2.h>
+#include "lv2.h"
 u64 mmap_lpar_addr;
 extern unsigned char bdemu[0x1380];
 

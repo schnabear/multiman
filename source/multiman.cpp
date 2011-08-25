@@ -3878,7 +3878,7 @@ u64 mount_dev_flash()
 
 u64 unmount_dev_flash()
 {
-	u64 ret2 = syscall_838((const char*)"/dev_blind");
+	u64 ret2 = syscall_838("/dev_blind");
 	return ret2;
 }
 

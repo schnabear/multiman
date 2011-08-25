@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <psl1ght/lv2.h>
+#include "lv2.h"
 
 #define HVSC_SYSCALL			811                  	// which syscall to overwrite with hvsc redirect
 #define HVSC_SYSCALL_ADDR		0x8000000000195540ULL	// where above syscall is in lv2
