@@ -1302,14 +1302,14 @@ void display_img_persp(int x, int y, int width, int height, int tx, int ty, floa
 
 void display_img(int x, int y, int width, int height, int tx, int ty, float z, int Dtx, int Dty)
 {
-	if((cover_mode==8) && V_WIDTH==720)
+	/*if((cover_mode==8) && V_WIDTH==720)
 	{
 		x-=(int)((float)width*0.04f);
 		y-=(int)((float)height*0.06f);
 		width+=(int)((float)width*0.08f);
 		height+=(int)((float)height*0.12f);
 
-	}
+	}*/
     vertex_text[vert_texture_indx].x= ((float) ((x)*2))/((float) 1920)-1.0f;
     vertex_text[vert_texture_indx].y= ((float) ((y)*-2))/((float) 1080)+1.0f;
     vertex_text[vert_texture_indx].z= z;
@@ -1387,14 +1387,14 @@ int angle_coord_y(int radius, float __angle)
 void display_img_angle(int x, int y, int width, int height, int tx, int ty, float z, int Dtx, int Dty, float _angle)
 {
 	int _radius;
-	if((cover_mode==8) && V_WIDTH==720)
+	/*if((cover_mode==8) && V_WIDTH==720)
 	{
 		x-=(int)((float)width*0.04f);
 		y-=(int)((float)height*0.06f);
 		width+=(int)((float)width*0.08f);
 		height+=(int)((float)height*0.12f);
 
-	}
+	}*/
 
 	_radius = (int)(((float)width*sqrt(2.f))/2.f); // diagonal/2 -> works for square textures at the moment
 
