@@ -494,3 +494,7 @@ Set as Wallpaper
 Restore Wallpaper
 Write Access to /dev_flash
 Mount /dev_flash as /dev_blind with write permissions.
+Advanced Settings
+Standard Settings
+Pause Music
+Stop Music

@@ -602,7 +602,13 @@ extern MMString g_MMString [];
 #define	STR_XC2_DEVBLIND	MM_STRING( 494 )
 #define	STR_XC2_DEVBLIND1	MM_STRING( 495 )
 
-#define	STR_LAST_ID 496
+#define	STR_SIDE_ADVS		MM_STRING( 496 )
+#define	STR_SIDE_STDS		MM_STRING( 497 )
+
+#define	STR_SIDE_PAUSE		MM_STRING( 498 )
+#define	STR_SIDE_STOP		MM_STRING( 499 )
+
+#define	STR_LAST_ID 500
 
 // ***********************************************************************************
 

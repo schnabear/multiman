@@ -794,6 +794,7 @@ char this_pane[256], other_pane[256];
  u8 mount_bdvd=1;
  u8 mount_hdd1=1;
  u8 mount_dev_blind=0;
+ u8 settings_advanced=1;
 
  u8 animation=3;
  int direct_launch=1;
@@ -845,7 +846,7 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 int open_list_menu(char *_caption, int _width, t_opt_list *list, int _max, int _x, int _y, int _max_entries, int _centered);
 int open_dd_menu(char *_caption, int _width, t_opt_list *list, int _max, int _x, int _y, int _max_entries);
 int context_menu(char *_cap, int _type, char *c_pane, char *o_pane);
-int open_side_menu(int _top);
+int open_side_menu(int _top, int sel);
 
 #define MAX_PANE_SIZE 2560
 typedef struct
@@ -2088,8 +2089,10 @@ bool is_video(char *vfile)
 		strstr(vfile, ".VOB")!=NULL || strstr(vfile, ".vob")!=NULL ||
 		strstr(vfile, ".WMV")!=NULL || strstr(vfile, ".wmv")!=NULL ||
 		strstr(vfile, ".FLV")!=NULL || strstr(vfile, ".flv")!=NULL ||
+		strstr(vfile, ".VP6")!=NULL || strstr(vfile, ".vp6")!=NULL ||
 		strstr(vfile, ".MOV")!=NULL || strstr(vfile, ".mov")!=NULL ||
 		strstr(vfile, ".M2V")!=NULL || strstr(vfile, ".m2v")!=NULL ||
+		strstr(vfile, ".M4V")!=NULL || strstr(vfile, ".m4v")!=NULL ||
 		strstr(vfile, ".BIK")!=NULL || strstr(vfile, ".bik")!=NULL ||
 		strstr(vfile, ".BINK")!=NULL || strstr(vfile, ".bink")!=NULL ||
 		strstr(vfile, ".264")!=NULL || strstr(vfile, ".h264")!=NULL) &&
@@ -16161,6 +16164,9 @@ if ( fp != NULL )
 		if(strstr (line,"download_covers=0")!=NULL) download_covers=0;
 		if(strstr (line,"download_covers=1")!=NULL) download_covers=1;
 
+		if(strstr (line,"settings_advanced=0")!=NULL) settings_advanced=0;
+		if(strstr (line,"settings_advanced=1")!=NULL) settings_advanced=1;
+
 		if(strstr (line,"overscan=")!=NULL) {
 			overscan=(strtod(((char*)line)+9, NULL)/100.f);
 			if(overscan>0.10f) overscan=0.10f;
@@ -16585,14 +16591,16 @@ if(get_param_sfo_field((char *)game_param_sfo, (char *)"APP_VER", (char *)temp_v
 						if(lc==1 && strlen(g_ver)>2) sprintf(g_title, "[%s]: %s", game_id, g_ver);
 						if(lc>1)
 						{
-							sprintf(pkg_list[max_pkg].pkg_ver, "%s", g_ver);
-							sprintf(pkg_list[max_pkg].ps3_ver, "%s", g_ps3);
-							sprintf(pkg_list[max_pkg].pkg_url, "%s", g_url);
-							pkg_list[max_pkg].pkg_size = strtoull(line, NULL, 10);
-							all_pkg+=pkg_list[max_pkg].pkg_size;
-							if(param_ver<strtof(g_ver, NULL) && first_pkg==-1) first_pkg=max_pkg;
-							max_pkg++;
-
+							if(c_firmware>=strtof(g_ps3, NULL))
+							{
+								sprintf(pkg_list[max_pkg].pkg_ver, "%s", g_ver);
+								sprintf(pkg_list[max_pkg].ps3_ver, "%s", g_ps3);
+								sprintf(pkg_list[max_pkg].pkg_url, "%s", g_url);
+								pkg_list[max_pkg].pkg_size = strtoull(line, NULL, 10);
+								all_pkg+=pkg_list[max_pkg].pkg_size;
+								if(param_ver<strtof(g_ver, NULL) && first_pkg==-1) first_pkg=max_pkg;
+								max_pkg++;
+							}
 						}
 					}
 				fclose(fpV);
@@ -18672,12 +18680,11 @@ int open_list_menu(char *_caption, int _width, t_opt_list *list, int _max, int _
 	return -1;
 }
 
-int open_side_menu(int _top)
+int open_side_menu(int _top, int sel)
 {
 	side_menu_open=true;
 	int _width=600;
 	int _height=1080;
-	int sel=5;
 
 	u8 *text_LIST = text_FONT;
 
@@ -19470,6 +19477,7 @@ void save_options()
 	fpA = fopen ( options_bin, "w" );
 	if(fpA!=NULL)
 	{
+		fprintf(fpA, "settings_advanced=%i\r\n", settings_advanced);
 		fprintf(fpA, "download_covers=%i\r\n", download_covers);
 		fprintf(fpA, "date_format=%i\r\n", date_format);
 		fprintf(fpA, "time_format=%i\r\n", time_format);
@@ -19615,6 +19623,8 @@ void add_settings_column()
 		add_xmb_member(xmb[2].member, &xmb[2].size, (char*)STR_XC2_GC, (char*)STR_XC2_GC1,
 				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_tool, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
 
+	if(settings_advanced)
+	{
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_DL_COVERS, (char*)STR_XC2_DL_COVERS1, (char*)"download_covers");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_NO ,		(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_AUTO,		(char*)"1");
@@ -19626,6 +19636,7 @@ void add_settings_column()
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,		(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=ftp_service;
 		xmb[2].member[xmb[2].size-1].icon=xmb_icon_ftp;
+	}
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_SPARKS, (char*)STR_XC2_SPARKS1,	(char*)"xmb_sparks");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,					(char*)"0");
@@ -19643,11 +19654,12 @@ void add_settings_column()
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=xmb_cover;
 
+	if(settings_advanced)
+	{
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_SWAP, (char*)STR_XC2_SWAP1,	(char*)"xmb_cover_column");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=xmb_cover_column;
-
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_POP, (char*)STR_XC2_POP1,	(char*)"xmb_popup");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
@@ -19724,6 +19736,7 @@ void add_settings_column()
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_NO ,		(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_YES,	(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=clear_activity_logs;
+	}
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_DATE, (char*)STR_XC2_DATE1, (char*)"date_format");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"DD/MM/YYYY",	(char*)"0");
@@ -19736,12 +19749,14 @@ void add_settings_column()
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_TIME3,	(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=time_format;
 
+	if(settings_advanced)
+	{
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_ACC, (char*)STR_XC2_ACC1, (char*)"confirm_with_x");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ACC2,	(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ACC3,	(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=confirm_with_x;
 
-
+	}
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_DM, (char*)STR_XC2_DM1,	(char*)"full_png");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM2,					(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM3,					(char*)"1");
@@ -19754,6 +19769,8 @@ void add_settings_column()
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM10,					(char*)"8");
 		xmb[2].member[xmb[2].size-1].option_selected=initial_cover_mode;
 
+	if(settings_advanced)
+	{
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_LOCKDM, (char*)STR_XC2_LOCKDM1,	(char*)"lock_display_mode");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,								(char*)"-1");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM2,					(char*)"0");
@@ -19766,6 +19783,7 @@ void add_settings_column()
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM9,					(char*)"7");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DM10,					(char*)"8");
 		xmb[2].member[xmb[2].size-1].option_selected=lock_display_mode+1;
+	}
 
 		if(user_font<10)
 		{
@@ -19788,7 +19806,7 @@ void add_settings_column()
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,							(char*)"1");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC_MUS,								(char*)"2");
 		xmb[2].member[xmb[2].size-1].option_selected=theme_sound;
-
+		xmb[2].member[xmb[2].size-1].icon=xmb_icon_note;
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_TV, (char*)STR_XC2_TV1,	(char*)"overscan");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
@@ -19813,12 +19831,15 @@ void add_settings_column()
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_TITLE_APP4,				(char*)"2");
 		xmb[2].member[xmb[2].size-1].option_selected=dir_mode;
 
+	if(settings_advanced)
+	{
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_TITLE_DET, (char*)STR_XC2_TITLE_DET1,	(char*)"game_details");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_TITLE_DET2,					(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_TITLE_DET3,					(char*)"1");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_TITLE_DET4,							(char*)"2");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"3");
 		xmb[2].member[xmb[2].size-1].option_selected=game_details;
+	}
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_ANI, (char*)STR_XC2_ANI1,		(char*)"animation");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,					(char*)"0");
@@ -19837,7 +19858,8 @@ void add_settings_column()
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_AUTO,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=gray_poster;
 
-
+	if(settings_advanced)
+	{
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_PROGRESS, (char*)STR_XC2_PROGRESS1,	(char*)"progress_bar");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_NO ,						(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_YES,						(char*)"1");
@@ -19858,6 +19880,7 @@ void add_settings_column()
 		if(dim_setting<0) dim_setting=0;
 		if(dim_setting>10) dim_setting=10;
 		xmb[2].member[xmb[2].size-1].option_selected=dim_setting;
+	}
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_SS, (char*)STR_XC2_SS1,	(char*)"ss_timeout");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
@@ -19874,10 +19897,14 @@ void add_settings_column()
 		xmb[2].member[xmb[2].size-1].option_selected=ss_timeout;
 		xmb[2].member[xmb[2].size-1].icon=xmb_icon_ss;
 
+	if(settings_advanced)
+	{
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_SENSOR, (char*)STR_XC2_SENSOR1,	(char*)"use_pad_sensor");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,						(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=use_pad_sensor;
+		xmb[2].member[xmb[2].size-1].icon=xmb[6].data;
+	}
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_SENSX, (char*)STR_XC2_SENSX1,	(char*)"deadzone_x");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
@@ -19924,6 +19951,8 @@ void add_settings_column()
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_KEY_REP6,					(char*)"10");
 		xmb[2].member[xmb[2].size-1].option_selected=(int) ((repeat_key_delay/2)-1);
 
+	if(settings_advanced)
+	{
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_CACHE, (char*)STR_XC2_CACHE1,	(char*)"mount_hdd1");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,					(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,					(char*)"1");
@@ -19933,7 +19962,8 @@ void add_settings_column()
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,					(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,					(char*)"1");
 		xmb[2].member[xmb[2].size-1].option_selected=mount_dev_blind;
-
+		xmb[2].member[xmb[2].size-1].icon=xmb_icon_folder;
+	}
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_EMU, (char*)STR_XC2_EMU1,	(char*)"bd_emulator");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_NONE,		(char*)"0");
@@ -19945,6 +19975,7 @@ void add_settings_column()
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_STD,		(char*)"2");
 		if(c_firmware==3.41f && bd_emulator>1) bd_emulator=1;
 		xmb[2].member[xmb[2].size-1].option_selected=bd_emulator;
+		xmb[2].member[xmb[2].size-1].icon=xmb_icon_blu;
 
 		xmb[2].first=xmb_settings_sel;
 }
@@ -24065,12 +24096,13 @@ copy_from_bluray:
 		}
 
 	// open side menu
-	if ( (new_pad & BUTTON_TRIANGLE) && cover_mode==8 &&
+	if ( (new_pad & BUTTON_TRIANGLE) && cover_mode==8 && !xmb_slide &&
 			(
 			(xmb_icon==5 && (xmb[xmb_icon].member[xmb[xmb_icon].first].type==3 || xmb[xmb_icon].first==1)) //showtime video
 			|| (xmb_icon==8 && xmb[xmb_icon].first) // ROM
 			|| (xmb_icon==3 && xmb[xmb_icon].size)  // PHOTO
 			|| (xmb_icon==4 && xmb[xmb_icon].size)  // MUSIC
+			|| (xmb_icon==2)  // SETTINGS
 			)
 		)
 	{
@@ -24107,9 +24139,18 @@ copy_from_bluray:
 
 			if(xmb_icon==3)								  sprintf(opt_list[5].label, "%s", (char*) STR_POP_PHOTO	+ 1);
 			else if(xmb_icon==4)						  sprintf(opt_list[5].label, "%s", (char*) STR_POP_MUSIC	+ 1);
-			else if(xmb_icon==5 && xmb[xmb_icon].first<2) sprintf(opt_list[5].label, "%s", (char*) STR_POP_ST	+ 1);
+			else if(xmb_icon==5 && xmb[xmb_icon].first<2) sprintf(opt_list[5].label, "%s", (char*) STR_POP_ST		+ 1);
 			else if(xmb_icon==5 && xmb[xmb_icon].first>1) sprintf(opt_list[5].label, "%s", (char*) STR_POP_VIDEO	+ 1);
-			else if(xmb_icon==8 && xmb[xmb_icon].first)   sprintf(opt_list[5].label, "%s", (char*) STR_POP_ROM	+ 1);
+			else if(xmb_icon==8 && xmb[xmb_icon].first)   sprintf(opt_list[5].label, "%s", (char*) STR_POP_ROM		+ 1);
+
+			if(xmb_icon==2)
+			{
+				if(!settings_advanced)
+					sprintf(opt_list[5].label, " %s", STR_SIDE_ADVS);
+				else
+					sprintf(opt_list[5].label, " %s", STR_SIDE_STDS);
+			}
+
 					opt_list[5].label[0]=' ';
 			sprintf(opt_list[5].value, "%s", "action");
 
@@ -24137,19 +24178,28 @@ copy_from_bluray:
 					opt_list[8].label[0]='!'; //del
 					opt_list[7].label[0]='!'; //ren
 				}
+
+				if(xmb_icon==4)
+				{
+					sprintf(opt_list[2].label, " %s", STR_SIDE_STOP);
+					sprintf(opt_list[2].value, "%s", "stop");
+					sprintf(opt_list[3].label, " %s", STR_SIDE_PAUSE);
+					sprintf(opt_list[3].value, "%s", "pause");
+					if(!current_mp3) {opt_list[2].label[0]='!';opt_list[3].label[0]='!';}
+				}
 			}
 
 			if(xmb_icon==3 || xmb_icon==4 || xmb_icon==8)
 			{
-				sprintf(opt_list[2].label, " %s", STR_XC1_REFRESH);
-				sprintf(opt_list[2].value, "%s", "refresh");
+				sprintf(opt_list[(xmb_icon==4?0:2)].label, " %s", STR_XC1_REFRESH);
+				sprintf(opt_list[(xmb_icon==4?0:2)].value, "%s", "refresh");
 				if( (is_video_loading || is_music_loading || is_photo_loading || is_retro_loading || is_game_loading || is_any_xmb_column))
-					opt_list[2].label[0]='!'; //refresh
+					opt_list[(xmb_icon==4?0:2)].label[0]='!'; //refresh
 			}
 
 
-			//opt_list_max=9;
-			int ret_f=open_side_menu(340);
+			u8 _first=5;
+			int ret_f=open_side_menu(340, _first);
 			new_pad=0;
 			ss_timer=0;
 			ss_timer_last=time(NULL);
@@ -24157,6 +24207,7 @@ copy_from_bluray:
 
 			if(ret_f!=-1)
 			{
+				if(!strcmp(opt_list[ret_f].value, "action") && xmb_icon==2) { settings_advanced=!settings_advanced; redraw_column_texts(xmb_icon); goto leave_side_sel;}
 				if(!strcmp(opt_list[ret_f].value, "action")) { new_pad=BUTTON_CROSS; goto overwrite_cancel_bdvd;}
 
 				else if(!strcmp(opt_list[ret_f].value, "delete"))
@@ -24266,8 +24317,17 @@ check_st_again:
 					current_left_pane[pch-current_left_pane]=0;
 					goto open_file_manager;
 				}
-
+				else if(!strcmp(opt_list[ret_f].value, "pause"))
+				{
+					 update_ms=!update_ms;
+					 xmb_info_drawn=0;
+				}
+				else if(!strcmp(opt_list[ret_f].value, "stop"))
+				{
+					stop_mp3(5);
+				}
 			}
+leave_side_sel:
 			new_pad=0;
 			ss_timer=0;
 			ss_timer_last=time(NULL);
@@ -24375,6 +24435,7 @@ cancel_theme_exit:
 
 		if(xmb_icon==2 && (xmb[2].member[xmb[2].first].option_size || xmb[2].first<3) ) //settings
 		{
+			int ret_f=-1;
 
 			if(xmb[2].first==0) // system information
 			{
@@ -24492,7 +24553,25 @@ xmb_pin_ok:
 
 xmb_pin_ok2:
 
-			if(new_pad & BUTTON_CIRCLE)
+			opt_list_max=0;
+			for(int n=0; n<15; n++)
+			{
+				sprintf(opt_list[opt_list_max].label, "-");	sprintf(opt_list[opt_list_max].value, "-"); opt_list_max++;
+			}
+
+
+			for(int n=0; n<xmb[2].member[xmb[2].first].option_size; n++)
+			{
+				sprintf(opt_list[n].label, " %s", xmb[2].member[xmb[2].first].option[n].label);
+				sprintf(opt_list[n].value, "%s", "---");
+			}
+
+			ret_f=open_side_menu(500, xmb[2].member[xmb[2].first].option_selected);
+			if(ret_f==-1) goto xmb_cancel_option;
+
+			xmb[2].member[xmb[2].first].option_selected=ret_f;
+
+/*			if(new_pad & BUTTON_CIRCLE)
 			{
 				if(xmb[2].member[xmb[2].first].option_selected<1) xmb[2].member[xmb[2].first].option_selected=xmb[2].member[xmb[2].first].option_size;
 				xmb[2].member[xmb[2].first].option_selected--;
@@ -24502,7 +24581,7 @@ xmb_pin_ok2:
 				xmb[2].member[xmb[2].first].option_selected++;
 				if(xmb[2].member[xmb[2].first].option_selected>=xmb[2].member[xmb[2].first].option_size) xmb[2].member[xmb[2].first].option_selected=0;
 			}
-
+*/
 			parse_settings();
 
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "xmb_cover_column")) {free_all_buffers(); xmb[6].init=0; xmb[7].init=0; init_xmb_icons(menu_list, max_menu_list, game_sel );}
@@ -24570,7 +24649,10 @@ xmb_pin_ok2:
 
 
 xmb_cancel_option:
-			//redraw_column_texts(xmb_icon);
+			new_pad=0;
+			ss_timer=0;
+			ss_timer_last=time(NULL);
+			xmb_bg_counter=200;
 			dialog_ret=0;
 
 		}
@@ -25715,11 +25797,19 @@ cancel_mount2:
 						mkdir(s_destination, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR); cellFsChmod(s_destination, 0777);
 						sprintf(s_destination, "%s/LICDIR/LIC.DAT", app_homedir);
 						file_copy((char*)s_source, (char*)s_destination, 0);
-
-
+						struct stat s;
+						int n=stat(menu_list[game_sel].path, &s);
+						if(( n < 0 || (s.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO)) != (S_IRWXU | S_IRWXG | S_IRWXO)) && strstr(menu_list[game_sel].path, "/dev_hdd0/")!=NULL)
+						{
+								dialog_ret=0; cellMsgDialogOpen2( type_dialog_back, (const char*) STR_SET_ACCESS1, dialog_fun2, (void*)0x0000aaab, NULL );	flipc(62);
+								sprintf(s_source, "%s", menu_list[game_sel].path);
+								//sys8_perm_mode(1);
+								abort_rec=0;
+								fix_perm_recursive(s_source);
+						}
 						unload_modules();
-
 						sprintf(filename2, "%s/PS3_GAME/USRDIR/EBOOT.BIN", menu_list[game_sel].path);
+
 						//if(stat("/dev_bdvd/PS3_GAME/USRDIR/EBOOT.BIN", &s3)>=0) sprintf(filename, "%s", "/dev_bdvd/PS3_GAME/USRDIR/EBOOT.BIN");
 						//else if(stat("/app_home/PS3_GAME/USRDIR/EBOOT.BIN", &s3)>=0) sprintf(filename, "%s", "/app_home/PS3_GAME/USRDIR/EBOOT.BIN");
 						sprintf(fileboot, "%s", menu_list[game_sel].path);
@@ -25731,6 +25821,16 @@ cancel_mount2:
 					else
 					{
 						write_last_play( filename, menu_list[game_sel].path, menu_list[game_sel].title, menu_list[game_sel].title_id, 0);
+						struct stat s;
+						int n=stat(menu_list[game_sel].path, &s);
+						if(( n < 0 || (s.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO)) != (S_IRWXU | S_IRWXG | S_IRWXO)) && strstr(menu_list[game_sel].path, "/dev_hdd0/")!=NULL)
+						{
+								dialog_ret=0; cellMsgDialogOpen2( type_dialog_back, (const char*) STR_SET_ACCESS1, dialog_fun2, (void*)0x0000aaab, NULL );	flipc(62);
+								sprintf(fileboot, "%s", menu_list[game_sel].path);
+								//sys8_perm_mode(1);
+								abort_rec=0;
+								fix_perm_recursive(fileboot);
+						}
 						unload_modules();
 						sprintf(fileboot, "%s", menu_list[game_sel].path);
 						if(use_cache) mount_with_cache(menu_list[game_sel].path, max_joined, menu_list[game_sel].user, menu_list[game_sel].title_id);

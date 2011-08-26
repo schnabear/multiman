@@ -652,6 +652,12 @@ static unsigned char s_SIDERW	[]	= "Restore Wallpaper";
 static unsigned char s_pXC2_494	[]	= "Write Access to /dev_flash";
 static unsigned char s_pXC2_495	[]	= "Mount /dev_flash as /dev_blind with write permissions.";
 
+static unsigned char s_SIDE_ADV	[]	= "Advanced Settings";
+static unsigned char s_SIDE_STD	[]	= "Standard Settings";
+
+static unsigned char s_SIDE_PAUSE[]	= "Pause Music";
+static unsigned char s_SIDE_STOP[]	= "Stop Music";
+
 static MMString s_MMStringDef[] = {
  { sizeof ( s_pDebugMode  ) - 1, s_pDebugMode	}, //0
  { sizeof ( s_pQuit0	  ) - 1, s_pQuit0		}, //1
@@ -1219,7 +1225,13 @@ static MMString s_MMStringDef[] = {
   { sizeof ( s_SIDERW		) - 1, s_SIDERW			}, //493
 
   { sizeof ( s_pXC2_494		) - 1, s_pXC2_494		},
-  { sizeof ( s_pXC2_495		) - 1, s_pXC2_495		}
+  { sizeof ( s_pXC2_495		) - 1, s_pXC2_495		},
+
+  { sizeof ( s_SIDE_ADV		) - 1, s_SIDE_ADV		}, //496
+  { sizeof ( s_SIDE_STD		) - 1, s_SIDE_STD		},
+
+  { sizeof ( s_SIDE_PAUSE	) - 1, s_SIDE_PAUSE		}, //498
+  { sizeof ( s_SIDE_STOP	) - 1, s_SIDE_STOP		}
 
 };
 
