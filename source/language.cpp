@@ -658,6 +658,23 @@ static unsigned char s_SIDE_STD	[]	= "Standard Settings";
 static unsigned char s_SIDE_PAUSE[]	= "Pause Music";
 static unsigned char s_SIDE_STOP[]	= "Stop Music";
 
+static unsigned char s_SIDE_INFO[]	= "Information";
+static unsigned char s_SIDE_BROW[]	= "Browse";
+
+static unsigned char s_BR_NOV[]		= "There are no titles";
+static unsigned char s_BR_NOP[]		= "There are no images";
+static unsigned char s_BR_NOM[]		= "There are no tracks";
+static unsigned char s_BR_NOE[]		= "There are no ROM emulator images";
+
+static unsigned char s_BR_HDD[]		= "PS3™ Internal HDD";
+static unsigned char s_BR_USB[]		= "USB Device (Port %03i)";
+
+static unsigned char s_pXC2_508	[]	= "Default";
+static unsigned char s_pXC2_509	[]	= "Side Menu Color";
+static unsigned char s_pXC2_510	[]	= "Changes the background color of the side menu.";
+static unsigned char s_pXC2_511	[]	= "Color";
+
+
 static MMString s_MMStringDef[] = {
  { sizeof ( s_pDebugMode  ) - 1, s_pDebugMode	}, //0
  { sizeof ( s_pQuit0	  ) - 1, s_pQuit0		}, //1
@@ -1231,7 +1248,22 @@ static MMString s_MMStringDef[] = {
   { sizeof ( s_SIDE_STD		) - 1, s_SIDE_STD		},
 
   { sizeof ( s_SIDE_PAUSE	) - 1, s_SIDE_PAUSE		}, //498
-  { sizeof ( s_SIDE_STOP	) - 1, s_SIDE_STOP		}
+  { sizeof ( s_SIDE_STOP	) - 1, s_SIDE_STOP		},
+  { sizeof ( s_SIDE_PAUSE	) - 1, s_SIDE_INFO		}, //500
+  { sizeof ( s_SIDE_STOP	) - 1, s_SIDE_BROW		},
+
+  { sizeof ( s_BR_NOV		) - 1, s_BR_NOV			}, //502
+  { sizeof ( s_BR_NOP		) - 1, s_BR_NOP			},
+  { sizeof ( s_BR_NOM		) - 1, s_BR_NOM			},
+  { sizeof ( s_BR_NOE		) - 1, s_BR_NOE			},
+
+  { sizeof ( s_BR_HDD		) - 1, s_BR_HDD			},
+  { sizeof ( s_BR_USB		) - 1, s_BR_USB			}, //507
+
+  { sizeof ( s_pXC2_508		) - 1, s_pXC2_508		},
+  { sizeof ( s_pXC2_509		) - 1, s_pXC2_509		},
+  { sizeof ( s_pXC2_510		) - 1, s_pXC2_510		},
+  { sizeof ( s_pXC2_511		) - 1, s_pXC2_511		} //511
 
 };
 

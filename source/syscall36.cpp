@@ -80,7 +80,7 @@ void psgroove_main(int enable)
 			// 27 @ 2BE4A0 (D8)
 		    for(n = 0; n < 0xd8; n += 8) {  memcpy(&val, &p[n], 8); Lv2Syscall2(7, 0x80000000002BE4A0ULL + (u64) n, ~val); }
 
-			Lv2Syscall2(7, 0x80000000002D8498ULL, 0x38A000074BD7623DULL ); // 06 symbols search /dev_b
+			Lv2Syscall2(7, 0x80000000002D8498ULL, 0x38A000074BD7623DULL ); // 07 symbols search /dev_bd
 			Lv2Syscall2(7, 0x80000000002D8504ULL, 0x38A000024BD761D1ULL ); // 0x002D7800 (/app_home) 2 search
 
 		}

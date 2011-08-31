@@ -607,8 +607,23 @@ extern MMString g_MMString [];
 
 #define	STR_SIDE_PAUSE		MM_STRING( 498 )
 #define	STR_SIDE_STOP		MM_STRING( 499 )
+#define	STR_SIDE_INFO		MM_STRING( 500 )
+#define	STR_SIDE_BROW		MM_STRING( 501 )
 
-#define	STR_LAST_ID 500
+#define	STR_BR_NOV			MM_STRING( 502 )
+#define	STR_BR_NOP			MM_STRING( 503 )
+#define	STR_BR_NOM			MM_STRING( 504 )
+#define	STR_BR_NOE			MM_STRING( 505 )
+
+#define	STR_BR_HDD			MM_STRING( 506 )
+#define	STR_BR_USB			MM_STRING( 507 )
+
+#define	STR_XC2_DEFAULT		MM_STRING( 508 )
+#define	STR_XC2_COLOR		MM_STRING( 509 )
+#define	STR_XC2_COLOR1		MM_STRING( 510 )
+#define	STR_XC2_COLOR2		MM_STRING( 511 )
+
+#define	STR_LAST_ID 512
 
 // ***********************************************************************************
 
