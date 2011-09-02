@@ -386,7 +386,14 @@ int repeat_counter2=repeat_key_delay; // repeat after pause
 
 u8 repeat_counter3=1; // accelerate repeat (multiplier)
 float repeat_counter3_inc=0.f;
+
+int repeat_counter1_t[7]; //wait before repeat
+int repeat_counter2_t[7]; // repeat after pause
+u8 repeat_counter3_t[7];
+float repeat_counter3_inc_t[7];
+
 bool key_repeat=0;
+bool key_repeat_t[7];
 
 char time_result[2];
 char cat_result[64];
@@ -696,6 +703,7 @@ u8 hide_bd=0;
 #define	BUTTON_SQUARE		(1<<15)
 
 #define	BUTTON_PAUSE		(1<<16)
+#define	BUTTON_RED			(1<<17)
 
 u16 BUTTON_CROSS =	_BUTTON_CROSS;
 u16 BUTTON_CIRCLE=	_BUTTON_CIRCLE;
@@ -1611,9 +1619,13 @@ void get_free_memory()
 
 
 u32 new_pad=0, old_pad=0;
+u32 new_pad_t[7];
+u32 old_pad_t[7];
 uint8_t old_status=0;
 uint8_t old_status_k=0;
-int pad_num=0;
+u8 pad_num=0;
+u8 active_pads=0;
+int last_pad=-1;
 static u32 old_info[7];
 static CellPadActParam _CellPadActParam[1];
 bool use_motor=false;
@@ -1641,8 +1653,9 @@ static int pad_read( void )
 	int ret;
 	u32 padd;
 	u32 dev_type=0;
-
-
+	key_repeat=0;
+	if(pad_num>6) pad_num=0;
+	key_repeat_t[pad_num]=0;
 
 static CellPadData databuf;
 
@@ -1802,16 +1815,25 @@ CellPadInfo2 infobuf;
 
 	if ( cellPadGetInfo2(&infobuf) != 0 )
 	{
+		old_pad_t[pad_num] = new_pad_t[pad_num] = 0;
 		old_pad = new_pad = 0;
 		return 1;
 	}
 
 	//pad_num++;
-	//if(pad_num>6) pad_num=0;
-	for(pad_num=0;pad_num<7;pad_num++)
-		if ( infobuf.port_status[pad_num] == CELL_PAD_STATUS_CONNECTED ) {goto pad_ok;}
 
+	active_pads=0;
+	for(int n=0;n<7;n++)
+		if ( infobuf.port_status[n] == CELL_PAD_STATUS_CONNECTED ) active_pads++;
+
+	for(int n=pad_num;n<7;n++)
+		if ( infobuf.port_status[n] == CELL_PAD_STATUS_CONNECTED ) {pad_num=n; goto pad_ok;}
+	for(int n=0;n<pad_num;n++)
+		if ( infobuf.port_status[n] == CELL_PAD_STATUS_CONNECTED ) {pad_num=n; goto pad_ok;}
+
+	old_pad_t[pad_num] = new_pad_t[pad_num] = 0;
 	old_pad = new_pad = 0;
+	pad_num++;
 	return 1;
 
 
@@ -1825,19 +1847,21 @@ pad_ok:
 		if((!(infobuf.system_info & CELL_PAD_INFO_INTERCEPTED)) && (old_info[pad_num] & CELL_PAD_INFO_INTERCEPTED))
 		{
 			old_info[pad_num] = infobuf.system_info;
-			old_pad = new_pad = 0;
+			old_pad_t[pad_num] = new_pad_t[pad_num] = 0;
 			goto pad_repeat;
 		}
 
 	if (cellPadGetDataExtra( pad_num, &dev_type, &databuf ) != CELL_PAD_OK)
 	{
+		old_pad_t[pad_num] = new_pad_t[pad_num] = 0;
 		old_pad=new_pad = 0;
+		pad_num++;
 		return 1;
 	}
 
 	if (databuf.len == 0)
 	{
-		new_pad = 0;
+		new_pad_t[pad_num] = 0;
 		goto pad_repeat;
 	}
 
@@ -1870,10 +1894,12 @@ pad_ok:
 		else if(databuf.button[25]==0x38) padd|=BUTTON_START | BUTTON_SQUARE;	//stop_mp3(5);
 		else if(databuf.button[25]==0x30) padd|=BUTTON_START | BUTTON_LEFT;		//prev_mp3();
 		else if(databuf.button[25]==0x31) padd|=BUTTON_START | BUTTON_RIGHT;	//next_mp3();
-		else if(databuf.button[25]==0x80) padd|=BUTTON_START | BUTTON_SELECT;	//BLUE button -> file manager
-		else if(databuf.button[25]==0x82) padd|=BUTTON_L2	 | BUTTON_R2;		//GREEN -> screensaver
 		else if(databuf.button[25]==0x60) padd|=BUTTON_START | BUTTON_DOWN;		//SLOW REV button -> decrease volume
 		else if(databuf.button[25]==0x61) padd|=BUTTON_START | BUTTON_UP;		//SLOW FWD button -> increase volume
+		else if(databuf.button[25]==0x80) padd|=BUTTON_START | BUTTON_SELECT;	//BLUE button -> file manager
+		else if(databuf.button[25]==0x81) padd|=BUTTON_RED;		//RED -> quit
+		else if(databuf.button[25]==0x82) padd|=BUTTON_L2	 | BUTTON_R2;		//GREEN -> screensaver
+		else if(databuf.button[25]==0x83) {old_pad_t[pad_num]=BUTTON_START; padd=BUTTON_SELECT|BUTTON_START;}		//YELLOW -> restart
 
 		else if(databuf.button[25]==0x39) padd|=BUTTON_PAUSE;
 	}
@@ -1893,44 +1919,44 @@ pad_ok:
 	//deadzone: x=100 y=156 (28 / 10%)
 
 	if(padRXstick<=(128-xDZa)){
-		mouseXD=(float)(((padRXstick+xDZa-128.0f))/11000.0f);//*(1.f-overscan);
+		mouseXD=(float)(((padRXstick+xDZa-128.0f))/(11000.0f/active_pads));//*(1.f-overscan);
 		mouseXDR=mouseXD;}
 
 	if(padRXstick>=(128+xDZa)){
-		mouseXD=(float)(((padRXstick-xDZa-128.0f))/11000.0f);//*(1.f-overscan);
+		mouseXD=(float)(((padRXstick-xDZa-128.0f))/(11000.0f/active_pads));//*(1.f-overscan);
 		mouseXDR=mouseXD;}
 
 	if(padRYstick<=(128-yDZa)){
-		mouseYD=(float)(((padRYstick+yDZa-128.0f))/11000.0f);//*(1.f-overscan);
+		mouseYD=(float)(((padRYstick+yDZa-128.0f))/(11000.0f/active_pads));//*(1.f-overscan);
 		mouseYDR=mouseYD;}
 
 	if(padRYstick>=(128+yDZa)){
-		mouseYD=(float)(((padRYstick-yDZa-128.0f))/11000.0f);//*(1.f-overscan);
+		mouseYD=(float)(((padRYstick-yDZa-128.0f))/(11000.0f/active_pads));//*(1.f-overscan);
 		mouseYDR=mouseYD;}
 
 
 	if(padLXstick<=(128-xDZa)){
-		mouseXD=(float)(((padLXstick+xDZa-128.0f))/11000.0f);//*(1.f-overscan);
+		mouseXD=(float)(((padLXstick+xDZa-128.0f))/(11000.0f/active_pads));//*(1.f-overscan);
 		mouseXDL=mouseXD;}
 
 	if(padLXstick>=(128+xDZa)){
-		mouseXD=(float)(((padLXstick-xDZa-128.0f))/11000.0f);//*(1.f-overscan);
+		mouseXD=(float)(((padLXstick-xDZa-128.0f))/(11000.0f/active_pads));//*(1.f-overscan);
 		mouseXDL=mouseXD;}
 
 	if(padLYstick<=(128-yDZa)){
-		mouseYD=(float)(((padLYstick+yDZa-128.0f))/11000.0f);//*(1.f-overscan);
+		mouseYD=(float)(((padLYstick+yDZa-128.0f))/(11000.0f/active_pads));//*(1.f-overscan);
 		mouseYDL=mouseYD;}
 
 	if(padLYstick>=(128+yDZa)){
-		mouseYD=(float)(((padLYstick-yDZa-128.0f))/11000.0f);//*(1.f-overscan);
+		mouseYD=(float)(((padLYstick-yDZa-128.0f))/(11000.0f/active_pads));//*(1.f-overscan);
 		mouseYDL=mouseYD;}
 
 pad_out:
 
-	new_pad=padd & (~old_pad);
-	old_pad= padd;
+	new_pad_t[pad_num] = padd & (~old_pad_t[pad_num]);
+	old_pad_t[pad_num] = padd;
 
-	if(new_pad==0 && old_pad==0) goto pad_repeat;
+	if(new_pad_t[pad_num]==0 && old_pad_t[pad_num]==0) goto pad_repeat;
 
 	c_opacity_delta=16;	dimc=0; dim=1;
 	b_box_opaq= 0xfe;
@@ -1942,34 +1968,60 @@ pad_out:
 
 pad_repeat:
 
-	key_repeat=0;
-	if(new_pad==0 && old_pad!=0)
+	key_repeat_t[pad_num]=0;
+
+	if(last_pad!=-1)
 	{
-		repeat_counter1--;
-		if(repeat_counter1<=0)
+		repeat_counter1_t[last_pad] = repeat_counter1;
+		repeat_counter2_t[last_pad] = repeat_counter2;
+		repeat_counter3_t[last_pad] = repeat_counter3;
+		repeat_counter3_inc_t[last_pad] = repeat_counter3_inc;
+	}
+
+	last_pad=-1;
+
+	if(new_pad_t[pad_num]==0 && old_pad_t[pad_num]!=0)
+	{
+		repeat_counter1_t[pad_num]--;
+		if(repeat_counter1_t[pad_num]<=0)
 		{
-			repeat_counter1=0;
-			repeat_counter2--;
-			if(repeat_counter2<=0)
+			repeat_counter1_t[pad_num]=0;
+			repeat_counter2_t[pad_num]--;
+			if(repeat_counter2_t[pad_num]<=0)
 			{
-				if(repeat_counter3_inc<3.f) repeat_counter3_inc+=0.02f;
-				repeat_counter3+=(int)repeat_counter3_inc;
-				repeat_counter2=repeat_key_delay;
-				new_pad=old_pad;
+				if(repeat_counter3_inc_t[pad_num]<3.f) repeat_counter3_inc_t[pad_num]+=0.02f;
+				repeat_counter3_t[pad_num]+=(int)repeat_counter3_inc_t[pad_num];
+				repeat_counter2_t[pad_num]=repeat_key_delay;
+				new_pad_t[pad_num]=old_pad_t[pad_num];
 				ss_timer=0;
 				ss_timer_last=time(NULL);
 				xmb_bg_counter=200;
 			}
-			key_repeat=1;
+			key_repeat_t[pad_num]=1;
+			last_pad=pad_num;
 		}
 	}
 	else
 	{
-		repeat_counter1=repeat_init_delay; repeat_counter2=repeat_key_delay; repeat_counter3=1; repeat_counter3_inc=0.f;
+		if(!active_pads) active_pads=1;
+		repeat_counter1_t[pad_num]=repeat_init_delay/active_pads;
+		repeat_counter2_t[pad_num]=repeat_key_delay/active_pads;
+		repeat_counter3_t[pad_num]=1;
+		repeat_counter3_inc_t[pad_num]=0.f;
 	}
 
-//	sprintf(www_info, "%i %i %i %i %i", new_pad, old_pad, repeat_counter1, repeat_counter2, key_repeat);
+	repeat_counter1 = repeat_counter1_t[pad_num];
+	repeat_counter2 = repeat_counter2_t[pad_num];
+	repeat_counter3 = repeat_counter3_t[pad_num];
+	repeat_counter3_inc = repeat_counter3_inc_t[pad_num];
 
+	key_repeat=key_repeat_t[pad_num];
+	new_pad=new_pad_t[pad_num];
+	old_pad=old_pad_t[pad_num];
+	pad_num++;
+	if(last_pad!=-1) pad_num=last_pad;
+
+	//sprintf(status_info, "%4i %4i %4i %4i %4i", new_pad, old_pad, repeat_counter1, repeat_counter2, key_repeat);
 	return 1;
 }
 
@@ -13265,7 +13317,6 @@ static void MS_update_thread(uint64_t param)
 		if(mm_is_playing && update_ms)
 			cellMSSystemSignalSPU();
 		cellMSSystemGenerateCallbacks();
-		//sprintf(status_info, "%i", (int)time(NULL));
 	}
 	cellAudioPortStop(portNum);
     sys_ppu_thread_exit(0);
@@ -13294,7 +13345,7 @@ int StartMultiStream()
 
     cellMSSystemConfigureLibAudio(&audioParam, &portConfig);
     cellAudioPortStart(portNum);
-	sys_ppu_thread_create(&ms_thread, MS_update_thread, NULL, 50, 0x4000, 0, "MultiStream PU Thread");
+	sys_ppu_thread_create(&ms_thread, MS_update_thread, NULL, 64, 0x4000, 0, "multiSTREAM");
 	(void) cellMSSystemSetGlobalCallbackFunc(mp3_callback);
 	return 1;
 }
@@ -22085,6 +22136,36 @@ void show_sysinfo()
 		dialog_ret=0; cellMsgDialogOpen2( type_dialog_back, sys_info, dialog_fun2, (void*)0x0000aaab, NULL ); wait_dialog();
 }
 
+void quit_multiman()
+{
+		char line[1024];
+		dialog_ret=0;
+		cellMsgDialogOpen2( type_dialog_yes_no, (const char*) STR_QUIT1, dialog_fun1, (void*)0x0000aaaa, NULL );
+		wait_dialog();
+
+		if(dialog_ret==1)
+		{
+			reset_mount_points();
+
+			char list_file2[128];
+			int i;
+			sprintf(list_file2, "%s/LLIST.TXT", app_usrdir);
+			FILE *flist;
+			remove(list_file2);
+
+			flist = fopen(list_file2, "w");
+			sprintf(line, "%s", "\xEF\xBB\xBF"); fputs (line,  flist );
+			for(i=0;i<max_menu_list;i++)
+			{
+				sprintf(line, "[%s] %s\r\n", menu_list[i].title_id, menu_list[i].title); fputs (line,  flist );
+				sprintf(line, "        --> %s\r\n",  menu_list[i].path); fputs (line,  flist );
+				sprintf(line, "%s", "\r\n"); fputs (line,  flist );
+			}
+			fclose(flist);
+			unload_modules(); exit(0);
+		}
+}
+
 int main(int argc, char **argv)
 {
 	cellSysutilRegisterCallback( 0, sysutil_callback, NULL );
@@ -22969,11 +23050,12 @@ int main(int argc, char **argv)
 	}
 
 
-	/* main loop */
-	while( pad_read() != 0)
+	/* main GUI loop */
+	while(1)
 	{
-start_of_loop:
 
+start_of_loop:
+	pad_read();
 
 	if(dim_setting>0)
 		{
@@ -27289,35 +27371,11 @@ skip_to_FM:
 		goto force_reload;
 	}
 
-	if ( new_pad & BUTTON_CIRCLE && cover_mode!=5 && cover_mode!=8 && net_used_ignore())
+	if ( ( ( (new_pad & BUTTON_CIRCLE) && cover_mode!=5 && cover_mode!=8) || (new_pad & BUTTON_RED) ) && net_used_ignore())
 	{
 		new_pad=0;
 		c_opacity_delta=16;	dimc=0; dim=1;
-		dialog_ret=0;
-		ret = cellMsgDialogOpen2( type_dialog_yes_no, (const char*) STR_QUIT1, dialog_fun1, (void*)0x0000aaaa, NULL );
-		wait_dialog();
-
-		if(dialog_ret==1)
-		{
-			reset_mount_points();
-
-			char list_file2[128];
-			int i;
-			sprintf(list_file2, "%s/LLIST.TXT", app_usrdir);
-			FILE *flist;
-			remove(list_file2);
-
-			flist = fopen(list_file2, "w");
-			sprintf(filename, "%s", "\xEF\xBB\xBF"); fputs (filename,  flist );
-			for(i=0;i<max_menu_list;i++)
-			{
-				sprintf(filename, "[%s] %s\r\n", menu_list[i].title_id, menu_list[i].title); fputs (filename,  flist );
-				sprintf(filename, "        --> %s\r\n",  menu_list[i].path); fputs (filename,  flist );
-				sprintf(filename, "%s", "\r\n"); fputs (filename,  flist );
-			}
-			fclose(flist);
-			unload_modules(); exit(0); break;
-		}
+		quit_multiman();
 	}
 
 		ClearSurface();
