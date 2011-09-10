@@ -30,6 +30,7 @@ extern float overscan;
 extern int cover_mode;
 extern bool key_repeat;
 extern int xmb_slide_y;
+extern bool is_remoteplay;
 
 extern bool th_device_list;
 extern bool th_device_separator;
@@ -54,11 +55,11 @@ typedef struct {
 
 u32 screen_width;
 u32 screen_height;
-float screen_aspect;
+//float screen_aspect;
 
 u32 color_pitch;
 u32 depth_pitch;
-u32 color_offset[2];
+u32 color_offset[V_BUFFERS];
 u32 depth_offset;
 
 extern u32 _binary_vpshader_vpo_start;
@@ -117,12 +118,6 @@ static vtx_color *vertex_color;
 extern int vert_indx;
 extern int vert_texture_indx;
 
-static u32 text_width;
-static u32 text_height;
-
-static u32 text_colorp;
-static u32 text_depthp;
-
 static vtx_texture *vertex_text;
 static u32 vertex_text_offset;
 
@@ -152,16 +147,6 @@ static void *localAllocAlign(const u32 alignment, const u32 size)
 	return (void*)localAlloc(size);
 }
 
-
-void put_vertex(float x, float y, float z, u32 color)
-{
-	vertex_color[vert_indx].x = x;
-	vertex_color[vert_indx].y = y;
-	vertex_color[vert_indx].z = z;
-	vertex_color[vert_indx].color=color;
-
-	vert_indx++;
-}
 
 void setRenderTarget(void)
 {
@@ -222,26 +207,23 @@ void initShader(void)
 }
 
 
-int text_create( u32 xsize, u32 ysize );
+int text_create();
 
 int initDisplay(void)
 {
 	int ret, i;
 	u32 color_size, depth_size, color_depth= 4, z_depth= 4;
 
-
-//	void *color_base_addr, *depth_base_addr, *color_addr[2];
 	color_base_addr=NULL;
-	void *depth_base_addr, *color_addr[2];
+	void *depth_base_addr, *color_addr[V_BUFFERS];
 
 	CellVideoOutResolution resolution;
-
 	CellVideoOutState videoState;
-
-	//cellVideoOutGetState(CELL_VIDEO_OUT_PRIMARY, 0, &videoState);
 
 	ret = cellVideoOutGetState(CELL_VIDEO_OUT_PRIMARY, 0, &videoState);
 	if (ret != CELL_OK)	return -1;
+
+	is_remoteplay = ( videoState.displayMode.conversion == CELL_VIDEO_OUT_DISPLAY_CONVERSION_TO_REMOTEPLAY );
 
 	cellVideoOutGetResolution(videoState.displayMode.resolutionId, &resolution);
 
@@ -252,10 +234,10 @@ int initDisplay(void)
 
 	color_pitch = screen_width*color_depth;
 	depth_pitch = screen_width*z_depth;
-	color_size =   color_pitch*screen_height;
-	depth_size =  depth_pitch*screen_height;
+	color_size  = color_pitch*screen_height;
+	depth_size  = depth_pitch*screen_height;
 
-	switch (videoState.displayMode.aspect)
+/*	switch (videoState.displayMode.aspect)
 		{
 		case CELL_VIDEO_OUT_ASPECT_4_3:
 			screen_aspect=4.0f/3.0f;
@@ -266,7 +248,7 @@ int initDisplay(void)
 		default:
 			screen_aspect=16.0f/9.0f;
 		}
-
+*/
 	CellVideoOutConfiguration videocfg;
 	memset(&videocfg, 0, sizeof(CellVideoOutConfiguration));
 	videocfg.resolutionId = videoState.displayMode.resolutionId;
@@ -285,10 +267,10 @@ int initDisplay(void)
 
 	local_heap = (u32) config.localAddress;
 
-	color_base_addr = localAllocAlign(16, 2*color_size);
+	color_base_addr = localAllocAlign(16, V_BUFFERS * color_size);
 	video_buffer=color_size;
 
-	for (i = 0; i < 2; i++)
+	for (i = 0; i < V_BUFFERS; i++)
 		{
 		color_addr[i]= (void *)((u32)color_base_addr+ (i*color_size));
 		ret = cellGcmAddressToOffset(color_addr[i], &color_offset[i]);
@@ -301,7 +283,13 @@ int initDisplay(void)
 	ret = cellGcmAddressToOffset(depth_base_addr, &depth_offset);
 	if(ret != CELL_OK) return -1;
 
-	text_create( 512, 512 );
+	cellGcmSetZcull(0, depth_offset,
+					ROUNDUP(screen_width, 64), ROUNDUP(screen_height, 64), 0,
+					CELL_GCM_ZCULL_Z24S8, CELL_GCM_SURFACE_CENTER_1,
+					CELL_GCM_ZCULL_LESS, CELL_GCM_ZCULL_LONES,
+					CELL_GCM_ZCULL_LESS, 0x80, 0xff);
+
+	text_create();
 
 	return 0;
 }
@@ -346,7 +334,7 @@ void setDrawEnv(void)
 
 	cellGcmSetAlphaFunc(gCellGcmCurrentContext, CELL_GCM_GREATER, 0x01);
 
-	//cellGcmSetAntiAliasingControl(gCellGcmCurrentContext, CELL_GCM_TRUE, CELL_GCM_FALSE, CELL_GCM_FALSE, 0x41ff);
+	cellGcmSetAntiAliasingControl(gCellGcmCurrentContext, CELL_GCM_TRUE, CELL_GCM_FALSE, CELL_GCM_FALSE, 0xffff);
 
 }
 
@@ -1163,41 +1151,14 @@ static void init_text_shader( void )
 }
 
 
-int text_create( u32 xsize, u32 ysize )
+int text_create()
 {
-	u32 color_size;
-	u32 color_limit;
-	u32 depth_size;
-	u32 depth_limit;
-	u32 buffer_width;
-
-
-	text_width = xsize;
-	text_height =ysize;
-
-	buffer_width = ROUNDUP( text_width, 64 );
-
-
-	text_colorp = cellGcmGetTiledPitchSize( buffer_width*4 );
-	if( text_colorp == 0 ) return -1;
-
-	text_depthp = cellGcmGetTiledPitchSize( buffer_width*4 );
-	if( text_depthp == 0 ) return -1;
-
-	color_size = text_colorp*ROUNDUP( text_height, 64 );
-	color_limit = ROUNDUP( 2*color_size, 0x10000 );
-
-	depth_size = text_depthp*ROUNDUP( text_height, 64 );
-	depth_limit = ROUNDUP( depth_size, 0x10000 );
-
 	init_text_shader();
-
 
 	vertex_text = (vtx_texture*) localAllocAlign(128*1024, 1024*sizeof(vtx_texture));
 
 	cellGcmAddressToOffset( (void*)vertex_text,
 							&vertex_text_offset );
-
 
 	text_param.format  = CELL_GCM_TEXTURE_A8R8G8B8;
 	text_param.format |= CELL_GCM_TEXTURE_LN;
@@ -1492,3 +1453,4 @@ void draw_square_angle(float _x, float _y, float w, float h, float z, u32 color,
 	cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_QUADS, vert_indx, 4);
 	vert_indx+=4;
 }
+

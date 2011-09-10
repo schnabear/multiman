@@ -674,6 +674,9 @@ static unsigned char s_pXC2_509	[]	= "Side Menu Color";
 static unsigned char s_pXC2_510	[]	= "Changes the background color of the side menu.";
 static unsigned char s_pXC2_511	[]	= "Color";
 
+static unsigned char s_pXC2_512	[]	= "Rain Drops";
+static unsigned char s_pXC2_513	[]	= "Options";
+
 
 static MMString s_MMStringDef[] = {
  { sizeof ( s_pDebugMode  ) - 1, s_pDebugMode	}, //0
@@ -1263,7 +1266,10 @@ static MMString s_MMStringDef[] = {
   { sizeof ( s_pXC2_508		) - 1, s_pXC2_508		},
   { sizeof ( s_pXC2_509		) - 1, s_pXC2_509		},
   { sizeof ( s_pXC2_510		) - 1, s_pXC2_510		},
-  { sizeof ( s_pXC2_511		) - 1, s_pXC2_511		} //511
+  { sizeof ( s_pXC2_511		) - 1, s_pXC2_511		}, //511
+
+  { sizeof ( s_pXC2_512		) - 1, s_pXC2_512		},
+  { sizeof ( s_pXC2_513		) - 1, s_pXC2_513		} //513
 
 };
 

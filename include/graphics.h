@@ -1,3 +1,6 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <cell/gcm.h>
 #include <cell/dbgfont.h>
@@ -12,6 +15,7 @@ typedef unsigned char u8;
 #define DISPLAY_WIDTH  1920
 #define DISPLAY_HEIGHT 1080
 
+#define V_BUFFERS 5
 
 typedef struct
 {
@@ -25,7 +29,7 @@ typedef struct
 	int split;
 	int plevel;
 	int cover;
-	u32 user; //user options flag 
+	u32 user; //user options flag
 //	u8 selected;
 }
 t_menu_list;
@@ -79,8 +83,8 @@ void display_img_persp(int x, int y, int width, int height, int tx, int ty, floa
 
 void draw_device_list(u32 flags, int cover_mode, int opaq, char *content);
 
-int initConsole();
-int termConsole();
+int initConsole(void);
+int termConsole(void);
 int initFont(void);
 int termFont(void);
 
@@ -99,3 +103,7 @@ int DPrintf( const char *string, ... );
 
 #include <types.h>
 #include <sys/synchronization.h>
+
+#ifdef __cplusplus
+}
+#endif

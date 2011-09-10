@@ -623,7 +623,10 @@ extern MMString g_MMString [];
 #define	STR_XC2_COLOR1		MM_STRING( 510 )
 #define	STR_XC2_COLOR2		MM_STRING( 511 )
 
-#define	STR_LAST_ID 512
+#define	STR_XC2_RAIN		MM_STRING( 512 )
+#define	STR_SIDE_OPT		MM_STRING( 513 )
+
+#define	STR_LAST_ID 514
 
 // ***********************************************************************************
 

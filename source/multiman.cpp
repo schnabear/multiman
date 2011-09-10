@@ -80,8 +80,15 @@
 #include "syscall36.h"
 
 #include "graphics.h"
+
 #include "fonts.h"
 #include "language.h"
+
+#define WITH_BG_VIDEO
+
+#ifdef WITH_BG_VIDEO
+#include "video.h"
+#endif
 
 #define FB(x) ((x)*1920*1080*4)	// 1 video frame buffer
 #define MB(x) ((x)*1024*1024)	// 1 MB
@@ -164,7 +171,7 @@ u64 _mp3_buffer=KB(MP3_MEMORY_KB);
 
 int mp3_freq=44100;
 u32 mp3_durr=0;
-float mp3_skip=0.f;
+u32 mp3_skip=0;
 u32 mp3_packet=0;
 float mp3_packet_time=0.001f;
 char mp3_now_playing[512];
@@ -186,7 +193,7 @@ bool audio_sub_proc=false;
 bool mp3_force_position=false;
 
 u8 browse_column_active=0;
-
+int bounce=0;
 
 int StartMultiStream();
 void stop_audio(float attn);
@@ -195,8 +202,7 @@ void prev_mp3();
 void next_mp3();
 
 void main_mp3( char *temp_mp3);
-int main_mp3_th( char *my_mp3, float skip);
-
+int main_mp3_th( char *my_mp3, u32 skip);
 
 void *color_base_addr;
 u32 frame_index = 0;
@@ -446,6 +452,8 @@ char get_cmd[1024];
 static u8 *buf2;
 u32 BUF_SIZE2=0;
 
+int clock_c, clock_l;
+
 time_t time_start;
 uint32_t blockSize;
 uint64_t freeSize;
@@ -594,11 +602,11 @@ static int unload_modules();
 void draw_text_stroke(float x, float y, float size, u32 color, const char *str);
 
 #define	GAME_INI_VER	"MMGI0100" //PS3GAME.INI	game flags (submenu)
-#define	GAME_STATE_VER	"MMLS0108" //LSTAT.BIN		multiMAN last state data
-#define	GAME_LIST_VER	"MMGL0109" //LLIST.BIN		cache for game list
-#define	XMB_COL_VER		"MMXC0118" //XMBS.00x		xmb[?] structure (1 XMMB column)
+#define	GAME_STATE_VER	"MMLS0109" //LSTAT.BIN		multiMAN last state data
+#define	GAME_LIST_VER	"MMGL0110" //LLIST.BIN		cache for game list
+#define	XMB_COL_VER		"MMXC0121" //XMBS.00x		xmb[?] structure (1 XMMB column)
 
-char current_version[9]="02.05.02";
+char current_version[9]="02.06.00";
 char current_version_NULL[10];
 char versionUP[64];
 
@@ -627,7 +635,7 @@ char vba_roms[512];
 char fba_self[512];
 char fba_roms[512];
 
-char current_showtime[10]="03.01.178";
+char current_showtime[10]="03.01.241";
 
 char ini_hdd_dir[64]="/dev_hdd0/GAMES/";
 char ini_usb_dir[64]="GAMES";
@@ -710,6 +718,12 @@ u16 BUTTON_CIRCLE=	_BUTTON_CIRCLE;
 
 u8 init_finished=0;
 bool mm_shutdown=0;
+bool canDraw=true;
+bool mm_flip_done=false;
+u8 is_bg_video=0;
+int video_status=0;
+
+u8 *cFrame=NULL;
 
 char userBG[64];
 char auraBG[64];
@@ -829,6 +843,7 @@ char this_pane[256], other_pane[256];
  u8 disable_options=0, force_disable_copy=0;
  u8 download_covers=0;
  float overscan=0.0f;
+ bool is_remoteplay=0;
 
  u8 force_update_check=0;
  u8 display_mode=0; // 0-All titles, 1-Games only, 2-AVCHD/Video only
@@ -1247,7 +1262,7 @@ u8 max_theme=0;
 
 int open_theme_menu(char *_caption, int _width, theme_def *list, int _max, int _x, int _y, int _max_entries, int _centered);
 
-void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon, int _xmb_x_offset, int _xmb_y_offset, const bool _recursive, int sub_level);
+void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon, int _xmb_x_offset, int _xmb_y_offset, const bool _recursive, int sub_level, int _bounce);
 void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offset);
 void draw_browse_column(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int _xmb_y_offset, const bool _recursive, int sub_level);
 
@@ -1500,8 +1515,11 @@ void load_localization(int id)
 		if(llines==STR_LAST_ID)
 		{
 			MM_LocaleSet (1);
-			mui_font = locales[id2].font_id;
-			user_font = locales[id2].font_id;
+			if(locales[id2].font_id!=4)
+			{
+				mui_font = locales[id2].font_id;
+				user_font = locales[id2].font_id;
+			}
 		}
 		else
 		{
@@ -1630,6 +1648,16 @@ static u32 old_info[7];
 static CellPadActParam _CellPadActParam[1];
 bool use_motor=false;
 
+void pad_reset()
+{
+	for(int n=0;n<7;n++)
+	{
+		new_pad_t[n]=0;
+		old_pad_t[n]=0;
+		old_info [n]=0;
+	}
+}
+
 static void pad_motor( u8 m1, u8 m2)
 {
 		_CellPadActParam[0].motor[0]=m1;
@@ -1675,7 +1703,6 @@ uint32_t old_info_k = 0;
 	u16 padSensorG;
 
 //check for keyboard input
-
 
 		if(cellKbSetReadMode (0, CELL_KB_RMODE_INPUTCHAR) != CELL_KB_OK) goto read_mouse;
 		if(cellKbSetCodeType (0, CELL_KB_CODETYPE_ASCII)  != CELL_KB_OK) goto read_mouse;
@@ -2027,7 +2054,8 @@ pad_repeat:
 
 void screen_saver()
 {
-		pad_read(); c_opacity_delta=0; new_pad=0; old_pad=0;
+		if(!www_running) pad_read();
+		c_opacity_delta=0; new_pad=0; old_pad=0;
 		int initial_skip=0;
 		int www_running_old=www_running;
 
@@ -2101,7 +2129,7 @@ void screen_saver()
 
 			initial_skip++;
 			new_pad=0; old_pad=0;
-			pad_read();
+			if(!www_running) pad_read();
 			if (( (new_pad || old_pad) && initial_skip>150) || www_running!=www_running_old) {// || c_opacity_delta==16
 				new_pad=0;  break;
 				}
@@ -2180,6 +2208,8 @@ bool is_video(char *vfile)
 		strstr(vfile, ".MTS")!=NULL || strstr(vfile, ".mts")!=NULL ||
 		strstr(vfile, ".MPG")!=NULL || strstr(vfile, ".mpg")!=NULL ||
 		strstr(vfile, ".MPEG")!=NULL || strstr(vfile, ".mpeg")!=NULL ||
+
+		strstr(vfile, ".RMVB")!=NULL || strstr(vfile, ".rmvb")!=NULL ||
 
 		strstr(vfile, ".MKV")!=NULL || strstr(vfile, ".mkv")!=NULL ||
 		strstr(vfile, ".MP4")!=NULL || strstr(vfile, ".mp4")!=NULL ||
@@ -4782,6 +4812,7 @@ static int unload_modules()
 {
 	mm_shutdown=true;
 	init_finished=0;
+	is_bg_video=0;
 	/*
 	if(text_bmp!=NULL)
 	{
@@ -4870,22 +4901,13 @@ static int unload_modules()
 					   cellSysmoduleUnloadModule(CELL_SYSMODULE_JPGDEC);
 	if(unload_mod & 1) cellSysmoduleUnloadModule(CELL_SYSMODULE_FS);
 
-	//cellSysmoduleUnloadModule(CELL_SYSMODULE_VDEC_MPEG2);
-
 	cellSysmoduleUnloadModule( CELL_SYSMODULE_SYSUTIL_SCREENSHOT );
 	cellSysmoduleUnloadModule( CELL_SYSMODULE_AUDIO );
-	//cellSysmoduleUnloadModule( CELL_SYSMODULE_USBD );
-	cellSysmoduleUnloadModule( CELL_SYSMODULE_RESC );
 	cellSysmoduleUnloadModule( CELL_SYSMODULE_SPURS );
-
 
 	if(ve_initialized) cellSysmoduleUnloadModule( CELL_SYSMODULE_VIDEO_EXPORT );
 	if(me_initialized) cellSysmoduleUnloadModule( CELL_SYSMODULE_MUSIC_EXPORT );
 	if(pe_initialized) cellSysmoduleUnloadModule( CELL_SYSMODULE_PHOTO_EXPORT );
-
-	//FontBitmaps_End( &FontBitmaps );
-	//Fonts_UnbindRenderer( &FontBitmaps.Font );
-	//Fonts_DetachFont( &FontBitmaps.Font );
 
 	Fonts_CloseFonts( fonts );
 	Fonts_DestroyRenderer( &RenderWork.Renderer );
@@ -7671,8 +7693,8 @@ void put_label(uint8_t *buffer, uint32_t width, uint32_t height, char *str1p, ch
 
 						if(game_details>1)
 						{
-							Fonts_RenderPropText( cf, surf, x2+1, y+68, utf8Str1, scale*0.8f, scale*0.8f, slant, step, 0xff101010);
-							blur_texture(buffer, 1920, (int)(lineH*0.8+5), (int)x2-2, (int)y+65,  (int)w2+15, (int)(lineH*0.8+5), 0, 0, 1, 1);
+							//Fonts_RenderPropText( cf, surf, x2+1, y+68, utf8Str1, scale*0.8f, scale*0.8f, slant, step, 0xff101010);
+							//blur_texture(buffer, 1920, (int)(lineH*0.8+5), (int)x2-2, (int)y+65,  (int)w2+15, (int)(lineH*0.8+5), 0, 0, 1, 1);
 							Fonts_RenderPropText( cf, surf, x2, y+67, utf8Str1, scale*0.8f, scale*0.8f, slant, step, 0xc000ffff );
 						}
 					}
@@ -13384,7 +13406,7 @@ CellMSInfo  MS_Info;
     return nCh;
 }
 
-int LoadMP3(const char *mp3filename, int *_mp3_freq, float skip)
+int LoadMP3(const char *mp3filename, int *_mp3_freq, u32 skip)
 {
 unsigned int tSize=0;	// total size
 float tTime=0;			// total time
@@ -13448,6 +13470,11 @@ return_m1:
 
 return_1:
 	free(pDataC);
+	if(skip)
+	{
+		cellFsLseek(force_mp3_fd, skip, CELL_FS_SEEK_SET, &force_mp3_offset);
+		cellFsRead(force_mp3_fd, pDataC, MB(1), &force_mp3_offset);
+	}
 	return 1;
 }
 
@@ -13500,7 +13527,7 @@ void main_mp3( char *temp_mp3)
 	}
 }
 
-int main_mp3_th( char *temp_mp3, float skip)
+int main_mp3_th( char *temp_mp3, u32 skip)
 {
 
 	char my_mp3[1024];
@@ -13534,7 +13561,7 @@ int main_mp3_th( char *temp_mp3, float skip)
 		set_channel_vol(nChannel, mp3_volume, 0.1f);
 		return 1;
 	}
-	else mp3_skip=0.0f;
+	else mp3_skip=0;
 
 	//if(cellMSStreamGetStatus(nChannel)==CELL_MS_STREAM_OFF);
     return 0;
@@ -16341,6 +16368,7 @@ if ( fp != NULL )
 		if(strstr (line,"xmb_sparks=0")!=NULL) xmb_sparks=0;
 		if(strstr (line,"xmb_sparks=1")!=NULL) xmb_sparks=1;
 		if(strstr (line,"xmb_sparks=2")!=NULL) xmb_sparks=2;
+		if(strstr (line,"xmb_sparks=3")!=NULL) {xmb_sparks=3; use_drops=1;}
 
 		if(strstr (line,"xmb_popup=0")!=NULL) xmb_popup=0;
 		if(strstr (line,"xmb_popup=1")!=NULL) xmb_popup=1;
@@ -16385,6 +16413,7 @@ if ( fp != NULL )
 			if(overscan>0.10f) overscan=0.10f;
 			if(overscan<0.00f) overscan=0.00f;
 		}
+		if(is_remoteplay) overscan=0.1f;
 
 		char dimS[8];
 		if(strstr (line,"dim_titles=")!=NULL) {
@@ -16706,6 +16735,7 @@ void check_for_update()
 {		int ret=0;
 
 		force_update_check=0;
+
 		if(cellNetCtlGetInfo(16, &net_info)<0)//net_avail<0 ||
 
 		{
@@ -17063,9 +17093,7 @@ if(get_param_sfo_field((char *)game_param_sfo, (char *)"APP_VER", (char *)temp_v
 					else if(rnd==3) strcat(tortuga, "www.tortuga-cove.com: Ran By Gamers For Gamers!\n\n");
 					strcat(tortuga, (const char*) STR_DOWN_UPD);
 					dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, tortuga, dialog_fun2, (void*)0x0000aaab, NULL );
-					sys_timer_usleep( 250*1000 );
-					flipc(70);
-					sys_timer_usleep( 5*1000*1000 );
+					flipc(300);
 					cellMsgDialogAbort();
 				}
 
@@ -17144,6 +17172,21 @@ void clean_up()
 	sprintf(cleanup, "%s", "/dev_hdd0/game"); cellFsChmod(cleanup, CELL_FS_S_IFDIR | 0777);
 }
 
+void draw_xmb_bg()
+{
+	if(cFrame!=NULL && is_bg_video)//!canDraw &&
+	{
+		set_texture( cFrame, 1920, 1080);
+		display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+		canDraw=true;
+	}
+	else
+	{
+		set_texture( text_bmp, 1920, 1080);
+		display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
+	}
+}
+
 void slide_xmb0_left(int _xmb_icon)
 {
 	xmb0_slide=0;
@@ -17155,12 +17198,11 @@ void slide_xmb0_left(int _xmb_icon)
 		ClearSurface();
 		if(!use_drops && xmb_sparks!=0) draw_stars();
 
-		set_texture( text_bmp, 1920, 1080);
-		display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
+		draw_xmb_bg();
 		if(use_drops && xmb_sparks!=0) draw_stars();
 
 		draw_xmb_clock(xmb_clock, 0);
-		draw_xmb_icons(xmb, _xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
+		draw_xmb_icons(xmb, _xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel, 0);
 
 		flip();
 
@@ -17179,12 +17221,11 @@ void slide_xmb0_right()
 			ClearSurface();
 			if(!use_drops && xmb_sparks!=0) draw_stars();
 
-			set_texture( text_bmp, 1920, 1080);
-			display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
+			draw_xmb_bg();
 			if(use_drops && xmb_sparks!=0) draw_stars();
 
 			draw_xmb_clock(xmb_clock, 0);
-			draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
+			draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel, 0);
 
 			flip();
 
@@ -17206,12 +17247,11 @@ void slide_xmb_left(int _xmb_icon)
 		ClearSurface();
 		if(!use_drops && xmb_sparks!=0) draw_stars();
 
-		set_texture( text_bmp, 1920, 1080);
-		display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
+		draw_xmb_bg();
 		if(use_drops && xmb_sparks!=0) draw_stars();
 
 		draw_xmb_clock(xmb_clock, 0);
-		draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
+		draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel, 0);
 
 		flip();
 
@@ -17233,12 +17273,11 @@ void slide_xmb_right()
 			ClearSurface();
 			if(!use_drops && xmb_sparks!=0) draw_stars();
 
-			set_texture( text_bmp, 1920, 1080);
-			display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
+			draw_xmb_bg();
 			if(use_drops && xmb_sparks!=0) draw_stars();
 
 			draw_xmb_clock(xmb_clock, 0);
-			draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
+			draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel, 0);
 
 			flip();
 
@@ -17974,12 +18013,15 @@ void free_all_buffers()
 	}
 
 	for(n=1; n<xmb[8].size; n++)
+	{
 		if(xmb[8].member[n].icon!=xmb_icon_usb && xmb[8].member[n].icon!=xmb_icon_folder)//xmb[8].member[n].icon!=xmb[0].data &&
 		{
 			xmb[8].member[n].icon_buf=-1;
 			xmb[8].member[n].status=0;
 			xmb[8].member[n].icon=xmb_icon_retro;
 		}
+		if(!xmb[8].member[n].type) {xmb[8].member[n].icon=xmb_icon_usb; xmb[8].member[n].status=2;}
+	}
 
 	for(n=0; n<xmb[5].size; n++)
 	{
@@ -17989,6 +18031,7 @@ void free_all_buffers()
 			xmb[5].member[n].status=0;
 			xmb[5].member[n].icon=xmb_icon_film;
 		}
+		if(!xmb[5].member[n].type) {xmb[5].member[n].icon=xmb_icon_usb; xmb[5].member[n].status=2;}
 	}
 
 	for(n=0; n<xmb[3].size; n++)
@@ -17999,6 +18042,7 @@ void free_all_buffers()
 			xmb[3].member[n].status=0;
 			xmb[3].member[n].icon=xmb_icon_photo;
 		}
+		if(!xmb[3].member[n].type) {xmb[3].member[n].icon=xmb_icon_usb; xmb[3].member[n].status=2;}
 	}
 
 	for(n=0; n<xmb[4].size; n++)
@@ -18009,6 +18053,7 @@ void free_all_buffers()
 			xmb[4].member[n].status=0;
 			xmb[4].member[n].icon=xmb_icon_note;
 		}
+		if(!xmb[4].member[n].type) {xmb[4].member[n].icon=xmb_icon_usb; xmb[4].member[n].status=2;}
 	}
 
 	for(n=0; n<xmb[0].size; n++)
@@ -18093,7 +18138,7 @@ int find_free_buffer(const int _col)
 }
 
 // Draws the cross MM bar (XMMB)
-void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int _xmb_y_offset, const bool _recursive, int sub_level)
+void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int _xmb_y_offset, const bool _recursive, int sub_level, int _bounce)
 {
 	int _xmb_icon = _xmb_icon_;
 
@@ -18108,6 +18153,7 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 	int mo_of=0;
 	float mo_of2=0.0f;
 	bool one_done=false;
+	int bounce_step=0;
 
 	if(_xmb_icon>3 && _xmb_x_offset>0) {first_xmb--; _xpos-=200;}
 	for(int n=first_xmb; n<MAX_XMB_ICONS; n++)
@@ -18130,9 +18176,9 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 			/*if(egg) // :)
 				display_img_angle(xpos-(36-mo_of)/2, 230-(36-mo_of), 164-mo_of, 164-mo_of, 128, 128, 0.8f, 128, 128, angle);
 			else*/
-				display_img(xpos-(36-mo_of)/2, 230-(36-mo_of), 164-mo_of, 164-mo_of, 128, 128, 0.8f, 128, 128);
+				display_img(xpos-(36-mo_of)/2, 230-(36-mo_of) - _bounce, 164-mo_of, 164-mo_of, 128, 128, 0.8f, 128, 128);
 			set_texture(xmb_col, 300, 30); //column name
-			display_img(xpos-86, 340, 300, 30, 300, 30, 0.7f, 300, 30);
+			display_img(xpos-86, 340 - _bounce, 300, 30, 300, 30, 0.7f, 300, 30);
 
 			if(_xmb[_xmb_icon].size>0 && subicons && !(key_repeat && ( (old_pad & BUTTON_LEFT) || (old_pad & BUTTON_RIGHT)) && (xmb_icon!=1 && xmb_icon!=MAX_XMB_ICONS-1)) && (abs(_xmb_x_offset)<100 || _xmb_icon != _xmb_icon_))
 			{
@@ -18205,6 +18251,12 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 						}
 
 						if(cn3!=2) {tw/=2; th/=2;}
+						else
+						{
+							tw=(int) ( (float)tw*(  (1.f+(float)_bounce/90.f) ) );
+							th=(int) ( (float)th*(  (1.f+(float)_bounce/90.f) ) );
+						}
+
 						mo_of2=2.f-(abs(_xmb_y_offset)/90.0f);
 
 						if( (_xmb_y_offset!=0) )
@@ -18235,11 +18287,11 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 							}
 						}
 
-						if(cn3<1) ypos=cn3*90+_xmb_y_offset;
-						else if(cn3==1) ypos=cn3*90 + ( (_xmb_y_offset>0) ? (int)(_xmb_y_offset*3.566f) : (_xmb_y_offset) );
-						else if(cn3==2) {ypos = 411 + ( (_xmb_y_offset>0) ? (int)(_xmb_y_offset*2.377f) : (int)(_xmb_y_offset*3.566f) );}
-						else if(cn3==3) ypos=(cn3-3)*90 + 625 + ( (_xmb_y_offset>0) ? _xmb_y_offset : (int)(_xmb_y_offset*2.377f) );
-						else if(cn3 >3) ypos=(cn3-3)*90 + 625 + _xmb_y_offset;
+						if(cn3<1) ypos=cn3*90+_xmb_y_offset - _bounce;
+						else if(cn3==1) ypos=cn3*90 - _bounce + ( (_xmb_y_offset>0) ? (int)(_xmb_y_offset*3.566f) : (_xmb_y_offset) );
+						else if(cn3==2) {ypos = 411 - _bounce + ( (_xmb_y_offset>0) ? (int)(_xmb_y_offset*2.377f) : (int)(_xmb_y_offset*3.566f) );}
+						else if(cn3==3) ypos=(cn3-3)*90 + 625 + _bounce + ( (_xmb_y_offset>0) ? _xmb_y_offset : (int)(_xmb_y_offset*2.377f) );
+						else if(cn3 >3) ypos=(cn3-3)*90 + 625 + _bounce + _xmb_y_offset;
 
 						if(sub_level>0)
 						{
@@ -18281,8 +18333,10 @@ void draw_xmb_icons(xmb_def *_xmb, const int _xmb_icon_, int _xmb_x_offset, int 
 								else
 									set_texture(xmb_txt_buf[_xmb[_xmb_icon].member[cn].data].data, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT); //text
 
+								if(bounce) bounce_step=bounce*5/3; else bounce_step=0;
+
 								if(_xmb_icon!=6 && _xmb_icon!=7)
-									display_img(xpos+((_xmb_icon==3 || _xmb_icon==5 || _xmb_icon==8)?(230+(((V_WIDTH==720)?60:0))):(128+tw/2)), ypos+th/2-XMB_TEXT_HEIGHT/2, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT, 0.5f, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT); //(int)(XMB_TEXT_WIDTH*(1.f-abs((float)_xmb_x_offset)/200.f))
+									display_img(xpos+((_xmb_icon==3 || _xmb_icon==5 || _xmb_icon==8)?(230+bounce_step):(128+tw/2)), ypos+th/2-XMB_TEXT_HEIGHT/2, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT, 0.5f, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT); //(int)(XMB_TEXT_WIDTH*(1.f-abs((float)_xmb_x_offset)/200.f))
 								else
 									display_img(xpos+128+tw/2, ypos+th/2-XMB_TEXT_HEIGHT/2, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT, 0.5f, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT); //(int)(XMB_TEXT_WIDTH*(1.f-abs((float)_xmb_x_offset)/200.f))
 
@@ -18388,9 +18442,9 @@ skip_xmb_texts:
 			}
 			else */
 			{
-				if(n==xmb_icon-1 && _xmb_x_offset>0) display_img(xpos-(mo_of)/2, 230-(mo_of), 128+mo_of, 128+mo_of, 128, 128, 0.0f, 128, 128);
-				else if(n==xmb_icon+1 && _xmb_x_offset<0) display_img(xpos-(mo_of)/2, 230-(mo_of), 128+mo_of, 128+mo_of, 128, 128, 0.0f, 128, 128);
-				else display_img(xpos, 230, 128, 128, 128, 128, 0.0f, 128, 128);
+				if(n==xmb_icon-1 && _xmb_x_offset>0) display_img(xpos-(mo_of)/2, 230-(mo_of) - _bounce, 128+mo_of, 128+mo_of, 128, 128, 0.0f, 128, 128);
+				else if(n==xmb_icon+1 && _xmb_x_offset<0) display_img(xpos-(mo_of)/2, 230-(mo_of) - _bounce, 128+mo_of, 128+mo_of, 128, 128, 0.0f, 128, 128);
+				else display_img(xpos, 230 - _bounce, 128, 128, 128, 128, 0.0f, 128, 128);
 			}
 
 		}
@@ -18515,22 +18569,20 @@ void draw_xmb_bare(u8 _xmb_icon, u8 _all_icons, bool recursive, int _sub_level)
 
 	ClearSurface();
 	if(!use_drops && xmb_sparks!=0) draw_stars();
-	set_texture( text_bmp, 1920, 1080);
-	display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
+	draw_xmb_bg();
 	if(use_drops && xmb_sparks!=0) draw_stars();
 	draw_xmb_clock(xmb_clock, (_all_icons!=2 ? _xmb_icon : -1));
 
-	if(_all_icons==1) draw_xmb_icons(xmb, _xmb_icon, xmb_slide, xmb_slide_y, recursive, _sub_level);
-	else if(_all_icons==2) draw_xmb_icons(xmb, _xmb_icon, xmb_slide, xmb_slide_y, recursive, -1);
+	if(_all_icons==1) draw_xmb_icons(xmb, _xmb_icon, xmb_slide, xmb_slide_y, recursive, _sub_level, 0);
+	else if(_all_icons==2) draw_xmb_icons(xmb, _xmb_icon, xmb_slide, xmb_slide_y, recursive, -1, 0);
 	flip();
 }
 
 
 void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offset)
 {
-
 	if(is_game_loading) return;
-	int _xmb_icon = _xmb_icon_;
+	int _xmb_icon = 6; (void)_xmb_icon_;
 
 	u16 xpos=350;
 	int ypos=0, tw=0, th=0;
@@ -18590,22 +18642,32 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 	}
 	else
 	{
-		//draw sliding background
-		if(animation==2 || animation==3)
+
+		if(cFrame!=NULL && is_bg_video)//!canDraw &&
 		{
-			BoffX--; if(BoffX<= -1920) BoffX=0;
-			set_texture( text_bmpUPSR, 1920, 1080);
-
-			if(BoffX>= -1920)
-				display_img((int)BoffX, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
-
-			display_img(1920+(int)BoffX, 0, abs((int)BoffX), 1080, abs((int)BoffX), 1080, 0.9f, 1920, 1080);
-
+			set_texture( cFrame, 1920, 1080);
+			display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+			canDraw=true;
 		}
 		else
 		{
-			set_texture( text_bmpUPSR, 1920, 1080);
-			display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+			//draw sliding background
+			if(animation==2 || animation==3)
+			{
+				BoffX--; if(BoffX<= -1920) BoffX=0;
+				set_texture( text_bmpUPSR, 1920, 1080);
+
+				if(BoffX>= -1920)
+					display_img((int)BoffX, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+
+				display_img(1920+(int)BoffX, 0, abs((int)BoffX), 1080, abs((int)BoffX), 1080, 0.9f, 1920, 1080);
+
+			}
+			else
+			{
+				set_texture( text_bmpUPSR, 1920, 1080);
+				display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+			}
 		}
 	}
 
@@ -18921,12 +18983,12 @@ int open_theme_menu(char *_caption, int _width, theme_def *list, int _max, int _
 		ClearSurface();
 		if(!use_drops && xmb_sparks!=0) draw_stars();
 
-		set_texture( text_bmp, 1920, 1080);
-		display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
+		draw_xmb_bg();
+
 		if(use_drops && xmb_sparks!=0) draw_stars();
 
 		draw_xmb_clock(xmb_clock, 0);
-		draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
+		draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel, 0);
 
 		set_texture(text_LIST, _width, _height);
 		display_img((int)(mouseX*1920.f), (int)(mouseY*1080.f), _width, _height, _width, _height, 0.0f, _width, _height);
@@ -19068,12 +19130,11 @@ int open_select_menu(char *_caption, int _width, t_opt_list *list, int _max, u8 
 		{
 			if(!use_drops && xmb_sparks!=0) draw_stars();
 
-			set_texture( text_bmp, 1920, 1080);
-			display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
+			draw_xmb_bg();
 			if(use_drops && xmb_sparks!=0) draw_stars();
 
 			draw_xmb_clock(xmb_clock, 0);
-			draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
+			draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel, 0);
 		}
 
 		else
@@ -19181,12 +19242,11 @@ int open_list_menu(char *_caption, int _width, t_opt_list *list, int _max, int _
 		ClearSurface();
 		if(!use_drops && xmb_sparks!=0) draw_stars();
 
-		set_texture( text_bmp, 1920, 1080);
-		display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
+		draw_xmb_bg();
 		if(use_drops && xmb_sparks!=0) draw_stars();
 
 		draw_xmb_clock(xmb_clock, 0);
-		draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
+		draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel, 0);
 
 		set_texture(text_LIST, _width, _height);
 //		display_img(_x, _y, _width, _height, _width, _height, 0.0f, _width, _height);
@@ -19240,10 +19300,12 @@ int open_side_menu(int _top, int sel)
 		print_label_ex( 0.133f, (float)(n*40.f+(float)_top)/1080.f, 1.2f, (opt_list[n].label[0]!=' ' ? 0xff000000 : _color), opt_list[n].label+1, 1.04f, 0.0f, mui_font, 0.68f/((float)(_width/1920.f)), (0.7f)/((float)(_height/1080.f)), 0);
 	}
 	flush_ttf(text_LIST, _width, _height);
+	bounce=0;
 
 	for(int fsr=1860; fsr>1320; fsr-=60) // slide in the side menu
 	{
 		ClearSurface();
+		if(!browse_column_active && xmb_icon!=2 && xmb[xmb_icon].member[xmb[xmb_icon].first].type && xmb[xmb_icon].member[xmb[xmb_icon].first].type!=6 && xmb[xmb_icon].member[xmb[xmb_icon].first].type!=7) bounce+=10;
 		draw_whole_xmb(0);
 		set_texture(text_LIST, _width, _height);	display_img(fsr, 0, 1920-fsr, _height, _width, _height, -0.3f, _width, _height);
 		flip();
@@ -19306,16 +19368,23 @@ int open_side_menu(int _top, int sel)
 		flip();
 	}
 
-	for(int fsr=1320; fsr<=1920; fsr+=60) // slide out
+	for(int fsr=1320; fsr<=1860; fsr+=60) // slide out
 	{
+		if(!browse_column_active && xmb_icon!=2 && xmb[xmb_icon].member[xmb[xmb_icon].first].type && xmb[xmb_icon].member[xmb[xmb_icon].first].type!=6 && xmb[xmb_icon].member[xmb[xmb_icon].first].type!=7) bounce-=10;
 		ClearSurface();
 		draw_whole_xmb(0);
 		set_texture(text_LIST, _width, _height);
 		display_img(fsr, 0, 1920-fsr, _height, _width, _height, -0.3f, _width, _height);
 		flip();
 	}
-
+	bounce=0;
 	side_menu_open=false;
+	if(sel!=-1)
+	{
+		ClearSurface();
+		draw_whole_xmb(0);
+		flip();
+	}
 	return sel;
 
 }
@@ -19448,8 +19517,7 @@ static void add_browse_column_thread_entry( uint64_t arg )
 		cellFsReaddir(dir_fd, &entry, &nread);
 		if(nread==0) break;
 
-		if(entry.d_name[0]=='.' && entry.d_name[1]==0) continue;
-		if(entry.d_name[0]=='.' && entry.d_name[1]=='.' && entry.d_name[2]==0) continue;
+		if(entry.d_name[0]=='$' || entry.d_name[0]=='.') continue;
 		if(!(entry.d_type & DT_DIR))
 		{
 			e_type=4;
@@ -19893,10 +19961,11 @@ static void add_retro_column_thread_entry( uint64_t arg )
 				if(strlen(linkfile)>(sizeof(xmb[8].member[0].file_path)-1)) continue;
 				if(imgfile[strlen(imgfile)-4]=='.') imgfile[strlen(imgfile)-4]=0;
 
-				sprintf(imgfile2, "%s/snes/%s.jpg", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_snes;
-				sprintf(imgfile2, "%s/snes/%s.png", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_snes;
 				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok_snes;
-				sprintf(imgfile2, "%s.png", imgfile); if(!exist(imgfile2)) goto thumb_not_ok_snes;
+				sprintf(imgfile2, "%s.png", imgfile); if(exist(imgfile2)) goto thumb_ok_snes;
+				sprintf(imgfile2, "%s/snes/%s.jpg", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_snes;
+				sprintf(imgfile2, "%s/snes/%s.png", covers_retro, pane[ret_f].name); if(!exist(imgfile2)) goto thumb_not_ok_snes;
+
 				//if(stat(imgfile2, &s3)>=0) goto thumb_ok_snes;
 				//sprintf(imgfile2, "%s.JPG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_snes;
 				//sprintf(imgfile2, "%s.PNG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_snes;
@@ -19954,9 +20023,9 @@ thumb_cont_snes:
 				sprintf(imgfile, "%s", linkfile);
 				if(imgfile[strlen(imgfile)-4]=='.') imgfile[strlen(imgfile)-4]=0;
 				else if(imgfile[strlen(imgfile)-3]=='.') imgfile[strlen(imgfile)-3]=0;
+				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok_genp;
 				sprintf(imgfile2, "%s/gen/%s.jpg", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_genp;
 				sprintf(imgfile2, "%s/gen/%s.png", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_genp;
-				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok_genp;
 				sprintf(imgfile2, "%s.png", imgfile); if(!exist(imgfile2)) goto thumb_not_ok_genp;
 				/* if(stat(imgfile2, &s3)>=0) goto thumb_ok_genp;
 				sprintf(imgfile2, "%s.JPG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_genp;
@@ -20012,9 +20081,9 @@ thumb_cont_genp:
 				sprintf(imgfile, "%s", linkfile);
 				if(imgfile[strlen(imgfile)-4]=='.') imgfile[strlen(imgfile)-4]=0;
 				else if(imgfile[strlen(imgfile)-5]=='.') imgfile[strlen(imgfile)-5]=0;
+				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok_fceu;
 				sprintf(imgfile2, "%s/fceu/%s.jpg", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_fceu;
 				sprintf(imgfile2, "%s/fceu/%s.png", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_fceu;
-				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok_fceu;
 				sprintf(imgfile2, "%s.png", imgfile); if(!exist(imgfile2)) goto thumb_not_ok_fceu;
 				/* if(stat(imgfile2, &s3)>=0) goto thumb_ok_fceu;
 				sprintf(imgfile2, "%s.JPG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_fceu;
@@ -20069,9 +20138,9 @@ thumb_cont_fceu:
 				sprintf(imgfile, "%s", linkfile);
 				if(imgfile[strlen(imgfile)-4]=='.') imgfile[strlen(imgfile)-4]=0;
 				else if(imgfile[strlen(imgfile)-3]=='.') imgfile[strlen(imgfile)-3]=0;
+				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok_vba;
 				sprintf(imgfile2, "%s/vba/%s.jpg", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_vba;
 				sprintf(imgfile2, "%s/vba/%s.png", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_vba;
-				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok_vba;
 				sprintf(imgfile2, "%s.png", imgfile); if(!exist(imgfile2)) goto thumb_not_ok_vba;
 				/* if(stat(imgfile2, &s3)>=0) goto thumb_ok_vba;
 				sprintf(imgfile2, "%s.JPG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_vba;
@@ -20126,9 +20195,9 @@ thumb_cont_vba:
 				sprintf(imgfile, "%s", linkfile);
 				if(imgfile[strlen(imgfile)-4]=='.') imgfile[strlen(imgfile)-4]=0;
 				else if(imgfile[strlen(imgfile)-3]=='.') imgfile[strlen(imgfile)-3]=0;
+				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok_fba;
 				sprintf(imgfile2, "%s/fba/%s.jpg", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_fba;
 				sprintf(imgfile2, "%s/fba/%s.png", covers_retro, pane[ret_f].name); if(exist(imgfile2)) goto thumb_ok_fba;
-				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok_fba;
 				sprintf(imgfile2, "%s.png", imgfile); if(!exist(imgfile2)) goto thumb_not_ok_fba;
 				/* if(stat(imgfile2, &s3)>=0) goto thumb_ok_fba;
 				sprintf(imgfile2, "%s.JPG", imgfile); if(stat(imgfile2, &s3)>=0) goto thumb_ok_fba;
@@ -20413,6 +20482,7 @@ void add_settings_column()
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,					(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,						(char*)"1");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_AUTO,						(char*)"2");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_RAIN,						(char*)"3");
 		xmb[2].member[xmb[2].size-1].option_selected=xmb_sparks;
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_POSTER, (char*)STR_XC2_POSTER1,	(char*)"xmb_game_bg");
@@ -21045,9 +21115,11 @@ void add_web_column()
 
 void init_xmb_icons(t_menu_list *list, int max, int sel)
 {
+		load_localization(mm_locale);
 		seconds_clock=0;
 		xmb_legend_drawn=0;
 		xmb_info_drawn=0;
+		bounce=0;
 		parental_pin_entered=0;
 		xmb_sublevel=(browse_column_active!=0);
 		xmb0_icon=xmb_icon; if(browse_column_active) xmb0_icon=0;
@@ -21129,12 +21201,12 @@ void init_xmb_icons(t_menu_list *list, int max, int sel)
 			add_music_column();
 			add_photo_column();
 			add_emulator_column();
-		}
 
-		// Retro columm
-		if(!xmb[8].init)
-		{
-			xmb[8].first=0; xmb[8].size=0;
+			// Retro columm
+			if(!xmb[8].init)
+			{
+				xmb[8].first=0; xmb[8].size=0;
+			}
 		}
 
 
@@ -21202,7 +21274,7 @@ void draw_xmb_legend(const int _xmb_icon)
 
 		if( (_xmb_icon==6 && xmb[_xmb_icon].first) || _xmb_icon==7)
 		{
-			sprintf(xmb_text, "%s", (char*) STR_POP_GS);
+			sprintf(xmb_text, ": %s", (char*) STR_SIDE_OPT);
 			put_texture_with_alpha_gen( text_MSG, text_DOX+(dox_triangle_x*4 + dox_triangle_y	* dox_width*4), dox_triangle_w,	dox_triangle_h, dox_width, 300, 8, 5);
 		}
 
@@ -21675,6 +21747,7 @@ void draw_whole_xmb(u8 mode)
 	char filename[1024];
 	xmb0_icon=xmb_icon; if(browse_column_active) xmb0_icon=0;
 	drawing_xmb=1;
+	if(bounce<0) bounce=0;
 	if(mode)
 	{
 		pad_read();
@@ -21697,15 +21770,12 @@ void draw_whole_xmb(u8 mode)
 	else if(xmb_icon==8 && xmb[8].init==0) add_emulator_column();
 
 	if(xmb_slide_step!=0 || xmb_slide_step_y!=0 || (xmb_game_bg==0 && xmb_cover==0) || is_game_loading) xmb_bg_show=0;
-	if(!use_drops) if(xmb_sparks==1 || (xmb_sparks==2 && xmb_bg_show==0)) draw_stars();
+	if(!use_drops) if(xmb_sparks&1 || (xmb_sparks==2 && xmb_bg_show==0)) draw_stars();
 
 	if(!is_caching)
 	{
 		if(!xmb_bg_show || is_game_loading)
-		{
-			set_texture( text_bmp, 1920, 1080);
-			display_img(0, 0, 1920, 1080, xmbbg_user_w, xmbbg_user_h, 0.9f, 1920, 1080);
-		}
+			draw_xmb_bg();
 		else
 		{
 			set_texture( text_FONT, 1920, 1080);
@@ -21713,7 +21783,7 @@ void draw_whole_xmb(u8 mode)
 		}
 	}
 
-	if(use_drops) if(xmb_sparks==1 || (xmb_sparks==2 && xmb_bg_show==0)) draw_stars();
+	if(use_drops) if(xmb_sparks&1 || (xmb_sparks==2 && xmb_bg_show==0)) draw_stars();
 
 	draw_xmb_clock(xmb_clock, 0);
 	draw_xmb_legend(xmb_icon);
@@ -21842,7 +21912,7 @@ void draw_whole_xmb(u8 mode)
 		}
 	}
 
-	draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel);
+	draw_xmb_icons(xmb, xmb_icon, xmb_slide, xmb_slide_y, 0, xmb_sublevel, bounce);
 	if((xmb_icon==6 || xmb_icon==7 || xmb_icon==5) && xmb[xmb_icon].member[xmb[xmb_icon].first].game_id!=-1) game_sel=xmb[xmb_icon].member[xmb[xmb_icon].first].game_id;
 	if(xmb_icon==2) xmb_settings_sel=xmb[2].first;
 
@@ -22164,6 +22234,23 @@ void quit_multiman()
 			fclose(flist);
 			unload_modules(); exit(0);
 		}
+}
+
+void restart_multiman()
+{
+	char reload_self[128];
+	sprintf(reload_self, "%s/RELOAD.SELF", app_usrdir);
+	if(exist(reload_self) && net_used_ignore())
+	{
+		cellMsgDialogAbort();
+		dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, (const char*) STR_RESTART, dialog_fun1, (void*)0x0000aaaa, NULL ); wait_dialog();
+
+		if(dialog_ret==1){
+
+			unload_modules();
+			exitspawn((const char*) reload_self, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
+		}
+	}
 }
 
 int main(int argc, char **argv)
@@ -22594,9 +22681,10 @@ int main(int argc, char **argv)
 	sprintf(string1, "%s/LICDIR", app_homedir);	rmdir(string1);
 	//sprintf(string1, "%s/TROPDIR", app_homedir); my_game_delete(string1); rmdir(string1);
 
+	new_pad=0; old_pad=0;
 	pad_read();pad_read();
 	debug_mode = ( (new_pad | old_pad) & (BUTTON_R2 | BUTTON_L2) );
-	new_pad=0; old_pad=0;
+	new_pad=0;
 
 	if(debug_mode)
 					// Save default English GUI labels
@@ -23038,10 +23126,9 @@ int main(int argc, char **argv)
 
 	if(debug_mode)
 	{
-		dialog_ret=0;
-		ret = cellMsgDialogOpen2( type_dialog_ok, (const char*) STR_DEBUG_MODE, dialog_fun2, (void*)0x0000aaab, NULL );
-		wait_dialog_simple();
-
+		ClearSurface();
+		dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, (const char*) STR_DEBUG_MODE, dialog_fun2, (void*)0x0000aaab, NULL );
+		flipc(240); cellMsgDialogAbort();
 
 		current_version[6]=0x44;
 		current_version[7]=0x44;
@@ -23049,6 +23136,8 @@ int main(int argc, char **argv)
 		current_version_NULL[7]=0x44;
 	}
 
+
+	pad_reset();
 
 	/* main GUI loop */
 	while(1)
@@ -24276,14 +24365,16 @@ switch_ntfs:
 		new_pad=0;
 		set_channel_vol(nChannel, mp3_volume, 0.1f);
 		xmb_info_drawn=0;
+		xmb_bg_counter=0;
+		c_opacity2=0xff;
 	 }
 
 	/*if ((old_pad & BUTTON_START) &&  ( (new_pad & BUTTON_L1) || (new_pad & BUTTON_R1)))
 	{
 		if((new_pad & BUTTON_L1))
-			mp3_skip-=1.0f; if(mp3_skip<0) mp3_skip=0.f;
+			mp3_skip=force_mp3_offset-KB(128); //if(mp3_skip<0) mp3_skip=0;
 		else
-			mp3_skip+=1.f;
+			mp3_skip=force_mp3_offset+KB(128);
 
 		main_mp3_th(force_mp3_file, mp3_skip);
 		new_pad=0;
@@ -24515,20 +24606,7 @@ from_fm:
 
 	    if ( (old_pad & BUTTON_START) && (new_pad & BUTTON_SELECT))
 		{
-			char reload_self[128];
-			//new_pad=0; old_pad=0;
-			sprintf(reload_self, "%s/RELOAD.SELF", app_usrdir);
-			if(exist(reload_self) && net_used_ignore())
-			{
-				cellMsgDialogAbort();
-				dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, (const char*) STR_RESTART, dialog_fun1, (void*)0x0000aaaa, NULL ); wait_dialog();
-
-				if(dialog_ret==1){
-
-					unload_modules();
-					exitspawn((const char*) reload_self, NULL, NULL, NULL, 0, 64, SYS_PROCESS_PRIMARY_STACK_SIZE_1M);
-				}
-			}
+			restart_multiman();
 		}
 
 
@@ -25294,13 +25372,28 @@ copy_from_bluray:
 
 	xmb0_icon=xmb_icon; if(browse_column_active) xmb0_icon=0;
 
+#ifdef WITH_BG_VIDEO
+	if ( (new_pad & BUTTON_TRIANGLE) && (old_pad & BUTTON_SELECT) && cover_mode==8)
+	{
+		new_pad=0;
+		//if(!is_bg_video)
+		sprintf(filename, "%s/wave.divx", app_usrdir);
+		if(exist(filename)) main_video( (char*) filename);	//char ssssss[24]; sprintf(ssssss, "%i", ret);dialog_ret=0;	ret = cellMsgDialogOpen2( type_dialog_ok, ssssss, dialog_fun2, (void*)0x0000aaab, NULL );			wait_dialog();
+	}
+#endif
+
 	// open side menu
 	if ( (new_pad & BUTTON_TRIANGLE) && cover_mode==8 && !xmb_slide &&
 			(
-			(xmb_icon==5 && (xmb[xmb_icon].member[xmb[xmb_icon].first].type==3 || xmb[xmb_icon].member[xmb[xmb_icon].first].type==0 || xmb[xmb_icon].first<2)) //showtime video
+			(xmb_icon==5 && (xmb[xmb_icon].member[xmb[xmb_icon].first].type==3
+			|| xmb[xmb_icon].member[xmb[xmb_icon].first].type==0
+			|| xmb[xmb_icon].first<2)) //showtime video
+
 			|| (xmb_icon==8 && xmb[xmb_icon].first) // ROM
 			|| (xmb_icon==3 && xmb[xmb_icon].size)  // PHOTO
 			|| (xmb_icon==4 && xmb[xmb_icon].size)  // MUSIC
+			|| (xmb_icon==6 && xmb[xmb_icon].first) // GAME
+			|| (xmb_icon==7 && xmb[xmb_icon].size)  // FAVES
 			|| (xmb_icon==2)  // SETTINGS
 			)
 		)
@@ -25322,6 +25415,12 @@ copy_from_bluray:
 			{
 				sprintf(opt_list[5].label, " %s", (char*)STR_SIDE_INFO);
 				sprintf(opt_list[5].value, "%s", "action");
+
+				sprintf(opt_list[(xmb_icon==4?0:2)].label, " %s", STR_XC1_REFRESH);
+				sprintf(opt_list[(xmb_icon==4?0:2)].value, "%s", "refresh");
+				if( (is_video_loading || is_music_loading || is_photo_loading || is_retro_loading || is_game_loading || is_any_xmb_column))
+					opt_list[(xmb_icon==4?0:2)].label[0]='!'; //refresh
+
 				goto skip_to_side_menu;
 			}
 //3 showtime vid, 4 music, 5 photo
@@ -25351,6 +25450,7 @@ copy_from_bluray:
 			else if(xmb_icon==4 && xmb[xmb0_icon].member[xmb[xmb0_icon].first].type==4) sprintf(opt_list[5].label, "%s", (char*) STR_POP_MUSIC	+ 1);
 			else if(xmb_icon==5 && xmb[xmb_icon].first<2 && !browse_column_active)		sprintf(opt_list[5].label, "%s", (char*) STR_POP_ST		+ 1);
 			else if(xmb_icon==5 && xmb[xmb0_icon].member[xmb[xmb0_icon].first].type==3) sprintf(opt_list[5].label, "%s", (char*) STR_POP_VIDEO	+ 1);
+			else if( ( (xmb_icon==6 && xmb[xmb_icon].first) || (xmb_icon==7) ) && !browse_column_active) sprintf(opt_list[5].label, " %s", (char*) STR_BUT_LOAD);
 			else if(xmb_icon==8 && xmb[xmb0_icon].member[xmb[xmb0_icon].first].type >7) sprintf(opt_list[5].label, "%s", (char*) STR_POP_ROM		+ 1);
 
 			if(xmb_icon==2)
@@ -25359,6 +25459,13 @@ copy_from_bluray:
 					sprintf(opt_list[5].label, " %s", STR_SIDE_ADVS);
 				else
 					sprintf(opt_list[5].label, " %s", STR_SIDE_STDS);
+
+				sprintf(opt_list[7].label, " %s", STR_XC1_QUIT);
+				sprintf(opt_list[7].value, "%s", "quit");
+
+				sprintf(opt_list[8].label, " %s", STR_XC1_RESTART);
+				sprintf(opt_list[8].value, "%s", "restart");
+
 			}
 
 					opt_list[5].label[0]=' ';
@@ -25409,7 +25516,7 @@ copy_from_bluray:
 				}
 			}
 
-			if((xmb_icon==3 || xmb_icon==4 || xmb_icon==5 || xmb_icon==8) && !browse_column_active)
+			if((xmb_icon>=3 && xmb_icon<=5) && !browse_column_active)
 			{
 				sprintf(opt_list[(xmb_icon==4?0:2)].label, " %s", STR_XC1_REFRESH);
 				sprintf(opt_list[(xmb_icon==4?0:2)].value, "%s", "refresh");
@@ -25417,8 +25524,46 @@ copy_from_bluray:
 					opt_list[(xmb_icon==4?0:2)].label[0]='!'; //refresh
 			}
 
+			if(xmb_icon==6 || xmb_icon==7)
+			{
+
+				sprintf(opt_list[0].label, " %s", STR_XC1_REFRESH);
+				sprintf(opt_list[0].value, "%s", "refresh");
+				if( (is_video_loading || is_music_loading || is_photo_loading || is_retro_loading || is_game_loading || is_any_xmb_column))
+					opt_list[0].label[0]='!'; //refresh
+
+				sprintf(opt_list[2].label, " %s", (char*) STR_GM_DELETE);
+				sprintf(opt_list[2].value, "%s", "game_del");
+				if(disable_options==1 || disable_options==3)
+					opt_list[2].label[0]='!'; //delete disabled
+
+				sprintf(opt_list[3].label, " %s", (char*) STR_GM_COPY);
+				sprintf(opt_list[3].value, "%s", "game_cpy");
+				if(disable_options==2 || disable_options==3)
+					opt_list[3].label[0]='!'; //copy disabled
+
+				sprintf(opt_list[6].label, "%s", (char*) STR_POP_GS+1);
+				sprintf(opt_list[6].value, "%s", "game_set");
+
+				sprintf(opt_list[8].label, " %s", (char*) STR_GM_UPDATE);
+				sprintf(opt_list[8].value, "%s", "game_upd");
+
+				sprintf(opt_list[9].label, " %s", (char*) STR_GM_PERM);
+				sprintf(opt_list[9].value, "%s", "game_per");
+
+				sprintf(opt_list[11].label, " %s", (char*) STR_GM_TEST);
+				sprintf(opt_list[11].value, "%s", "game_tst");
+
+				sprintf(opt_list[12].label, " %s", (char*) STR_GM_RENAME);
+				sprintf(opt_list[12].value, "%s", "game_ren");
+
+			}
+
+
 skip_to_side_menu:
 			//if(browse_column_active) opt_list[5].label[0]='!';
+			xmb_bg_show=0;
+			xmb_bg_counter=200;
 			ret_f=open_side_menu(340, 5);
 			new_pad=0;
 			ss_timer=0;
@@ -25427,7 +25572,12 @@ skip_to_side_menu:
 
 			if(ret_f!=-1)
 			{
-				if(!strcmp(opt_list[ret_f].value, "action") && xmb_icon==2) { settings_advanced=!settings_advanced; redraw_column_texts(xmb_icon); goto leave_side_sel;}
+				if(xmb_icon==2)
+				{
+					if(!strcmp(opt_list[ret_f].value, "action")) { settings_advanced=!settings_advanced; redraw_column_texts(xmb_icon); goto leave_side_sel;}
+					if(!strcmp(opt_list[ret_f].value, "quit")) { quit_multiman(); goto leave_side_sel;}
+					if(!strcmp(opt_list[ret_f].value, "restart")) { restart_multiman(); goto leave_side_sel;}
+				}
 
 				if(!strcmp(opt_list[ret_f].value, "action") && !browse_column_active && !xmb[xmb_icon].member[xmb[xmb_icon].first].type)
 				{
@@ -25440,7 +25590,16 @@ skip_to_side_menu:
 					goto leave_side_sel;
 				}
 
-				if(!strcmp(opt_list[ret_f].value, "action")) { new_pad=BUTTON_CROSS; goto overwrite_cancel_bdvd;}
+				else if(!strcmp(opt_list[ret_f].value, "action")) { new_pad=BUTTON_CROSS; goto overwrite_cancel_bdvd;}
+
+				else if(!strcmp(opt_list[ret_f].value, "game_set")) { new_pad=BUTTON_TRIANGLE; goto overwrite_cancel_bdvd;}
+
+				else if(!strcmp(opt_list[ret_f].value, "game_upd")) goto update_title;
+				else if(!strcmp(opt_list[ret_f].value, "game_per")) goto setperm_title;
+				else if(!strcmp(opt_list[ret_f].value, "game_ren")) goto rename_title;
+				else if(!strcmp(opt_list[ret_f].value, "game_tst")) goto test_title;
+				else if(!strcmp(opt_list[ret_f].value, "game_del")) goto delete_title;
+				else if(!strcmp(opt_list[ret_f].value, "game_cpy")) goto copy_title;
 
 				else if(!strcmp(opt_list[ret_f].value, "delete"))
 				{
@@ -25493,6 +25652,7 @@ skip_to_side_menu:
 					{
 						xmb[xmb_icon].init=0;
 						if(xmb_icon==5) {xmb[6].init=0;add_game_column(menu_list, max_menu_list, game_sel, 0);}
+						if(xmb_icon==6 || xmb_icon==7) goto refresh_list;
 					}
 				}
 				else if(!strcmp(opt_list[ret_f].value, "update_st"))
@@ -25645,7 +25805,6 @@ overwrite_cancel_bdvd:
 			xmb[0].init=0;
 			free_text_buffers();
 		}
-
 	} //not browse mode
 
 	if (
@@ -25658,7 +25817,16 @@ overwrite_cancel_bdvd:
 	{
 		new_pad=0;
 		sprintf(browse_path[0], "%s", xmb[xmb_icon].member[xmb[xmb_icon].first].file_path);
-		browse_level=0;
+		if(strstr(xmb[xmb_icon].member[xmb[xmb_icon].first].file_path, "/dev_hdd0")==NULL)
+		{
+			char f_path[8];
+			if(xmb_icon==3) sprintf(f_path, "PICTURE");
+			else if(xmb_icon==4) sprintf(f_path, "MUSIC");
+			else if(xmb_icon==5) sprintf(f_path, "VIDEO");
+			else if(xmb_icon==8) sprintf(f_path, "ROMS");
+			sprintf(browse_path[1], "%s/%s", xmb[xmb_icon].member[xmb[xmb_icon].first].file_path, f_path);
+			browse_level=1;
+		}
 		for(int n=0; n<MAX_BROWSE_LEVELS; n++) browse_entry[n]=0;
 
 		slide_xmb_left(xmb_icon);
@@ -25711,9 +25879,7 @@ overwrite_cancel_bdvd:
 							else if(rnd==3) strcat(tortuga, "www.tortuga-cove.com: Ran By Gamers For Gamers!\n\n");
 							strcat(tortuga, (const char*) STR_DOWN_THM);
 							dialog_ret=0; cellMsgDialogOpen2( type_dialog_no, tortuga, dialog_fun2, (void*)0x0000aaab, NULL );
-							sys_timer_usleep( 250*1000 );
-							flipc(70);
-							sys_timer_usleep( 5*1000*1000 );
+							flipc(300);
 							cellMsgDialogAbort();
 						}
 
@@ -25928,7 +26094,7 @@ xmb_pin_ok2:
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "xmb_cover_column")) {free_all_buffers(); xmb[6].init=0; xmb[7].init=0; init_xmb_icons(menu_list, max_menu_list, game_sel );}
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "confirm_with_x")) {set_xo();xmb_legend_drawn=0;}
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "display_mode") || !strcmp(xmb[2].member[xmb[2].first].optionini, "hide_bd")) forcedevices=(1<<11);//0x0800;
-
+			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "xmb_sparks")) {use_drops=(xmb[2].member[xmb[2].first].option_selected==3);}
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "mount_dev_blind"))
 			{
 				if(mount_dev_blind) mount_dev_flash(); else unmount_dev_flash();
@@ -27379,9 +27545,17 @@ skip_to_FM:
 	}
 
 		ClearSurface();
+
+		if(dim==1)
+		c_opacity+=c_opacity_delta;
+		if(c_opacity<0x20) c_opacity=0x20;
+		if(c_opacity>0xff) c_opacity=0xff;
+
 		c_opacity2=c_opacity;
 		if(c_opacity2>0xc0) c_opacity2=0xc0;
 		if(c_opacity2<0x21) c_opacity2=0x00;
+
+		if(cover_mode==8) draw_whole_xmb(0);
 
 		//mouse pointer
 		if(cover_mode==5)
@@ -27392,7 +27566,7 @@ skip_to_FM:
 		}
 
 
-		if(!no_video)
+		if(!no_video && cover_mode!=8)
 		{
 			if(game_sel>=0 && (((mode_list==0) /*&& max_menu_list>0*/)) ) // && png_w!=0 && png_h!=0
 				{
@@ -27466,10 +27640,6 @@ skip_to_FM:
 					xmb_icon=6;
 					draw_coverflow_icons(xmb, xmb_icon, xmb_slide_y);
 				}
-
-				if(cover_mode==8)
-					draw_whole_xmb(0);
-
 
 				if(cover_mode==5) {
 
@@ -27900,11 +28070,6 @@ skip_to_FM:
 
 			if(mode_list==0)
 			{
-				if(dim==1)
-				c_opacity+=c_opacity_delta;
-				if(c_opacity<0x20) c_opacity=0x20;
-				if(c_opacity>0xff) c_opacity=0xff;
-
 				if(cover_mode!=8)
 				{
 					draw_device_list(fdevices | ((game_sel>=0 && max_menu_list>0) ? (menu_list[game_sel].flags<<16) : 0), cover_mode, c_opacity2, menu_list[0].content);
@@ -27945,27 +28110,38 @@ skip_to_FM:
 void flip(void)
 {
 	cellSysutilCheckCallback();
-
+	clock_c = sys_time_get_system_time()-clock_l+1;
+	clock_l = sys_time_get_system_time();
+	//if(clock_c<16683) sys_timer_usleep( 16683-clock_c ); //slow flip down to 59.94Hz (same as using VSYNC)
+	//sprintf(status_info, "Clock = %5ins | FPS: %6.2f", clock_c, 1000000.f/(float)clock_c);
 	cellDbgFontPrintf( 0.99f, 0.98f, 0.5f,0x10101010, payloadT);
 	if(status_info[0] && debug_mode)
+	//	sprintf(status_info, "Video status = %i", video_status);
 		cellDbgFontPrintf( 0.01f, 0.98f, 0.5f,0x60606080, status_info);
 	cellDbgFontDrawGcm();
 	cellConsolePoll();
-	cellGcmResetFlipStatus();
+	//cellGcmResetFlipStatus();
 
 //	if(max_ttf_label) flush_ttf((uint8_t*)(color_base_addr)+video_buffer*(c_frame_index), V_WIDTH, V_HEIGHT);
+
+	mm_flip_done=false;
 	cellGcmSetFlip(gCellGcmCurrentContext, frame_index);
 
 	cellGcmFlush(gCellGcmCurrentContext);
+	cellGcmSetWaitFlip(gCellGcmCurrentContext);
+	cellGcmFlush(gCellGcmCurrentContext);
+
 	setDrawEnv();
 	setRenderColor();
-	cellGcmSetWaitFlip(gCellGcmCurrentContext);
 
-	frame_index = 1- frame_index;// (frame_index+1) & 1;
+	//frame_index = 1- frame_index;// (frame_index+1) & 1;
+	frame_index++; if(frame_index>=V_BUFFERS) frame_index=0;
+
 	setRenderTarget();
 
 	vert_indx=0; // reset the vertex index
 	vert_texture_indx=0;
+	mm_flip_done=true;
 
 	angle+=3.6f;
 	if(angle>=360.f) angle=0.f;
@@ -28131,7 +28307,7 @@ static void misc_thread_entry( uint64_t arg )
 	(void)arg;
 	while(init_finished)
 	{
-
+	//cellConsolePoll();
 		if(debug_mode)
 		{
 			get_free_memory();
@@ -28169,3 +28345,4 @@ static void misc_thread_entry( uint64_t arg )
 	}
 	sys_ppu_thread_exit( 0 );
 }
+
