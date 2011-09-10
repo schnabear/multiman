@@ -606,7 +606,7 @@ void draw_text_stroke(float x, float y, float size, u32 color, const char *str);
 #define	GAME_LIST_VER	"MMGL0110" //LLIST.BIN		cache for game list
 #define	XMB_COL_VER		"MMXC0121" //XMBS.00x		xmb[?] structure (1 XMMB column)
 
-char current_version[9]="02.06.00";
+char current_version[9]="02.06.01";
 char current_version_NULL[10];
 char versionUP[64];
 
@@ -662,7 +662,7 @@ char update_dir[128]="/_skip";
 char download_dir[128]="/_skip";
 int verify_data=1;
 int usb_mirror=0;
-int scan_for_apps=0;
+int scan_for_apps=1;
 int date_format=0; // 1=MM/DD/YYYY, 2=YYYY/MM/DD
 int time_format=1; // 0=12h 1=24h
 int progress_bar=1;
@@ -832,7 +832,7 @@ char this_pane[256], other_pane[256];
 
  int cover_available=0, cover_available_1=0, cover_available_2=0, cover_available_3=0, cover_available_4=0, cover_available_5=0, cover_available_6=0;
  u8 scan_avchd=1;
- u8 expand_avchd=1;
+ u8 expand_avchd=0;
  u8 mount_bdvd=1;
  u8 mount_hdd1=1;
  u8 mount_dev_blind=0;
@@ -841,7 +841,7 @@ char this_pane[256], other_pane[256];
  u8 animation=3;
  int direct_launch=1;
  u8 disable_options=0, force_disable_copy=0;
- u8 download_covers=0;
+ u8 download_covers=1;
  float overscan=0.0f;
  bool is_remoteplay=0;
 
@@ -1501,7 +1501,7 @@ void wait_dialog_simple()
 	setRenderColor();
 }
 
-void load_localization(int id)
+void load_localization(int id, bool force)
 {
 	MM_LocaleSet(0);
 	mui_font = locales[0].font_id;
@@ -1515,7 +1515,7 @@ void load_localization(int id)
 		if(llines==STR_LAST_ID)
 		{
 			MM_LocaleSet (1);
-			if(locales[id2].font_id!=4)
+			if(locales[id2].font_id!=4 || force)
 			{
 				mui_font = locales[id2].font_id;
 				user_font = locales[id2].font_id;
@@ -17387,7 +17387,7 @@ int select_language()
 	if(ret_f!=-1)
 	{
 		mm_locale = (int)(strtod(opt_list[ret_f].value, NULL));
-		load_localization(mm_locale);
+		load_localization(mm_locale, 1);
 		for(int n=0; n<MAX_XMB_ICONS; n++) redraw_column_texts(n);
 		xmb_legend_drawn=0;
 		xmb_info_drawn=0;
@@ -21115,7 +21115,7 @@ void add_web_column()
 
 void init_xmb_icons(t_menu_list *list, int max, int sel)
 {
-		load_localization(mm_locale);
+		load_localization(mm_locale, 0);
 		seconds_clock=0;
 		xmb_legend_drawn=0;
 		xmb_info_drawn=0;
@@ -22718,7 +22718,7 @@ int main(int argc, char **argv)
 		mm_locale=0;
 		user_font=4;
 	}
-	load_localization(mm_locale);
+	load_localization(mm_locale, 0);
 
 	for(usb_loop=0;usb_loop<8;usb_loop++)
 	{
@@ -25385,7 +25385,9 @@ copy_from_bluray:
 	// open side menu
 	if ( (new_pad & BUTTON_TRIANGLE) && cover_mode==8 && !xmb_slide &&
 			(
-			(xmb_icon==5 && (xmb[xmb_icon].member[xmb[xmb_icon].first].type==3
+			(xmb_icon==5 &&
+			(xmb[xmb_icon].member[xmb[xmb_icon].first].type==3	 //st video
+			|| xmb[xmb_icon].member[xmb[xmb_icon].first].type==2 //avchd video
 			|| xmb[xmb_icon].member[xmb[xmb_icon].first].type==0
 			|| xmb[xmb_icon].first<2)) //showtime video
 
@@ -25449,7 +25451,7 @@ copy_from_bluray:
 			else if(xmb_icon==3 && xmb[xmb0_icon].member[xmb[xmb0_icon].first].type==5)		sprintf(opt_list[5].label, "%s", (char*) STR_POP_PHOTO	+ 1);
 			else if(xmb_icon==4 && xmb[xmb0_icon].member[xmb[xmb0_icon].first].type==4) sprintf(opt_list[5].label, "%s", (char*) STR_POP_MUSIC	+ 1);
 			else if(xmb_icon==5 && xmb[xmb_icon].first<2 && !browse_column_active)		sprintf(opt_list[5].label, "%s", (char*) STR_POP_ST		+ 1);
-			else if(xmb_icon==5 && xmb[xmb0_icon].member[xmb[xmb0_icon].first].type==3) sprintf(opt_list[5].label, "%s", (char*) STR_POP_VIDEO	+ 1);
+			else if(xmb_icon==5 && (xmb[xmb0_icon].member[xmb[xmb0_icon].first].type==2 || xmb[xmb0_icon].member[xmb[xmb0_icon].first].type==3)) sprintf(opt_list[5].label, "%s", (char*) STR_POP_VIDEO	+ 1);
 			else if( ( (xmb_icon==6 && xmb[xmb_icon].first) || (xmb_icon==7) ) && !browse_column_active) sprintf(opt_list[5].label, " %s", (char*) STR_BUT_LOAD);
 			else if(xmb_icon==8 && xmb[xmb0_icon].member[xmb[xmb0_icon].first].type >7) sprintf(opt_list[5].label, "%s", (char*) STR_POP_ROM		+ 1);
 
@@ -25481,11 +25483,35 @@ copy_from_bluray:
 
 			if((xmb_icon==5 && xmb[xmb_icon].first>1) || (xmb_icon==3 || xmb_icon==4 || xmb_icon==8) || browse_column_active)
 			{
-				sprintf(opt_list[7].label, " %s", STR_CM_RENAME);
-				sprintf(opt_list[7].value, "%s", "rename");
+				if(xmb[xmb0_icon].member[xmb[xmb0_icon].first].type!=2)
+				{
+					sprintf(opt_list[7].label, " %s", STR_CM_RENAME);
+					sprintf(opt_list[7].value, "%s", "rename");
 
-				sprintf(opt_list[8].label, " %s", STR_CM_DELETE);
-				sprintf(opt_list[8].value, "%s", "delete");
+					sprintf(opt_list[8].label, " %s", STR_CM_DELETE);
+					sprintf(opt_list[8].value, "%s", "delete");
+				}
+				else
+				{
+					sprintf(opt_list[7].label, " %s", (char*) STR_GM_COPY);
+					sprintf(opt_list[7].value, "%s", "game_cpy");
+					if(disable_options==2 || disable_options==3)
+						opt_list[7].label[0]='!'; //copy disabled
+					sprintf(opt_list[8].label, " %s", (char*) STR_GM_DELETE);
+					sprintf(opt_list[8].value, "%s", "game_del");
+
+					sprintf(opt_list[3].label, " %s", (char*) STR_SIDE_OPT);
+					sprintf(opt_list[3].value, "%s", "game_set");
+
+					sprintf(opt_list[12].label, " %s", (char*) STR_GM_TEST);
+					sprintf(opt_list[12].value, "%s", "game_tst");
+					sprintf(opt_list[13].label, " %s", (char*) STR_GM_PERM);
+					sprintf(opt_list[13].value, "%s", "game_per");
+
+
+				}
+				if(disable_options==1 || disable_options==3)
+					opt_list[8].label[0]='!'; //delete disabled
 
 				if(!lock_fileman)
 				{
@@ -25503,7 +25529,7 @@ copy_from_bluray:
 					)
 				{
 					opt_list[8].label[0]='!'; //del
-					opt_list[7].label[0]='!'; //ren
+					if(xmb[xmb0_icon].member[xmb[xmb0_icon].first].type!=2) opt_list[7].label[0]='!'; //ren/copy
 				}
 
 				if(xmb_icon==4)
@@ -25557,6 +25583,11 @@ copy_from_bluray:
 				sprintf(opt_list[12].label, " %s", (char*) STR_GM_RENAME);
 				sprintf(opt_list[12].value, "%s", "game_ren");
 
+				if(!lock_fileman)
+				{
+					sprintf(opt_list[14].label, " %s", STR_XC1_FILEMAN);
+					sprintf(opt_list[14].value, "%s", "fileman");
+				}
 			}
 
 
@@ -25724,7 +25755,7 @@ check_st_again:
 				}
 				else if(!strcmp(opt_list[ret_f].value, "fileman"))
 				{
-					if(!xmb[xmb0_icon].member[xmb[xmb0_icon].first].type && browse_column_active)
+					if( (!xmb[xmb0_icon].member[xmb[xmb0_icon].first].type && browse_column_active) || (xmb[xmb0_icon].member[xmb[xmb0_icon].first].type<3 && !browse_column_active))
 						sprintf(current_left_pane, "%s", xmb[xmb0_icon].member[xmb[xmb0_icon].first].file_path);
 					else
 					{
@@ -26322,6 +26353,7 @@ retry_showtime_xmb:
 			float pic_zoom=1.0f;
 			int	pic_reload=1, pic_posY=0, pic_posX=0, pic_X=0, pic_Y=0;
 			char pic_info[512];
+			int pic_angle=0;
 			mouseYDR=mouseXDR=mouseYDL=mouseXDL=0.0000f;
 			while(1)
 				{ // Picture Viewer Mode
@@ -26400,6 +26432,7 @@ retry_showtime_xmb:
 						}
 
 						png_w2=png_w; png_h2=png_h;
+
 						if(pic_zoom==-1.0f){
 							pic_zoom=1.0f;
 							if(png_h!=0 && png_h>=png_w && (float)png_h/(float)png_w>=1.77f)
@@ -26454,10 +26487,20 @@ retry_showtime_xmb:
 						pad_read();
 						ClearSurface();
 						set_texture( text_bmp, 1920, 1080);
-						if(strstr(image_file, ".png")!=NULL || strstr(image_file, ".PNG")!=NULL)
-							display_img(pic_X, pic_Y, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
+						if(pic_angle)
+						{
+							if(strstr(image_file, ".png")!=NULL || strstr(image_file, ".PNG")!=NULL)
+								display_img(pic_X, pic_Y, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
+							else
+								display_img((int)((1920-png_w2)/2)+pic_posX, (int)((1080-png_h2)/2)+pic_posY, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
+						}
 						else
-							display_img((int)((1920-png_w2)/2)+pic_posX, (int)((1080-png_h2)/2)+pic_posY, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
+						{
+							if(strstr(image_file, ".png")!=NULL || strstr(image_file, ".PNG")!=NULL)
+								display_img(pic_X, pic_Y, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
+							else
+								display_img((int)((1920-png_w2)/2)+pic_posX, (int)((1080-png_h2)/2)+pic_posY, png_w2, png_h2, png_w, png_h, 0.0f, 1920, 1080);
+						}
 						if(show_info==1){
 							if(slide_show) sprintf(ss_status, "%s", "Stop"); else sprintf(ss_status, "%s", "Start");
 							sprintf(pic_info,"   Name: %s", xmb[xmb0_icon].member[current_image].name); pic_info[95]=0;
@@ -26500,6 +26543,7 @@ retry_showtime_xmb:
 									pic_posX=pic_posY=0;
 									slide_time=0;
 									slide_dir=0;
+									pic_angle=0;
 									break;
 								}
 
@@ -26527,6 +26571,7 @@ check_from_start2:
 									pic_reload=1;
 									pic_posX=pic_posY=0;
 									slide_show=0; slide_dir=1;
+									pic_angle=0;
 									break;
 								}
 
@@ -26582,12 +26627,9 @@ check_from_start2:
 							break;
 						}
 
-						if (( new_pad & BUTTON_L2 ) || mouseXDR> 0.003f || mouseYDR> 0.003f)
+						if (mouseXDR> 0.003f || mouseYDR> 0.003f)
 						{
-							if ( new_pad & BUTTON_L2 )
-								pic_zoom-=0.045f;
-							else
-								pic_zoom-=0.010f;
+							pic_zoom-=0.010f;
 							if(pic_zoom<1.0f) pic_zoom=1.000f;
 							pic_reload=0;
 							png_h2=(int) (png_h2*pic_zoom);
@@ -26599,12 +26641,9 @@ check_from_start2:
 							break;
 						}
 
-						if (( new_pad & BUTTON_R2 ) || mouseXDR< -0.003f || mouseYDR< -0.003f)
+						if (mouseXDR< -0.003f || mouseYDR< -0.003f)
 						{
-							if (new_pad & BUTTON_R2)
-								pic_zoom+=0.045f;
-							else
-								pic_zoom+=0.010f;
+							pic_zoom+=0.010f;
 							pic_reload=0;
 							png_h2=(int) (png_h2*pic_zoom);
 							png_w2=(int) (png_w2*pic_zoom);
@@ -26613,6 +26652,14 @@ check_from_start2:
 							if( pic_posY<(int)((1080-png_h2)/2) ) pic_posY=(int)((1080-png_h2)/2);
 							if( ((int)((1080-png_h2)/2)+pic_posY)>0 ) pic_posY=0;
 							break;
+						}
+						if( new_pad & BUTTON_R2 )
+						{
+							pic_angle++; pic_angle&=3;
+						}
+						if( new_pad & BUTTON_L2 )
+						{
+							pic_angle--; pic_angle&=3;
 						}
 
 					}

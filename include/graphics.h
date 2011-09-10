@@ -80,6 +80,7 @@ void display_img(int x, int y, int width, int height, int tx, int ty, float z, i
 void display_img_nr(int x, int y, int width, int height, int tx, int ty, float z, int Dtx, int Dty);
 void display_img_angle(int x, int y, int width, int height, int tx, int ty, float z, int Dtx, int Dty, float angle);
 void display_img_persp(int x, int y, int width, int height, int tx, int ty, float z, int Dtx, int Dty, int keystoneL, int keystoneR);
+void display_img_rotate(int x, int y, int width, int height, int tx, int ty, float z, int Dtx, int Dty, int step);
 
 void draw_device_list(u32 flags, int cover_mode, int opaq, char *content);
 

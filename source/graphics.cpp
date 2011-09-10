@@ -1419,7 +1419,7 @@ void draw_square(float x, float y, float w, float h, float z, u32 color)
 
 }
 
-void draw_square_angle(float _x, float _y, float w, float h, float z, u32 color, float _angle)
+/*void draw_square_angle(float _x, float _y, float w, float h, float z, u32 color, float _angle)
 {
 	int _radius;
 	(void) w;
@@ -1452,5 +1452,5 @@ void draw_square_angle(float _x, float _y, float w, float h, float z, u32 color,
 
 	cellGcmSetDrawArrays( gCellGcmCurrentContext, CELL_GCM_PRIMITIVE_QUADS, vert_indx, 4);
 	vert_indx+=4;
-}
+}*/
 
