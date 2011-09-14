@@ -19,17 +19,19 @@ const char* VERSION = "for multiMAN";	// used in the welcome message and display
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <assert.h>
 #include <string.h>
 
 #include <netex/libnetctl.h>
 #include <netex/errno.h>
 #include <netex/net.h>
+#include <netex/sockinfo.h>
+
 #include <arpa/inet.h>
 #include <netinet/in.h>
+
+
 #include <sys/ppu_thread.h>
 #include <sys/socket.h>
-#include <netex/sockinfo.h>
 
 #include "ftp_filesystem.h"
 #include "ftp.h"
@@ -56,13 +58,13 @@ static void handleclient(u64 conn_s_p)
 
 	int connactive = 1; // whether the ftp connection is active or not
 	int dataactive = 0; // prevent the data connection from being closed at the end of the loop
-	int loggedin = 0; // whether the user is logged in or not
+	int loggedin = 0;	// whether the user is logged in or not
 
-	char user[32]; // stores the username that the user entered
-	char rnfr[1024]; // stores the path/to/file for the RNFR command
+	char user[32];		// stores the username that the user entered
+	char rnfr[1024];	// stores the path/to/file for the RNFR command
 
-	char cwd[1024]; // Current Working Directory
-	int rest = 0; // for resuming file transfers
+	char cwd[1024];		// Current Working Directory
+	int rest = 0;		// for resuming file transfers
 
 	char buffer[2048];
 
@@ -70,10 +72,11 @@ static void handleclient(u64 conn_s_p)
 	int p1 = (rand() % 251) + 4;
 	int p2 = rand() % 256;
 
-	char pasv_output[64];
 	union CellNetCtlInfo net_info;
 	cellNetCtlGetInfo(16, &net_info);
+
 	char ip_address[24];
+	char pasv_output[64];
 	sprintf(ip_address, "%s", net_info.ip_address); for(u8 n=0;n<strlen(ip_address);n++) if(ip_address[n]=='.') ip_address[n]=',';
 	sprintf(pasv_output, "227 Entering Passive Mode (%s,%i,%i)\r\n", ip_address, p1, p2);
 
@@ -82,8 +85,7 @@ static void handleclient(u64 conn_s_p)
 
 	// welcome message
 	ssend(conn_s, "220-OpenPS3FTP by @jjolano\r\n");
-	sprintf(buffer, "220 Version %s\r\n", VERSION);
-	ssend(conn_s, buffer);
+	sprintf(buffer, "220 Version %s (Login as anonymous with any password)\r\n", VERSION);	ssend(conn_s, buffer);
 
 	while(exitapp == 0 && connactive == 1 && !mm_shutdown && recv(conn_s, buffer, 2047, 0) > 0)
 	{
@@ -91,7 +93,7 @@ static void handleclient(u64 conn_s_p)
 		buffer[strcspn(buffer, "\n")] = '\0';
 		buffer[strcspn(buffer, "\r")] = '\0';
 
-		char cmd[16], param[512];
+		char cmd[16], param[1024];
 		int split = ssplit(buffer, cmd, 15, param, 1023);
 
 		if(loggedin == 1)
@@ -596,37 +598,9 @@ static void handleclient(u64 conn_s_p)
 					if(strcasecmp(cmd, "HELP") == 0)
 					{
 						ssend(conn_s, "214-Special OpenPS3FTP commands:\r\n");
-						ssend(conn_s, " SITE PASSWD <newpassword> - Change your password\r\n");
-						ssend(conn_s, " SITE EXITAPP - Remotely quit OpenPS3FTP\r\n");
+						ssend(conn_s, " SITE EXITAPP - Remotely shutdown the FTP service\r\n");
 						ssend(conn_s, " SITE HELP - Show this message\r\n");
 						ssend(conn_s, "214 End\r\n");
-					}
-					else
-					if(strcasecmp(cmd, "PASSWD") == 0)
-					{
-						if(split == 1)
-						{
-							Lv2FsFile fd;
-
-							if(lv2FsOpen("/dev_hdd0/game/OFTP00001/USRDIR/passwd", LV2_O_WRONLY | LV2_O_CREAT | LV2_O_TRUNC, &fd, 0660, NULL, 0) == 0)
-							{
-								u64 written;
-								lv2FsWrite(fd, param2, strlen(param2), &written);
-								lv2FsClose(fd);
-
-								strcpy(userpass, param2);
-								sprintf(buffer, "200 Password successfully set: %s\r\n", param2);
-								ssend(conn_s, buffer);
-							}
-							else
-							{
-								ssend(conn_s, "550 Cannot change FTP password\r\n");
-							}
-						}
-						else
-						{
-							ssend(conn_s, "501 No password given\r\n");
-						}
 					}
 					else
 					if(strcasecmp(cmd, "EXITAPP") == 0)

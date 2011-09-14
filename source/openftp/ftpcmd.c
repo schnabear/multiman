@@ -16,7 +16,9 @@
 #include <netex/libnetctl.h>
 #include <netex/errno.h>
 #include <netex/net.h>
+
 #include <sys/socket.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -27,7 +29,6 @@
 #include <netinet/in.h>
 
 #include "ftp_filesystem.h"
-
 #include "common_ftp.h"
 
 int slisten(int port, int backlog)

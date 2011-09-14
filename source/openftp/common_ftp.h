@@ -9,7 +9,7 @@
 #include "functions.h"
 #include "ftpcmd.h"
 
-#define FTPPORT		21	// port to start ftp server on (21 is standard)
+#define FTPPORT		21		// port to start ftp server on (21 is standard)
 #define BUFFER_SIZE	32768	// the default buffer size used in file transfers, in bytes
 #define DISABLE_PASS	1	// whether or not to disable the checking of the password (1 - yes, 0 - no)
 
