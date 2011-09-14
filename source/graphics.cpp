@@ -31,6 +31,7 @@ extern int cover_mode;
 extern bool key_repeat;
 extern int xmb_slide_y;
 extern bool is_remoteplay;
+extern u8 video_mode;
 
 extern bool th_device_list;
 extern bool th_device_separator;
@@ -258,7 +259,9 @@ int initDisplay(void)
 	ret = cellVideoOutConfigure(CELL_VIDEO_OUT_PRIMARY, &videocfg, NULL, 0);
 	if (ret != CELL_OK) return -1;
 
-//	cellGcmSetFlipMode(CELL_GCM_DISPLAY_VSYNC);
+if(cover_mode==8 || !video_mode)
+	cellGcmSetFlipMode(CELL_GCM_DISPLAY_VSYNC);
+else
 	cellGcmSetFlipMode(CELL_GCM_DISPLAY_HSYNC);
 //	cellGcmSetFlipMode(CELL_GCM_DISPLAY_HSYNC_WITH_NOISE);
 
