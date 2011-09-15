@@ -82,6 +82,7 @@
 #include "fonts.h"
 #include "language.h"
 #include "ftp.h"
+#include "openftp/ftp_filesystem.h"
 
 #define WITH_BG_VIDEO
 
@@ -133,7 +134,7 @@ u16 th_legend_y=853;
 bool th_drive_icon=1;
 u16 th_drive_icon_x=1790;
 u16 th_drive_icon_y=964;
-
+bool coverflow_legend_loading=0;
 //NTFS/PFS driver
 int max_usb_volumes=1;
 
@@ -372,6 +373,7 @@ u8 a_dynamic2=0;
 
 bool debug_mode=false;
 bool use_pad_sensor=false;
+u8 background_type=0;
 
 static int old_fi=-1;
 u16 counter_png=0;
@@ -1561,14 +1563,18 @@ u64 is_size(char *path)
 
 int exist(char *path)
 {
-	struct stat p_stat;
-	return (stat(path, &p_stat)>=0);
+	//struct stat p_stat;
+	//return (stat(path, &p_stat)>=0);
+	Lv2FsStat buf;
+	return lv2FsStat(path, &buf)>=0;
 }
 
 int exist_c(const char *path)
 {
-	struct stat p_stat;
-	return (stat(path, &p_stat)>=0);
+	//struct stat p_stat;
+	//return (stat(path, &p_stat)>=0);
+	Lv2FsStat buf;
+	return lv2FsStat(path, &buf)>=0;
 }
 
 int rndv(int maxval)
@@ -7619,19 +7625,19 @@ void put_label(uint8_t *buffer, uint32_t width, uint32_t height, char *str1p, ch
 						if(game_details==0) y+=25;
 						if(game_details==1) y+=12;
 						Fonts_RenderPropText( cf, surf, x+1, y+1, utf8Str0, scale*1.2, scale, slant, step, 0xf0101010 );//f01010e0 //0xff404040
-						blur_texture(buffer, 1920, (int)(lineH+5), (int)x-2, (int)y-2,  (int)(w1+15), (int)lineH+5, 0, 0, 3, 1);
+						//blur_texture(buffer, 1920, (int)(lineH+5), (int)x-2, (int)y-2,  (int)(w1+15), (int)lineH+5, 0, 0, 3, 1);
 						Fonts_RenderPropText( cf, surf, x, y, utf8Str0, scale*1.2f, scale, slant, step, color );//(color & 0x00ffffff)
 
 						if(game_details>0)
 						{
 							Fonts_RenderPropText( cf, surf, x3+1, y+42, utf8Str2, scale*0.8f, scale*0.57f, slant, step, 0xff101010);
-							blur_texture(buffer, 1920, (int)(lineH*0.8+5), (int)x3-2, (int)y+40,  (int)w3+15, (int)(lineH*0.57+5), 0, 0, 1, 1);
+							//blur_texture(buffer, 1920, (int)(lineH*0.8+5), (int)x3-2, (int)y+40,  (int)w3+15, (int)(lineH*0.57+5), 0, 0, 1, 1);
 							Fonts_RenderPropText( cf, surf, x3, y+41, utf8Str2, scale*0.8f, scale*0.57f, slant, step, 0xffd0d0ff );
 						}
 
 						if(game_details>1)
 						{
-							//Fonts_RenderPropText( cf, surf, x2+1, y+68, utf8Str1, scale*0.8f, scale*0.8f, slant, step, 0xff101010);
+							Fonts_RenderPropText( cf, surf, x2+1, y+68, utf8Str1, scale*0.8f, scale*0.8f, slant, step, 0xff101010);
 							//blur_texture(buffer, 1920, (int)(lineH*0.8+5), (int)x2-2, (int)y+65,  (int)w2+15, (int)(lineH*0.8+5), 0, 0, 1, 1);
 							Fonts_RenderPropText( cf, surf, x2, y+67, utf8Str1, scale*0.8f, scale*0.8f, slant, step, 0xc000ffff );
 						}
@@ -8046,16 +8052,7 @@ gs_cover:
 		else if(ps3_sys_ver)
 			sprintf(temp_val, " (PS3 firmware %4.2f)", ps3_sys_ver);
 
-//		put_texture_with_alpha( text_FONT, text_DOX+(dox_rb1s_x	*4 + dox_rb1s_y	* dox_width*4), dox_rb1s_w,	dox_rb1s_h, dox_width, 580, 695, 0, 0);
-//		put_texture_with_alpha( text_FONT, text_DOX+(dox_rb1u_x	*4 + dox_rb1u_y	* dox_width*4), dox_rb1u_w,	dox_rb1u_h, dox_width, 580, 735, 0, 0);
-//		put_texture_with_alpha( text_FONT, text_DOX+(dox_rb2s_x	*4 + dox_rb2s_y	* dox_width*4), dox_rb2s_w,	dox_rb2s_h, dox_width, 580, 775, 0, 0);
-
-//		put_texture_with_alpha( text_FONT, text_DOX+(dox_rb2u_x	*4 + dox_rb2u_y	* dox_width*4), dox_rb2u_w,	dox_rb2u_h, dox_width, 240, 695, 0, 0);
-//		put_texture_with_alpha( text_FONT, text_DOX+(dox_rb1s_x	*4 + dox_rb1s_y	* dox_width*4), dox_rb1s_w,	dox_rb1s_h, dox_width, 240, 735, 0, 0);
-//		put_texture_with_alpha( text_FONT, text_DOX+(dox_rb1u_x	*4 + dox_rb1u_y	* dox_width*4), dox_rb1u_w,	dox_rb1u_h, dox_width, 240, 775, 0, 0);
 	}
-
-//	put_texture_with_alpha( text_FONT, text_DOX+(dox_att_x	*4 + dox_att_y	* dox_width*4), dox_att_w,	dox_att_h, dox_width, 950, 1000, 0, 0);
 
 	max_ttf_label=0;
 	char *game_title = menu_list[*_game_sel].title[0]=='_' ? menu_list[*_game_sel].title+1 : menu_list[*_game_sel].title;
@@ -8824,12 +8821,13 @@ void fix_perm_recursive(const char* start_path)
     char f_name[CELL_FS_MAX_FS_FILE_NAME_LENGTH+1];
     CellFsDirent dir_ent;
     CellFsErrno err;
-    cellFsChmod(start_path, 0777);
+    lv2FsChmod(start_path, 0777);
+
 
 	flip();
     if (cellFsOpendir(start_path, &dir_fd) == CELL_FS_SUCCEEDED)
     {
-        cellFsChmod(start_path, 0777);
+        lv2FsChmod(start_path, 0777);
         while (1) {
 			pad_read();
 			if ( (old_pad & BUTTON_CIRCLE) || (old_pad & BUTTON_TRIANGLE) || dialog_ret==3) { abort_rec=1; new_pad=0; old_pad=0; break; } //
@@ -8842,13 +8840,13 @@ void fix_perm_recursive(const char* start_path)
 
                 if (dir_ent.d_type == CELL_FS_TYPE_DIRECTORY)
                 {
-                    cellFsChmod(f_name, CELL_FS_S_IFDIR | 0777);
+                    lv2FsChmod(f_name, CELL_FS_S_IFDIR | 0777);
                     fix_perm_recursive(f_name);
 					if(abort_rec==1) break;
                 }
                 else if (dir_ent.d_type == CELL_FS_TYPE_REGULAR)
                 {
-                    cellFsChmod(f_name, 0666);
+                    lv2FsChmod(f_name, 0666);
                 }
             } else {
                 break;
@@ -8924,9 +8922,9 @@ static double get_system_version(void)
 		uint32_t crc=0, crc_c;
 		for(crc_c=0; crc_c<len; crc_c++) crc+=mem[crc_c];
 //		sprintf(status_info, "%x", crc);
-		if(crc==0x416bbaULL) base=3.15;	else //ignore spoofers by crcing libfs
-		if(crc==0x41721eULL) base=3.41; else
-		if(crc==0x41655eULL) base=3.55;
+		if(crc==0x416bbaULL) base=3.15f; else //ignore spoofers by crcing libfs
+		if(crc==0x41721eULL) base=3.41f; else
+		if(crc==0x41655eULL) base=3.55f;
 		free(mem);
 	}
 
@@ -8937,7 +8935,7 @@ void change_param_sfo_field(char *file, char *field, char *value)
 {
 	if(!exist(file) || strstr(file, "/dev_bdvd")!=NULL) return;
 	FILE *fp;
-	cellFsChmod(file, 0666);
+	lv2FsChmod(file, 0666);
 	fp = fopen(file, "rb");
 	if (fp != NULL) {
 		unsigned len, pos, str;
@@ -16266,6 +16264,9 @@ if ( fp != NULL )
 		if(strstr (line,"use_pad_sensor=0")!=NULL) use_pad_sensor=0;
 		if(strstr (line,"use_pad_sensor=1")!=NULL) use_pad_sensor=1;
 
+		if(strstr (line,"background_type=0")!=NULL) background_type=0;
+		if(strstr (line,"background_type=1")!=NULL) background_type=1;
+
 		if(strstr (line,"bd_emulator=0")!=NULL) bd_emulator=0;
 		if(strstr (line,"bd_emulator=1")!=NULL) bd_emulator=1;
 		if(strstr (line,"bd_emulator=2")!=NULL) bd_emulator=2;
@@ -18434,6 +18435,7 @@ void load_legend(u8* buffer, char* path)
 	else
 	{
 		memset(buffer, 0x0, 639360);
+		max_ttf_label=0;
 
 		put_texture_with_alpha_gen( buffer, text_DOX+(dox_l1_x		*4 + dox_l1_y		* dox_width*4), dox_l1_w,		dox_l1_h,		dox_width, 1665,
 			277*1-138-dox_l1_w/2, 10);
@@ -18470,7 +18472,8 @@ void load_legend(u8* buffer, char* path)
 
 void load_coverflow_legend()
 {
-	if(cover_mode!=4 || !xmb[6].init) return;
+	if(cover_mode!=4 || !xmb[6].init || coverflow_legend_loading) return;
+	coverflow_legend_loading=1;
 	if((xmb_icon==6) && xmb[xmb_icon].member[xmb[xmb_icon].first].game_id!=-1) game_sel=xmb[xmb_icon].member[xmb[xmb_icon].first].game_id; // || xmb_icon==8
 	int grey=(menu_list[game_sel].title[0]=='_' || menu_list[game_sel].split);
 	u32 color= (menu_list[game_sel].flags && game_sel==0)? COL_PS3DISC : ((grey==0) ?  COL_PS3 : COL_SPLIT);
@@ -18500,6 +18503,7 @@ void load_coverflow_legend()
 
 	legend_y=tmp_legend_y;
 	xmb_bg_show=0;
+	coverflow_legend_loading=0;
 }
 
 void draw_xmb_bare(u8 _xmb_icon, u8 _all_icons, bool recursive, int _sub_level)
@@ -18720,7 +18724,7 @@ void draw_coverflow_icons(xmb_def *_xmb, const int _xmb_icon_, int __xmb_y_offse
 						load_png_threaded( _xmb_icon, cn);
 				}
 			}
-			if(_xmb[_xmb_icon].member[cn].status==1 || (_xmb[_xmb_icon].member[cn].status==0 && (key_repeat)))
+			if( (_xmb[_xmb_icon].member[cn].status==1 || _xmb[_xmb_icon].member[cn].status==0) && key_repeat)
 			{
 				tw=128; th=128;
 				if(cn3!=5) {tw/=2; th/=2;}
@@ -20291,6 +20295,7 @@ void save_options()
 		fprintf(fpA, "deadzone_y=%i\r\n", yDZ);
 
 		fprintf(fpA, "use_pad_sensor=%i\r\n", use_pad_sensor);
+		fprintf(fpA, "background_type=%i\r\n", background_type);
 
 		fprintf(fpA, "parental_level=%i\r\n", parental_level);
 		fprintf(fpA, "parental_pass=%s\r\n", parental_pass);
@@ -20372,6 +20377,7 @@ void parse_settings()
 		else if(!strcmp(oini, "mount_dev_blind"))	mount_dev_blind		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 
 		else if(!strcmp(oini, "side_menu_color"))	side_menu_color_indx=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "background_type"))	background_type		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 
 
 //		else if(!strcmp(oini, "parental_pass"))		sprintf(parental_pass, "%s", xmb[2].member[n].option[xmb[2].member[n].option_selected].value);
@@ -20594,6 +20600,11 @@ void add_settings_column()
 			xmb[2].member[xmb[2].size-1].option_selected=user_font;
 		}
 
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_BG, (char*)STR_XC2_BG1,	(char*)"background_type");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_BG2,						(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_BG3,						(char*)"1");
+		xmb[2].member[xmb[2].size-1].option_selected=background_type;
+
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_THM, (char*)STR_XC2_THM1,	(char*)"theme_sound");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
 		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_ENABLE,							(char*)"1");
@@ -20813,6 +20824,9 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 		u8 *g_icon=xmb[0].data;
 		u8 ext_devs=0;
 
+		if(cover_mode==8)
+		{
+
 		if(!xmb[5].init || !xmb[5].size)
 		{
 			xmb[5].first=0;
@@ -20855,6 +20869,8 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 			sort_xmb_col_all(xmb[5].member, xmb[5].size, 2+ext_devs);
 			delete_xmb_dubs(xmb[5].member, &xmb[5].size);
 		}
+
+		}//xmmb
 
 
 		if(!xmb[6].init)
@@ -20993,7 +21009,8 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 			sort_xmb_col(xmb[7].member, xmb[7].size, 0);
 		}
 
-		sort_xmb_col(xmb[5].member, xmb[5].size, 2+ext_devs);
+		if(cover_mode==8)
+			sort_xmb_col(xmb[5].member, xmb[5].size, 2+ext_devs);
 
 		for(int m=0; m<max; m++)
 		{
@@ -21054,7 +21071,7 @@ void add_web_column()
 
 void init_xmb_icons(t_menu_list *list, int max, int sel)
 {
-		load_localization(mm_locale, 0);
+		//load_localization(mm_locale, 0);
 		seconds_clock=0;
 		xmb_legend_drawn=0;
 		xmb_info_drawn=0;
@@ -22263,13 +22280,13 @@ int main(int argc, char **argv)
 	if(!exist(disclaimer) || exist(string1))
 	{
 
-			sprintf(string1x, "multiMAN (referred hereafter as \"software\"), its author, partners, and associates do not condone piracy. multiMAN is a hobby project, distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY, without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\nDo you accept this binding agreement (1/3)?");
+			sprintf(string1x, "multiMAN (referred hereafter as \"SOFTWARE\"), its authors, partners, and associates (collectively \"ASSOSIATES\") do not condone piracy. This SOFTWARE is an open project, distributed in the hope that it will be useful, while all ASSOSIATES expressly disclaim any implied warranty of merchantability, WARRANTY OF FITNESS FOR A PARTICULAR PURPOSE and WARRANTY OF NON-INFRIGEMENT.\n\nDo you accept this binding agreement (1/3)?");
 			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string1x, dialog_fun1, (void*)0x0000aaaa, NULL );	wait_dialog_simple(); if(dialog_ret!=1) exit(0);
 
-			sprintf(string2x, "The software is intended solely for educational and testing purposes, and while it may allow the user to create copies of legitimately acquired and/or owned content, it is required that such user actions must comply with local, federal and country legislation.\n\nFurthermore, the author of this software, its partners and associates shall assume NO responsibility, legal or otherwise implied, for any misuse of, or for any loss that may occur while using multiMAN.\n\nDo you accept this binding agreement (2/3)?");
+			sprintf(string2x, "The SOFTWARE shall be used for educational and testing purposes only, and while it may allow the user to create test copies of legitimately acquired and/or owned content, it is required that such user actions shall comply with local, federal and country legislation.\n\nFurthermore, the ASSOSIATES shall assume NO responsibility, legal or otherwise implied, for any misuse of, or for any loss that may occur while using the SOFTWARE.\n\nDo you accept this binding agreement (2/3)?");
 			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string2x, dialog_fun1, (void*)0x0000aaaa, NULL ); wait_dialog_simple();	if(dialog_ret!=1) exit(0);
 
-			sprintf(string3x, "You are solely responsible for complying with the applicable laws in your country and you must cease using this software should your actions during multiMAN operation lead to or may lead to infringement or violation of the rights of the respective content copyright holders.\n\nmultiMAN is not licensed, approved or endorsed by \"Sony Computer Entertainment, Inc.\" (SCEI) or any other party.\n\nDo you understand and accept this binding agreement?");
+			sprintf(string3x, "You are solely responsible for complying with the applicable laws in your country and you must cease using this software should your actions during multiMAN operation lead to or may lead to infringement or violation of the rights of the respective content copyright owners.\n\nThis SOFTWARE is not licensed, approved or endorsed by \"Sony Computer Entertainment, Inc.\" (SCEI), SNEI, SEN or any other party.\n\nDo you understand and accept this binding agreement?");
 			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string3x, dialog_fun1, (void*)0x0000aaaa, NULL ); wait_dialog_simple();	if(dialog_ret!=1) exit(0);
 
 			FILE *fpA;
@@ -23028,6 +23045,14 @@ int main(int argc, char **argv)
 			}
 		}
 	}
+
+	if(background_type)
+	{
+		sprintf(filename, "%s/wave.divx", app_usrdir);
+		if(exist(filename)) main_video( (char*) filename); else background_type=0;
+	}
+	else
+		is_bg_video=0;
 
 	int find_device=0;
 
@@ -26085,6 +26110,18 @@ xmb_pin_ok2:
 				if(mount_dev_blind) mount_dev_flash(); else unmount_dev_flash();
 			}
 
+			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "background_type"))
+			{
+				if(background_type && !is_bg_video)
+				{
+					sprintf(filename, "%s/wave.divx", app_usrdir);
+					if(exist(filename)) main_video( (char*) filename); else background_type=0;
+				}
+				else
+					if(!background_type && is_bg_video)	is_bg_video=0;
+			}
+
+
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "bd_emulator") && xmb[2].member[xmb[2].first].option_selected==1 && !bdemu2_present)
 			{
 				if(c_firmware==3.55f)
@@ -27635,10 +27672,10 @@ skip_to_FM:
 
 				if(cover_mode==4 && max_menu_list>0)
 				{
+					xmb_icon=6;
 					if(!xmb[6].init)
 						init_xmb_icons(menu_list, max_menu_list, game_sel);
 
-					xmb_icon=6;
 					draw_coverflow_icons(xmb, xmb_icon, xmb_slide_y);
 				}
 

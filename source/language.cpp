@@ -677,6 +677,11 @@ static unsigned char s_pXC2_511	[]	= "Color";
 static unsigned char s_pXC2_512	[]	= "Rain Drops";
 static unsigned char s_pXC2_513	[]	= "Options";
 
+static unsigned char s_pXC2_514	[]	= "Background Appearance";
+static unsigned char s_pXC2_515	[]	= "Changes background type for XMMB and Coverflow modes.";
+static unsigned char s_pXC2_516	[]	= "Image";
+static unsigned char s_pXC2_517	[]	= "Video";
+
 
 static MMString s_MMStringDef[] = {
  { sizeof ( s_pDebugMode  ) - 1, s_pDebugMode	}, //0
@@ -1269,8 +1274,12 @@ static MMString s_MMStringDef[] = {
   { sizeof ( s_pXC2_511		) - 1, s_pXC2_511		}, //511
 
   { sizeof ( s_pXC2_512		) - 1, s_pXC2_512		},
-  { sizeof ( s_pXC2_513		) - 1, s_pXC2_513		} //513
+  { sizeof ( s_pXC2_513		) - 1, s_pXC2_513		},
 
+  { sizeof ( s_pXC2_514		) - 1, s_pXC2_514		}, //514
+  { sizeof ( s_pXC2_515		) - 1, s_pXC2_515		},
+  { sizeof ( s_pXC2_516		) - 1, s_pXC2_516		},
+  { sizeof ( s_pXC2_517		) - 1, s_pXC2_517		}  //517
 };
 
 
