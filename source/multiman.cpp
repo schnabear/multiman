@@ -609,7 +609,7 @@ void draw_text_stroke(float x, float y, float size, u32 color, const char *str);
 #define	GAME_LIST_VER	"MMGL0110" //LLIST.BIN		cache for game list
 #define	XMB_COL_VER		"MMXC0121" //XMBS.00x		xmb[?] structure (1 XMMB column)
 
-char current_version[9]="02.06.03";
+char current_version[9]="02.06.04";
 char current_version_NULL[10];
 char versionUP[64];
 
@@ -2130,6 +2130,12 @@ void screen_saver()
 					}
 				}
 
+			}
+
+			if(cFrame!=NULL && is_bg_video)
+			{
+				set_texture( cFrame, 1920, 1080);
+				display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
 			}
 			setRenderColor();
 			flip();
@@ -8921,9 +8927,10 @@ static double get_system_version(void)
 		fclose(fp);
 		uint32_t crc=0, crc_c;
 		for(crc_c=0; crc_c<len; crc_c++) crc+=mem[crc_c];
-//		sprintf(status_info, "%x", crc);
+		//sprintf(status_info, "%x", crc);
 		if(crc==0x416bbaULL) base=3.15f; else //ignore spoofers by crcing libfs
-		if(crc==0x41721eULL) base=3.41f; else
+		if(crc==0x41721eULL) base=3.41f; else // ofw   3.41
+		if(crc==0x419d7eULL) base=3.41f; else // rebug 3.41.3
 		if(crc==0x41655eULL) base=3.55f;
 		free(mem);
 	}
@@ -16264,8 +16271,7 @@ if ( fp != NULL )
 		if(strstr (line,"use_pad_sensor=0")!=NULL) use_pad_sensor=0;
 		if(strstr (line,"use_pad_sensor=1")!=NULL) use_pad_sensor=1;
 
-		if(strstr (line,"background_type=0")!=NULL) background_type=0;
-		if(strstr (line,"background_type=1")!=NULL) background_type=1;
+		if(strstr (line,"background_type=")!=NULL) background_type=(u8)strtod(((char*)line)+16, NULL);
 
 		if(strstr (line,"bd_emulator=0")!=NULL) bd_emulator=0;
 		if(strstr (line,"bd_emulator=1")!=NULL) bd_emulator=1;
@@ -20587,22 +20593,30 @@ void add_settings_column()
 		if(user_font<10)
 		{
 			add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_FONT, (char*)STR_XC2_FONT1,	(char*)"user_font");
-			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Default",								(char*)"0");
-			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Pop"		,							(char*)"1");
-			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"New Rodin",							(char*)"2");
-			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Matisse",								(char*)"3");
-			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Rounded",								(char*)"4");
-			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"User #1 (font0)",						(char*)"5");
-			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"User #2 (font1)",						(char*)"6");
-			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"User #3 (font2)",						(char*)"7");
-			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"User #4 (font3)",						(char*)"8");
-			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"User #5 (font4)",						(char*)"9");
+			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Default",							(char*)"0");
+			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Pop"		,						(char*)"1");
+			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"New Rodin",						(char*)"2");
+			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Matisse",							(char*)"3");
+			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"Rounded",							(char*)"4");
+			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"User #1 (font0)",					(char*)"5");
+			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"User #2 (font1)",					(char*)"6");
+			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"User #3 (font2)",					(char*)"7");
+			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"User #4 (font3)",					(char*)"8");
+			add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)"User #5 (font4)",					(char*)"9");
 			xmb[2].member[xmb[2].size-1].option_selected=user_font;
 		}
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_BG, (char*)STR_XC2_BG1,	(char*)"background_type");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_BG2,						(char*)"0");
-		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_BG3,						(char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_BG2,							(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_BG3, " 1"),	(char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_BG3, " 2"),	(char*)"2");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_BG3, " 3"),	(char*)"3");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_BG3, " 4"),	(char*)"4");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_BG3, " 5"),	(char*)"5");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_BG3, " 6"),	(char*)"6");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_BG3, " 7"),	(char*)"7");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_BG3, " 8"),	(char*)"8");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)STR_XC2_BG3, " 9"),	(char*)"9");
 		xmb[2].member[xmb[2].size-1].option_selected=background_type;
 
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_THM, (char*)STR_XC2_THM1,	(char*)"theme_sound");
@@ -22280,10 +22294,10 @@ int main(int argc, char **argv)
 	if(!exist(disclaimer) || exist(string1))
 	{
 
-			sprintf(string1x, "multiMAN (referred hereafter as \"SOFTWARE\"), its authors, partners, and associates (collectively \"ASSOSIATES\") do not condone piracy. This SOFTWARE is an open project, distributed in the hope that it will be useful, while all ASSOSIATES expressly disclaim any implied warranty of merchantability, WARRANTY OF FITNESS FOR A PARTICULAR PURPOSE and WARRANTY OF NON-INFRIGEMENT.\n\nDo you accept this binding agreement (1/3)?");
+			sprintf(string1x, "multiMAN (referred hereafter as \"SOFTWARE\"), its authors, partners, and associates (collectively \"ASSOCIATES\") do not condone piracy. This SOFTWARE is an open project, distributed in the hope that it will be useful, while all ASSOCIATES expressly disclaim any implied warranty of merchantability, WARRANTY OF FITNESS FOR A PARTICULAR PURPOSE and WARRANTY OF NON-INFRINGEMENT.\n\nDo you accept this binding agreement (1/3)?");
 			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string1x, dialog_fun1, (void*)0x0000aaaa, NULL );	wait_dialog_simple(); if(dialog_ret!=1) exit(0);
 
-			sprintf(string2x, "The SOFTWARE shall be used for educational and testing purposes only, and while it may allow the user to create test copies of legitimately acquired and/or owned content, it is required that such user actions shall comply with local, federal and country legislation.\n\nFurthermore, the ASSOSIATES shall assume NO responsibility, legal or otherwise implied, for any misuse of, or for any loss that may occur while using the SOFTWARE.\n\nDo you accept this binding agreement (2/3)?");
+			sprintf(string2x, "The SOFTWARE shall be used for educational and testing purposes only, and while it may allow the user to create test copies of legitimately acquired and/or owned content, it is required that such user actions shall comply with local, federal and country legislation.\n\nFurthermore, the ASSOCIATES shall assume NO responsibility, legal or otherwise implied, for any misuse of, or for any loss that may occur while using the SOFTWARE.\n\nDo you accept this binding agreement (2/3)?");
 			dialog_ret=0; cellMsgDialogOpen2( type_dialog_yes_no, string2x, dialog_fun1, (void*)0x0000aaaa, NULL ); wait_dialog_simple();	if(dialog_ret!=1) exit(0);
 
 			sprintf(string3x, "You are solely responsible for complying with the applicable laws in your country and you must cease using this software should your actions during multiMAN operation lead to or may lead to infringement or violation of the rights of the respective content copyright owners.\n\nThis SOFTWARE is not licensed, approved or endorsed by \"Sony Computer Entertainment, Inc.\" (SCEI), SNEI, SEN or any other party.\n\nDo you understand and accept this binding agreement?");
@@ -23048,7 +23062,10 @@ int main(int argc, char **argv)
 
 	if(background_type)
 	{
-		sprintf(filename, "%s/wave.divx", app_usrdir);
+		if(background_type==1)
+			sprintf(filename, "%s/wave.divx", app_usrdir);
+		else
+			sprintf(filename, "%s/wave%i.divx", app_usrdir, background_type);
 		if(exist(filename)) main_video( (char*) filename); else background_type=0;
 	}
 	else
@@ -26112,9 +26129,16 @@ xmb_pin_ok2:
 
 			if(!strcmp(xmb[2].member[xmb[2].first].optionini, "background_type"))
 			{
+				if(background_type && is_bg_video)
+				{
+					restart_multiman();
+				}
 				if(background_type && !is_bg_video)
 				{
-					sprintf(filename, "%s/wave.divx", app_usrdir);
+					if(background_type==1)
+						sprintf(filename, "%s/wave.divx", app_usrdir);
+					else
+						sprintf(filename, "%s/wave%i.divx", app_usrdir, background_type);
 					if(exist(filename)) main_video( (char*) filename); else background_type=0;
 				}
 				else
@@ -28153,7 +28177,7 @@ void flip(void)
 	//if(clock_c<16683) sys_timer_usleep( 16683-clock_c ); //slow flip down to 59.94Hz (same as using VSYNC)
 	//sprintf(status_info, "Clock = %5ins | FPS: %6.2f", clock_c, 1000000.f/(float)clock_c);
 	cellDbgFontPrintf( 0.99f, 0.98f, 0.5f,0x10101010, payloadT);
-	if(status_info[0] && debug_mode)
+	if(debug_mode)
 	//	sprintf(status_info, "Video status = %i", video_status);
 		cellDbgFontPrintf( 0.01f, 0.98f, 0.5f,0x60606080, status_info);
 	cellDbgFontDrawGcm();

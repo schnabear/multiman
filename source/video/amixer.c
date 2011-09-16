@@ -26,9 +26,9 @@ int amixerSetParam(SAmixerCtlInfo* pAmixerCtlInfo,
 	case 2:
 	case 6:
 	case 8:
-		audioConfig.encoder   = CELL_AUDIO_OUT_CODING_TYPE_LPCM;
-		audioConfig.channel   = chNum;
-		audioConfig.downMixer = CELL_AUDIO_OUT_DOWNMIXER_NONE;
+		audioConfig.encoder   = CELL_AUDIO_OUT_CODING_TYPE_AC3;//CELL_AUDIO_OUT_CODING_TYPE_LPCM;
+		audioConfig.channel   = 6;//chNum;
+		audioConfig.downMixer = CELL_AUDIO_OUT_DOWNMIXER_TYPE_B;//CELL_AUDIO_OUT_DOWNMIXER_NONE;
 		break;
 	default:
 		return RET_CODE_ERR_ARG;
@@ -36,8 +36,12 @@ int amixerSetParam(SAmixerCtlInfo* pAmixerCtlInfo,
 
 	ret = cellAudioOutConfigure(CELL_AUDIO_OUT_PRIMARY, &audioConfig, NULL, 0);
 	if(ret < CELL_OK){
-		return ret;
+		audioConfig.encoder   = CELL_AUDIO_OUT_CODING_TYPE_LPCM;
+		audioConfig.channel   = chNum;
+		audioConfig.downMixer = CELL_AUDIO_OUT_DOWNMIXER_NONE;
+		ret = cellAudioOutConfigure(CELL_AUDIO_OUT_PRIMARY, &audioConfig, NULL, 0);
 	}
+	if(ret < CELL_OK) return ret;
 
 	return CELL_OK;
 }
