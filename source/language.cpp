@@ -682,6 +682,13 @@ static unsigned char s_pXC2_515	[]	= "Changes background type for XMMB and Cover
 static unsigned char s_pXC2_516	[]	= "Image";
 static unsigned char s_pXC2_517	[]	= "Video";
 
+static unsigned char s_pXC1_RSPS3	[]	= "Restart System";
+static unsigned char s_pXC1_RSPS32	[]	= "Close multiMAN and restart your PLAYSTATION\xC2\xAE\x33 System";
+static unsigned char s_pXC1_SHUT	[]	= "Turn Off System";
+static unsigned char s_pXC1_SHUT2	[]	= "Shutdown your PLAYSTATION\xC2\xAE\x33 System";
+
+static unsigned char s_pXC2_522	[]	= "System Auto-Off";
+static unsigned char s_pXC2_523	[]	= "Sets whether to enable or disable the automatic turn-off feature.";
 
 static MMString s_MMStringDef[] = {
  { sizeof ( s_pDebugMode  ) - 1, s_pDebugMode	}, //0
@@ -1279,7 +1286,15 @@ static MMString s_MMStringDef[] = {
   { sizeof ( s_pXC2_514		) - 1, s_pXC2_514		}, //514
   { sizeof ( s_pXC2_515		) - 1, s_pXC2_515		},
   { sizeof ( s_pXC2_516		) - 1, s_pXC2_516		},
-  { sizeof ( s_pXC2_517		) - 1, s_pXC2_517		}  //517
+  { sizeof ( s_pXC2_517		) - 1, s_pXC2_517		}, //517
+
+  { sizeof ( s_pXC1_RSPS3	) - 1, s_pXC1_RSPS3		},
+  { sizeof ( s_pXC1_RSPS32	) - 1, s_pXC1_RSPS32	},
+  { sizeof ( s_pXC1_SHUT	) - 1, s_pXC1_SHUT		},
+  { sizeof ( s_pXC1_SHUT2	) - 1, s_pXC1_SHUT2		}, //521
+
+  { sizeof ( s_pXC2_522		) - 1, s_pXC2_522		},
+  { sizeof ( s_pXC2_523		) - 1, s_pXC2_523		}  //523
 };
 
 

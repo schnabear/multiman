@@ -631,7 +631,15 @@ extern MMString g_MMString [];
 #define	STR_XC2_BG2			MM_STRING( 516 )
 #define	STR_XC2_BG3			MM_STRING( 517 )
 
-#define	STR_LAST_ID 518
+#define	STR_XC1_RESTART_PS3	MM_STRING( 518 )
+#define	STR_XC1_RESTART_PS31	MM_STRING( 519 )
+#define	STR_XC1_SHUTDOWN	MM_STRING( 520 )
+#define	STR_XC1_SHUTDOWN1	MM_STRING( 521 )
+
+#define	STR_XC2_SAO			MM_STRING( 522 )
+#define	STR_XC2_SAO1		MM_STRING( 523 )
+
+#define	STR_LAST_ID 524
 
 // ***********************************************************************************
 

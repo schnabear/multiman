@@ -83,16 +83,14 @@
 #include "language.h"
 #include "ftp.h"
 #include "openftp/ftp_filesystem.h"
-
-#define WITH_BG_VIDEO
-
-#ifdef WITH_BG_VIDEO
 #include "video.h"
-#endif
 
 #define FB(x) ((x)*1920*1080*4)	// 1 video frame buffer
 #define MB(x) ((x)*1024*1024)	// 1 MB
 #define KB(x) ((x)*1024)		// 1 KB
+
+#define SYSCALL_PEEK	6
+#define SYSCALL_POKE	7
 
 SYS_PROCESS_PARAM(1200, 0x100000)
 
@@ -268,6 +266,7 @@ void enable_sc36();
 
 void write_last_state();
 void save_options();
+void shutdown_system(u8 mode);
 
 void ClearSurface();
 
@@ -655,6 +654,19 @@ char usb_home_3[128]=" ";
 char usb_home_4[128]=" ";
 char usb_home_5[128]=" ";
 
+// ISO/CUE formats
+char iso_bdv[64]="/dev_hdd0/BDISO";		// Blu-ray iso images
+char iso_dvd[64]="/dev_hdd0/DVDISO";	// DVD Video iso images
+char iso_ps3[64]="/dev_hdd0/PS3ISO";	// PS3 iso images
+char iso_psx[64]="/dev_hdd0/PSXISO";	// PS1 iso/cue
+char iso_ps2[64]="/dev_hdd0/PS2ISO";	// PS2 iso/cue
+
+char iso_bdv_usb[16]="BDISO";	// Blu-ray iso images
+char iso_dvd_usb[16]="DVDISO";	// DVD Video iso images
+char iso_ps3_usb[16]="PS3ISO";	// PS3 iso images
+char iso_psx_usb[16]="PSXISO";	// PS1 iso/cue
+char iso_ps2_usb[16]="PS2ISO";	// PS2 iso/cue
+
 static char cache_dir[128]=" ";
 char covers_retro[128]=" ";
 char covers_dir[128]=" ";
@@ -671,6 +683,7 @@ int time_format=1; // 0=12h 1=24h
 int progress_bar=1;
 int dim_setting=5; //5 seconds to dim titles
 int ss_timeout=2;
+int sao_timeout=0;
 int ss_timer=0;
 int egg=0;
 int ss_timer_last=0;
@@ -791,10 +804,17 @@ char mouseInfo[128];//char mouseInfo2[128];
 	u8 *xmb_icon_quit	=	NULL;
 	u8 *xmb_icon_star	=	NULL;
 	u8 *xmb_icon_star_small = NULL;
+
 	u8 *xmb_icon_retro	=	NULL;
 	u8 *xmb_icon_ftp	=	NULL;
 	u8 *xmb_icon_folder	=	NULL;
 	u8 *xmb_icon_usb	=	NULL;
+	u8 *xmb_icon_psx	=	NULL;
+	u8 *xmb_icon_ps2	=	NULL;
+	u8 *xmb_icon_psp	=	NULL;
+	u8 *xmb_icon_dvd	=	NULL;
+	u8 *xmb_icon_bdv	=	NULL;
+
 	u8 *xmb_icon_desk	=	NULL;
 	u8 *xmb_icon_hdd	=	NULL;
 	u8 *xmb_icon_blu	=	NULL;
@@ -809,6 +829,7 @@ char mouseInfo[128];//char mouseInfo2[128];
 	u8 *xmb_icon_showtime	=	NULL;
 	u8 *xmb_icon_theme		=	NULL;
 	u8 *xmb_icon_arrow	=	NULL;
+
 
 
 FILE *fpV;
@@ -1046,7 +1067,7 @@ using namespace cell::Gcm;
 #define IS_3D			(15<<16)
 
 static char genre		[16] [48];
-static char retro_groups[ 6] [32];
+static char retro_groups[ 9] [32];
 static char xmb_columns [10] [32];
 static char alpha_groups[16] [32] = { "All", "A-B", "C-D", "E-F", "G-H", "I-J", "K-L", "M-N", "O-P", "Q-R", "S-T", "U-V", "W-X", "Y-Z", "Other", "---" };
 
@@ -1183,9 +1204,9 @@ xmbopt __attribute__((aligned(8)));
 typedef struct __xmbmem
 {
 	u8		type;	// 0 Device/Folder
-					// 1 PS3 Game
-					// 2 AVCHD/Blu-ray Video (from Game List)
-					// 3 Showtime Video
+					// 1 PS3 Game				(structure)
+					// 2 AVCHD/Blu-ray Video	(structure) (from Game List)
+					// 3 Showtime Video			(file)
 					// 4 Music
 					// 5 Image
 					// 6 Function
@@ -1195,6 +1216,12 @@ typedef struct __xmbmem
 					// 10 VBA ROM
 					// 11 GEN ROM
 					// 12 FBA ROM
+					// 13 PSX Disc Image
+					// 14 PS2 Disc Image
+					// 15 PSP Game
+					// 32 PS3 ISO
+					// 33 DVD ISO
+					// 34 BD ISO
 
 	u8		status; // 0 Pending, 1 Loading, 2 Loaded
 	bool	is_checked;
@@ -1541,6 +1568,9 @@ void load_localization(int id, bool force)
 	for(int n=0; n<16; n++) sprintf(genre[n],		  "%s", (const char*)MM_STRING(210+n));
 	for(int n=0; n< 6; n++) sprintf(retro_groups[n],  "%s", (const char*)MM_STRING(226+n));
 							sprintf(alpha_groups[14], "%s", (const char*)STR_OTHER);
+							sprintf(retro_groups[6],  "%s", (const char*)"PSX");
+							sprintf(retro_groups[7],  "%s",	(const char*)"PS2");
+							sprintf(retro_groups[8],  "%s", (const char*)"PSP");
 
 							sprintf(xmb_columns[0], "Empty");
 							sprintf(xmb_columns[1], "multiMAN");
@@ -2077,11 +2107,16 @@ void screen_saver()
 
 
 		while(1) {
-			ss_timer=0;
-			ss_timer_last=time(NULL);
 
 			ClearSurface();
+			if(cFrame!=NULL && is_bg_video && use_drops)
+			{
+				set_texture( cFrame, 1920, 1080);
+				display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
+			}
+
 			if(use_drops) set_texture(text_DROPS, 256, 256);
+
 			for(int n=0; n<MAX_STARS; n++)
 			{
 				int move_star= rndv(10);
@@ -2102,9 +2137,6 @@ void screen_saver()
 						stars[n].bri=rndv(200);
 						stars[n].size=rndv(XMB_SPARK_SIZE)+1;
 					}
-
-
-
 				}
 				else
 				{
@@ -2132,11 +2164,12 @@ void screen_saver()
 
 			}
 
-			if(cFrame!=NULL && is_bg_video)
+			if(cFrame!=NULL && is_bg_video && !use_drops)
 			{
 				set_texture( cFrame, 1920, 1080);
 				display_img(0, 0, 1920, 1080, 1920, 1080, 0.9f, 1920, 1080);
 			}
+
 			setRenderColor();
 			flip();
 			sys_timer_usleep(3336);
@@ -2147,7 +2180,10 @@ void screen_saver()
 			if (( (new_pad || old_pad) && initial_skip>150) || www_running!=www_running_old) {// || c_opacity_delta==16
 				new_pad=0;  break;
 				}
+			if(ss_timer>=(sao_timeout*3600) && sao_timeout) shutdown_system(0);
 		}
+		ss_timer=0;
+		ss_timer_last=time(NULL);
 		state_draw=1; c_opacity=0xff; c_opacity2=0xff;
 }
 
@@ -5886,13 +5922,13 @@ static void poke_sc36_path( const char *path)
 void pokeq( uint64_t addr, uint64_t val)
 {
 	if(c_firmware!=3.55f && c_firmware!=3.41f && c_firmware!=3.15f) return;
-	system_call_2(7, addr, val);
+	system_call_2(SYSCALL_POKE, addr, val);
 }
 
 uint64_t peekq(uint64_t addr)
 {
 	if(c_firmware!=3.55f && c_firmware!=3.41f && c_firmware!=3.15f) return 0;
-	system_call_1(6, addr);
+	system_call_1(SYSCALL_PEEK, addr);
 	return_to_user_prog(uint64_t);
 }
 
@@ -16373,6 +16409,12 @@ if ( fp != NULL )
 			if(ss_timeout>10) ss_timeout=0;
 		}
 
+		if(strstr (line,"sao_timeout=")!=NULL) {
+			int len = strlen(line)-2; for(i = 12; i < len; i++) {dimS[i-12] = line[i];} dimS[i-12]=0;
+			sao_timeout=strtoul(dimS, NULL, 10);
+			if(sao_timeout>4) sao_timeout=0;
+		}
+
 		if(strstr (line,"user_font=")!=NULL) {
 			int len = strlen(line)-2; for(i = 10; i < len; i++) {dimS[i-10] = line[i];} dimS[i-10]=0;
 			user_font=strtoul(dimS, NULL, 10);
@@ -17766,7 +17808,7 @@ void draw_xmb_title(u8 *buffer, xmbmem *member, int cn, u32 col1, u32 col2, u8 _
 		if(_xmb_col==2 && member[cn].option_size) //settings
 			print_label_ex( 0.99f, 0.2f, 0.48f, col1, member[cn].option[member[cn].option_selected].label, 1.04f, 0.0f, 0, 3.0f, 23.0f, 2);
 
-		if(!((_xmb_col>3 && _xmb_col<8 && member[cn].type<6) || (_xmb_col==8 && member[cn].type>7) || browse_column_active))
+		if(!((_xmb_col>3 && _xmb_col<8 && (member[cn].type<6 || member[cn].type==32 || member[cn].type==33 || member[cn].type==34)) || (_xmb_col==8 && member[cn].type>7) || browse_column_active))
 			print_label_ex( 0.000f, 0.52f, 0.87f, col2, member[cn].subname, 1.02f, 0.0f, 0, (1920.f/(float)XMB_TEXT_WIDTH), 15.5f, 0); //3.0f
 
 		//flush_ttf(buffer, XMB_TEXT_WIDTH, XMB_TEXT_HEIGHT);
@@ -17781,7 +17823,7 @@ void draw_xmb_title(u8 *buffer, xmbmem *member, int cn, u32 col1, u32 col2, u8 _
 
 		u8 *xmb_dev_icon1=xmb_icon_dev;
 		u8 *xmb_dev_icon2=xmb_icon_dev;
-		if( (_xmb_col>3 && _xmb_col<8 && member[cn].type<6) || (_xmb_col==8 && member[cn].type>7 && member[cn].type<13))
+		if( (_xmb_col>3 && _xmb_col<8 && (member[cn].type<6 || member[cn].type==32 || member[cn].type==33 || member[cn].type==34)) || (_xmb_col==8 && member[cn].type>7 && member[cn].type<15))
 		{
 			if(_xmb_col==6 || _xmb_col==7) xmb_dev_icon1=xmb_icon_dev;
 			else if(_xmb_col==5) xmb_dev_icon1=xmb_icon_dev+(1*8192);
@@ -17808,9 +17850,9 @@ void draw_xmb_title(u8 *buffer, xmbmem *member, int cn, u32 col1, u32 col2, u8 _
 			{
 				if(!strcmp(member[cn].subname, "AVCHD"))
 					{ put_texture_with_alpha_gen( buffer, xmb_icon_dev+(10*8192), 64, 32, 64, XMB_TEXT_WIDTH, nip, XMB_TEXT_HEIGHT-32); nip+=64; }
-				else if(!strcmp(member[cn].subname, "BDMV"))
+				else if(!strcmp(member[cn].subname, "BDMV") || member[cn].type==34)
 					{ put_texture_with_alpha_gen( buffer, xmb_icon_dev+(11*8192), 64, 32, 64, XMB_TEXT_WIDTH, nip, XMB_TEXT_HEIGHT-32); nip+=64; }
-				else if(!strcmp(member[cn].subname, "DVD"))
+				else if(!strcmp(member[cn].subname, "DVD") || member[cn].type==33)
 					{ put_texture_with_alpha_gen( buffer, xmb_icon_dev+(12*8192), 64, 32, 64, XMB_TEXT_WIDTH, nip, XMB_TEXT_HEIGHT-32); nip+=64; }
 			}
 			if(member[cn].type!=0)
@@ -17947,8 +17989,11 @@ void free_all_buffers()
 
 	for(n=((xmb[6].member[1].icon==xmb_icon_blu) ? 2 : 1); n<xmb[6].size; n++)
 	{
-		xmb[6].member[n].icon_buf=-1;
-		xmb[6].member[n].status=0;
+		if(xmb[6].member[n].icon!=xmb_icon_blu)
+		{
+			xmb[6].member[n].icon_buf=-1;
+			xmb[6].member[n].status=0;
+		}
 	}
 
 	for(n=0; n<xmb[7].size; n++)
@@ -17959,7 +18004,10 @@ void free_all_buffers()
 
 	for(n=1; n<xmb[8].size; n++)
 	{
-		if(xmb[8].member[n].icon!=xmb_icon_usb && xmb[8].member[n].icon!=xmb_icon_folder)//xmb[8].member[n].icon!=xmb[0].data &&
+		if(xmb[8].member[n].icon!=xmb_icon_usb &&
+			xmb[8].member[n].icon!=xmb_icon_folder &&
+			xmb[8].member[n].icon!=xmb_icon_psx &&
+			xmb[8].member[n].icon!=xmb_icon_ps2)
 		{
 			xmb[8].member[n].icon_buf=-1;
 			xmb[8].member[n].status=0;
@@ -17970,7 +18018,12 @@ void free_all_buffers()
 
 	for(n=0; n<xmb[5].size; n++)
 	{
-		if(xmb[5].member[n].icon!=xmb_icon_film && xmb[5].member[n].icon!=xmb_icon_showtime && xmb[5].member[n].icon!=xmb_icon_folder && xmb[5].member[n].icon!=xmb_icon_usb)
+		if(xmb[5].member[n].icon!=xmb_icon_film &&
+			xmb[5].member[n].icon!=xmb_icon_showtime &&
+			xmb[5].member[n].icon!=xmb_icon_folder &&
+			xmb[5].member[n].icon!=xmb_icon_usb &&
+			xmb[5].member[n].icon!=xmb_icon_dvd &&
+			xmb[5].member[n].icon!=xmb_icon_bdv)
 		{
 			xmb[5].member[n].icon_buf=-1;
 			xmb[5].member[n].status=0;
@@ -19603,6 +19656,9 @@ static void add_video_column_thread_entry( uint64_t arg )
 		if(!exist(filename)) mkdir(filename, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
 		else del_temp(filename);
 
+		ps3_home_scan_bare(iso_dvd, pane, &max_dir);
+		ps3_home_scan_bare(iso_bdv, pane, &max_dir);
+
 		ps3_home_scan_bare((char*)"/dev_hdd0/video", pane, &max_dir);
 		ps3_home_scan_bare((char*)"/dev_hdd0/VIDEO", pane, &max_dir);
 		ps3_home_scan_bare((char*)"/dev_sd/VIDEO", pane, &max_dir);
@@ -19611,11 +19667,20 @@ static void add_video_column_thread_entry( uint64_t arg )
 		ps3_home_scan_bare((char*)"/dev_cf/VIDEO", pane, &max_dir);
 		for(int ret_f=0; ret_f<9; ret_f++)
 		{
+			sprintf(linkfile, "/dev_usb00%i/%s", ret_f, iso_dvd_usb);
+			ps3_home_scan_bare(linkfile, pane, &max_dir);
+			sprintf(linkfile, "/dev_usb00%i/%s", ret_f, iso_bdv_usb);
+			ps3_home_scan_bare(linkfile, pane, &max_dir);
+
 			sprintf(linkfile, "/dev_usb00%i/VIDEO", ret_f);
 			ps3_home_scan_bare(linkfile, pane, &max_dir);
 		}
 		for(int ret_f=0; ret_f<max_dir; ret_f++)
-			if(is_video(pane[ret_f].name))
+			if(is_video(pane[ret_f].name) || (
+				(strstr(pane[ret_f].path, iso_dvd_usb)!=NULL || strstr(pane[ret_f].path, iso_bdv_usb)!=NULL)
+				&& (strstr(pane[ret_f].name, ".iso")!=NULL || strstr(pane[ret_f].name, ".ISO")!=NULL)
+				)
+			)
 			{
 				if(xmb[5].size>=MAX_XMB_MEMBERS) break;
 
@@ -19644,12 +19709,27 @@ static void add_video_column_thread_entry( uint64_t arg )
 
 thumb_ok:
 				if(strlen(imgfile2)>sizeof(xmb[5].member[0].icon_path)-1) goto thumb_not_ok;
+
+				if(strstr(linkfile, iso_dvd_usb)!=NULL)
+					add_xmb_member(xmb[5].member, &xmb[5].size, pane[ret_f].name, (char*)"DVD ISO",
+					/*type*/33, /*status*/0, /*game_id*/-1, /*icon*/xmb_icon_dvd, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)imgfile2, 0, 0);
+				else if(strstr(linkfile, iso_bdv_usb)!=NULL)
+					add_xmb_member(xmb[5].member, &xmb[5].size, pane[ret_f].name, (char*)"BD ISO",
+					/*type*/34, /*status*/0, /*game_id*/-1, /*icon*/xmb_icon_bdv, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)imgfile2, 0, 0);
+				else
 					add_xmb_member(xmb[5].member, &xmb[5].size, pane[ret_f].name, (strstr(linkfile, "/dev_hdd0")==NULL ? (char*) "Video" : (char*)"HDD Video"),
 					/*type*/3, /*status*/0, /*game_id*/-1, /*icon*/xmb_icon_film, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)imgfile2, 0, 0);
 
 				goto thumb_cont;
 
 thumb_not_ok:
+				if(strstr(linkfile, iso_dvd_usb)!=NULL)
+					add_xmb_member(xmb[5].member, &xmb[5].size, pane[ret_f].name, (char*)"DVD ISO",
+					/*type*/33, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_dvd, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
+				else if(strstr(linkfile, iso_bdv_usb)!=NULL)
+					add_xmb_member(xmb[5].member, &xmb[5].size, pane[ret_f].name, (char*)"BD ISO",
+					/*type*/34, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_bdv, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
+				else
 					add_xmb_member(xmb[5].member, &xmb[5].size, pane[ret_f].name, (strstr(linkfile, "/dev_hdd0")==NULL ? (char*) "Video" : (char*)"HDD Video"),
 					/*type*/3, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_film, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
 
@@ -19885,6 +19965,66 @@ static void add_retro_column_thread_entry( uint64_t arg )
 
 		xmb[8].init=1;
 		xmb[8].group=0;
+
+		ps3_home_scan_bare(iso_psx, pane, &max_dir);
+		ps3_home_scan_bare(iso_ps2, pane, &max_dir);
+
+		for(int ret_f=0; ret_f<9; ret_f++)
+		{
+			sprintf(linkfile, "/dev_usb00%i/%s", ret_f, iso_psx_usb);
+			ps3_home_scan_bare(linkfile, pane, &max_dir);
+			sprintf(linkfile, "/dev_usb00%i/%s", ret_f, iso_ps2_usb);
+			ps3_home_scan_bare(linkfile, pane, &max_dir);
+		}
+
+		for(int ret_f=0; ret_f<max_dir; ret_f++)
+		{
+			sprintf(linkfile, "%s/%s", pane[ret_f].path, pane[ret_f].name);
+			if(strstr(pane[ret_f].name, ".iso")!=NULL || strstr(pane[ret_f].name, ".ISO")!=NULL ||
+				strstr(pane[ret_f].name, ".cue")!=NULL || strstr(pane[ret_f].name, ".CUE")!=NULL)
+			{
+				if(xmb[8].size>=MAX_XMB_MEMBERS-1) break;
+				if(pane[ret_f].name[strlen(pane[ret_f].name)-4]=='.') pane[ret_f].name[strlen(pane[ret_f].name)-4]=0;
+
+				sprintf(imgfile, "%s", linkfile);
+				if(strlen(linkfile)>(sizeof(xmb[8].member[0].file_path)-1)) continue;
+				if(imgfile[strlen(imgfile)-4]=='.') imgfile[strlen(imgfile)-4]=0;
+
+				sprintf(imgfile2, "%s.jpg", imgfile); if(exist(imgfile2)) goto thumb_ok_iso;
+				sprintf(imgfile2, "%s.png", imgfile); if(!exist(imgfile2)) goto thumb_not_ok_iso;
+
+thumb_ok_iso:
+				if(strstr(linkfile, iso_psx_usb)!=NULL)
+					add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"PSX",
+					/*type*/13, /*status*/0, /*game_id*/-1, /*icon*/xmb_icon_psx, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)imgfile2, 0, 0);
+				else if(strstr(linkfile, iso_ps2_usb)!=NULL)
+					add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"PS2",
+					/*type*/14, /*status*/0, /*game_id*/-1, /*icon*/xmb_icon_ps2, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)imgfile2, 0, 0);
+				else continue;
+
+				goto thumb_cont_iso;
+
+thumb_not_ok_iso:
+				if(strstr(linkfile, iso_psx_usb)!=NULL)
+				add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"PSX",
+				/*type*/13, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_psx, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
+				else if(strstr(linkfile, iso_ps2_usb)!=NULL)
+				add_xmb_member(xmb[8].member, &xmb[8].size, pane[ret_f].name, (char*)"PS2",
+				/*type*/14, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_ps2, 128, 128, /*f_path*/(char*)linkfile, /*i_path*/(char*)"/", 0, 0);
+				else continue;
+
+thumb_cont_iso:
+				if(!(xmb[8].size & 0x0f)) sort_xmb_col(xmb[8].member, xmb[8].size, 1+ext_devs);
+				if(xmb[8].size>=MAX_XMB_MEMBERS-1) break;
+
+			}
+		}
+		sort_xmb_col(xmb[8].member, xmb[8].size, 1+ext_devs);
+
+//genp
+		max_dir=0;
+
+
 
 		ps3_home_scan_bare(snes_roms, pane, &max_dir);
 		if(strcmp(snes_roms, "/dev_hdd0/ROMS/snes"))
@@ -20297,6 +20437,7 @@ void save_options()
 		fprintf(fpA, "progress_bar=%i\r\n", progress_bar);
 		fprintf(fpA, "dim_titles=%i\r\n", dim_setting);
 		fprintf(fpA, "ss_timeout=%i\r\n", ss_timeout);
+		fprintf(fpA, "sao_timeout=%i\r\n", sao_timeout);
 		fprintf(fpA, "deadzone_x=%i\r\n", xDZ);
 		fprintf(fpA, "deadzone_y=%i\r\n", yDZ);
 
@@ -20368,6 +20509,8 @@ void parse_settings()
 		else if(!strcmp(oini, "progress_bar"))		progress_bar	=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "dim_titles"))		dim_setting		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "ss_timeout"))		ss_timeout		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+		else if(!strcmp(oini, "sao_timeout"))		sao_timeout		=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
+
 		else if(!strcmp(oini, "deadzone_x"))		xDZ				=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 		else if(!strcmp(oini, "deadzone_y"))		yDZ				=(int)strtol(xmb[2].member[n].option[xmb[2].member[n].option_selected].value, NULL, 10);
 
@@ -20715,6 +20858,15 @@ void add_settings_column()
 		xmb[2].member[xmb[2].size-1].option_selected=ss_timeout;
 		xmb[2].member[xmb[2].size-1].icon=xmb_icon_ss;
 
+		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_SAO, (char*)STR_XC2_SAO1,	(char*)"sao_timeout");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)STR_XC2_DISABLE,						(char*)"0");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"60 ",  (const char*)STR_XC2_MIN), (char*)"1");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"120 ", (const char*)STR_XC2_MIN), (char*)"2");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"240 ", (const char*)STR_XC2_MIN), (char*)"3");
+		add_xmb_suboption(xmb[2].member[xmb[2].size-1].option, &xmb[2].member[xmb[2].size-1].option_size, 0, (char*)string_cat((char*)"360 ", (const char*)STR_XC2_MIN), (char*)"4");
+		xmb[2].member[xmb[2].size-1].option_selected=sao_timeout;
+		xmb[2].member[xmb[2].size-1].icon=xmb_icon_ss;
+
 	if(settings_advanced)
 	{
 		add_xmb_option(xmb[2].member, &xmb[2].size, (char*)STR_XC2_SENSOR, (char*)STR_XC2_SENSOR1,	(char*)"use_pad_sensor");
@@ -20826,13 +20978,19 @@ void add_home_column()
 				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb[1].data, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
 		add_xmb_member(xmb[1].member, &xmb[1].size, (char*)STR_XC1_QUIT, (char*)STR_XC1_QUIT1,
 				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb_icon_quit, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
+
+		add_xmb_member(xmb[1].member, &xmb[1].size, (char*)STR_XC1_RESTART_PS3, (char*)STR_XC1_RESTART_PS31,
+				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb[1].data, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
+		add_xmb_member(xmb[1].member, &xmb[1].size, (char*)STR_XC1_SHUTDOWN, (char*)STR_XC1_SHUTDOWN1,
+				/*type*/6, /*status*/2, /*game_id*/-1, /*icon*/xmb[1].data, 128, 128, /*f_path*/(char*)"/", /*i_path*/(char*)"/", 0, 0);
+
 }
 
 void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 {
 		int toff=0;
 		int first_sort=0;
-		char icon_path[512];
+		char icon_path[512], linkfile[512];
 		u8	g_status;
 		char t_ip[512];
 		u8 *g_icon=xmb[0].data;
@@ -20896,6 +21054,34 @@ void add_game_column(t_menu_list *list, int max, int sel, bool force_covers)
 
 			xmb[7].first=0;
 			xmb[7].size=0;
+
+			t_dir_pane_bare *pane =  (t_dir_pane_bare *) memalign(16, sizeof(t_dir_pane_bare)*MAX_PANE_SIZE_BARE);
+			if(pane!=NULL)
+			{
+				int max_dir=0;
+
+				ps3_home_scan_bare(iso_ps3, pane, &max_dir);
+
+				for(int ret_f=0; ret_f<9; ret_f++)
+				{
+					sprintf(linkfile, "/dev_usb00%i/%s", ret_f, iso_ps3_usb);
+					ps3_home_scan_bare(linkfile, pane, &max_dir);
+				}
+				for(int ret_f=0; ret_f<max_dir; ret_f++)
+				{
+					if(strstr(pane[ret_f].name, ".iso")!=NULL || strstr(pane[ret_f].name, ".ISO")!=NULL)
+					{
+						snprintf(linkfile, 511, "%s/%s", pane[ret_f].path, pane[ret_f].name);
+						if(strlen(linkfile)>(sizeof(xmb[5].member[0].file_path)-1)) continue;
+						if(pane[ret_f].name[strlen(pane[ret_f].name)-4]=='.') pane[ret_f].name[strlen(pane[ret_f].name)-4]=0;
+						add_xmb_member(xmb[6].member, &xmb[6].size, pane[ret_f].name, (char*)"PS3 ISO",
+							/*type*/32, /*status*/2, /*game_id*/0, /*icon*/xmb_icon_blu, 128, 128, /*f_path*/linkfile, /*i_path*/(char*)"/", 0, 0);
+					}
+
+				}
+				free(pane);
+			}
+
 		}
 
 		if(!xmb[6].init || !xmb[7].init) //!xmb[5].init  ||
@@ -22223,6 +22409,17 @@ void restart_multiman()
 	}
 }
 
+void shutdown_system(u8 mode) // X0-off X1-reboot, X=0 no prompt, X=1 prompt
+{
+	if( !(mode&0x10) || (mode&0x10 && net_used_ignore()))
+	{
+		unload_modules();
+		if(!(mode&1)) {system_call_4(379,0x1100,0,0,0);}
+		if(mode&1) {system_call_4(379,0x1200,0,0,0);} // 0x1100/0x100 = turn off,0x1200/0x200=reboot
+		exit(0);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	cellSysutilRegisterCallback( 0, sysutil_callback, NULL );
@@ -22371,7 +22568,12 @@ int main(int argc, char **argv)
 	xmb_icon_ftp	=	text_FMS+(25*65536);
 	xmb_icon_folder	=	text_FMS+(26*65536);
 	xmb_icon_usb	=	text_FMS+(27*65536);
-//	text_???		=	text_FMS+(28*65536); //
+	xmb_icon_psx	=	text_FMS+(28*65536);
+	xmb_icon_ps2	=	text_FMS+(29*65536);
+	xmb_icon_psp	=	text_FMS+(30*65536);
+	xmb_icon_dvd	=	text_FMS+(31*65536);
+	xmb_icon_bdv	=	text_FMS+(32*65536);
+//	text_???		=	text_FMS+(33*65536); //
 //	text_???LAST	=	text_FMS+(47*65536); //XMB2.PNG end (24 icons 128x128 = 128x3072)
 //====================================================================
 	xmb_icon_star_small	=	text_FMS+(48*65536);//+(16384*0)//64*64*4
@@ -22560,7 +22762,7 @@ int main(int argc, char **argv)
 			main_group&=0x0f;
 			if(c==8 && xmb[8].group)
 			{
-				if(main_group>5) main_group=0;
+				if(main_group>8) main_group=0;
 				if(main_group)
 				{
 					read_xmb_column_type(8, main_group+7, alpha_group);
@@ -24590,6 +24792,7 @@ from_fm:
 
 
 	    if (( (old_pad & BUTTON_L2) && (old_pad & BUTTON_R2)) || (ss_timer>=(ss_timeout*60) && ss_timeout) || www_running) screen_saver();
+		if(ss_timer>=(sao_timeout*3600) && sao_timeout) shutdown_system(0);
 
 
 	if(force_update_check==1) {check_for_update(); force_update_check=0;}
@@ -25351,6 +25554,20 @@ copy_from_bluray:
 
 	xmb0_icon=xmb_icon; if(browse_column_active) xmb0_icon=0;
 
+/*	if ( (new_pad & BUTTON_SQUARE) && (old_pad & BUTTON_SELECT))
+	{
+		new_pad=0;
+		shutdown_system(0x11);
+	}
+
+	if ( (new_pad & BUTTON_TRIANGLE) && (old_pad & BUTTON_SELECT))
+	{
+		new_pad=0;
+		shutdown_system(0x10);
+	}
+*/
+
+/*
 	if ( (new_pad & BUTTON_SQUARE) && (old_pad & BUTTON_SELECT))
 	{
 		new_pad=0;
@@ -25372,11 +25589,11 @@ copy_from_bluray:
 	if ( (new_pad & BUTTON_TRIANGLE) && (old_pad & BUTTON_SELECT) && cover_mode==8)
 	{
 		new_pad=0;
-		//if(!is_bg_video)
 		sprintf(filename, "%s/wave.divx", app_usrdir);
-		if(exist(filename)) main_video( (char*) filename);	//char ssssss[24]; sprintf(ssssss, "%i", ret);dialog_ret=0;	ret = cellMsgDialogOpen2( type_dialog_ok, ssssss, dialog_fun2, (void*)0x0000aaab, NULL );			wait_dialog();
+		if(exist(filename)) main_video( (char*) filename);
 	}
 #endif
+*/
 
 	// open side menu
 	if ( (new_pad & BUTTON_TRIANGLE) && cover_mode==8 && !xmb_slide &&
@@ -25957,6 +26174,8 @@ cancel_theme_exit:
 				}
 			}
 			if(xmb[1].first==8 && net_used_ignore()) {unload_modules(); exit(0);}
+			if(xmb[1].first==9) {shutdown_system(0x11); } //restart PS3
+			if(xmb[1].first==10) {shutdown_system(0x10);} // shutdown PS3
 		}
 
 		if(xmb_icon==2 && (xmb[2].member[xmb[2].first].option_size || xmb[2].first<3) ) //settings
@@ -27503,7 +27722,7 @@ skip_to_FM:
 
 		if(xmb_icon==8)
 		{
-			if(main_group>5) main_group=0;
+			if(main_group>8) main_group=0;
 			if(main_group)
 			{
 				read_xmb_column_type(8, main_group+7, alpha_group);
