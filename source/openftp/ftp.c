@@ -69,7 +69,7 @@ static void handleclient(u64 conn_s_p)
 	char buffer[2048];
 
 	srand(conn_s);
-	int p1 = (rand() % 251) + 4;
+	int p1 = (rand() % 96) + 32;
 	int p2 = rand() % 256;
 
 	union CellNetCtlInfo net_info;
@@ -233,6 +233,7 @@ static void handleclient(u64 conn_s_p)
 
 						while(lv2FsReadDir(fd, &entry, &read_e) == 0 && read_e > 0)
 						{
+							if(!strcmp(entry.d_name, "app_home") || !strcmp(entry.d_name, "host_root")) continue;
 							char filename[512];
 							absPath(filename, entry.d_name, cwd);
 
@@ -295,6 +296,7 @@ static void handleclient(u64 conn_s_p)
 
 						while(lv2FsReadDir(fd, &entry, &read_e) == 0 && read_e > 0)
 						{
+							if(!strcmp(entry.d_name, "app_home") || !strcmp(entry.d_name, "host_root")) continue;
 							char filename[512];
 							absPath(filename, entry.d_name, cwd);
 
@@ -647,6 +649,7 @@ static void handleclient(u64 conn_s_p)
 
 						while(lv2FsReadDir(fd, &entry, &read_e) == 0 && read_e > 0)
 						{
+							if(!strcmp(entry.d_name, "app_home") || !strcmp(entry.d_name, "host_root")) continue;
 							sprintf(buffer, "%s\r\n", entry.d_name);
 							ssend(data_s, buffer);
 						}
@@ -686,6 +689,7 @@ static void handleclient(u64 conn_s_p)
 
 					while(lv2FsReadDir(fd, &entry, &read_e) == 0 && read_e > 0)
 					{
+						if(!strcmp(entry.d_name, "app_home") || !strcmp(entry.d_name, "host_root")) continue;
 						char filename[512];
 						absPath(filename, entry.d_name, cwd);
 

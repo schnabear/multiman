@@ -639,7 +639,22 @@ extern MMString g_MMString [];
 #define	STR_XC2_SAO			MM_STRING( 522 )
 #define	STR_XC2_SAO1		MM_STRING( 523 )
 
-#define	STR_LAST_ID 524
+#define	STR_XC2_MED_EXP		MM_STRING( 524 )
+#define	STR_XC2_MED_EXP1	MM_STRING( 525 )
+
+#define	STR_ISO				MM_STRING( 526 )
+#define	STR_ISO1			MM_STRING( 527 )
+#define	STR_ISO2			MM_STRING( 528 )
+#define	STR_ISO3			MM_STRING( 529 )
+#define	STR_ISO4			MM_STRING( 530 )
+#define	STR_ISO5			MM_STRING( 531 )
+
+#define	STR_XC2_PSXPAL		MM_STRING( 532 )
+#define	STR_XC2_PSXPAL1		MM_STRING( 533 )
+#define	STR_XC2_PSXNTSC		MM_STRING( 534 )
+#define	STR_XC2_PSXNTSC1	MM_STRING( 535 )
+
+#define	STR_LAST_ID 536
 
 // ***********************************************************************************
 

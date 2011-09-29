@@ -56,7 +56,6 @@ typedef struct {
 
 u32 screen_width;
 u32 screen_height;
-//float screen_aspect;
 
 u32 color_pitch;
 u32 depth_pitch;
@@ -238,23 +237,12 @@ int initDisplay(void)
 	color_size  = color_pitch*screen_height;
 	depth_size  = depth_pitch*screen_height;
 
-/*	switch (videoState.displayMode.aspect)
-		{
-		case CELL_VIDEO_OUT_ASPECT_4_3:
-			screen_aspect=4.0f/3.0f;
-			break;
-		case CELL_VIDEO_OUT_ASPECT_16_9:
-			screen_aspect=16.0f/9.0f;
-			 break;
-		default:
-			screen_aspect=16.0f/9.0f;
-		}
-*/
 	CellVideoOutConfiguration videocfg;
 	memset(&videocfg, 0, sizeof(CellVideoOutConfiguration));
 	videocfg.resolutionId = videoState.displayMode.resolutionId;
 	videocfg.format = CELL_VIDEO_OUT_BUFFER_COLOR_FORMAT_X8R8G8B8;
 	videocfg.pitch = color_pitch;
+	videocfg.aspect = CELL_VIDEO_OUT_ASPECT_AUTO;
 
 	ret = cellVideoOutConfigure(CELL_VIDEO_OUT_PRIMARY, &videocfg, NULL, 0);
 	if (ret != CELL_OK) return -1;
@@ -391,6 +379,7 @@ int initFont()
 	config.option = CELL_DBGFONT_VERTEX_LOCAL;
 	config.option |= CELL_DBGFONT_TEXTURE_LOCAL;
 	config.option |= CELL_DBGFONT_SYNC_ON;
+	config.option |= CELL_DBGFONT_MAGFILTER_LINEAR | CELL_DBGFONT_MINFILTER_LINEAR;
 
 	ret = cellDbgFontInitGcm(&config);
 	if(ret < 0) return ret;
@@ -414,7 +403,7 @@ int initConsole()
 return 0;
 }
 
-void DbgEnable()
+/*void DbgEnable()
 {
 	cellDbgFontConsoleEnable(consoleID);
 }
@@ -423,6 +412,7 @@ void DbgDisable()
 {
 	cellDbgFontConsoleDisable(consoleID);
 }
+*/
 
 int termConsole()
 {

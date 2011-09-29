@@ -15,7 +15,7 @@ typedef unsigned char u8;
 #define DISPLAY_WIDTH  1920
 #define DISPLAY_HEIGHT 1080
 
-#define V_BUFFERS 5
+#define V_BUFFERS 2
 
 typedef struct
 {

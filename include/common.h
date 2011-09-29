@@ -24,5 +24,8 @@
 #define	HV_START_OFFSET			0x363000				// remove lv2 protection
 #define HV_OFFSET				0x000a78				// at address 0x363a78
 
+#define	HV_START_OFFSET2		0x16f000				// set lv2 access rights for sys_storage
+														// at address 0x16f3b8
+
 #endif
 

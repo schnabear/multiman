@@ -6,6 +6,7 @@
 #include "lv2.h"
 u64 mmap_lpar_addr;
 extern unsigned char bdemu[0x1380];
+extern u8 ss_patched;
 
 int map_lv1()
 {
@@ -18,6 +19,16 @@ int map_lv1()
 	return 1;
 }
 
+int map_lv1_ss()
+{
+	int result = lv1_undocumented_function_114(HV_START_OFFSET2, HV_PAGE_SIZE, HV_SIZE, &mmap_lpar_addr);
+	if (result != 0) return 0;
+
+	result =  mm_map_lpar_memory_region(mmap_lpar_addr, HV_BASE, HV_SIZE, HV_PAGE_SIZE, 0);
+	if (result) return 0;
+
+	return 1;
+}
 
 void unmap_lv1()
 {
@@ -136,4 +147,78 @@ void hermes_payload_355(int enable)
 			Lv2Syscall2(7, 0x80000000002b3298ULL, 0x4bd5bda04bd9b411ULL ); // hook open()
 		}
 
+}
+
+int patch_syscall_864(void)
+{
+    const uint64_t addr          = 0x80000000002D7820ULL; // fw 3.55
+    uint8_t        access_rights = Lv2Syscall1(6, addr) >> 56;
+    if (access_rights == 0x20)
+    {
+        Lv2Syscall2(7, addr, (uint64_t) 0x40 << 56);
+    }
+    else if (access_rights != 0x40)
+    {
+        return -1;
+    }
+    return 0;
+}
+
+int patch_sys_storage(void)
+{
+    install_new_poke(); if (!map_lv1_ss()) { remove_new_poke(); return -1; }
+
+	Lv2Syscall2(7, HV_BASE + 0x3b8, 0x7f83e37860000000ULL);
+	Lv2Syscall2(7, HV_BASE + 0x3dc, 0x7f85e37838600001ULL);
+	Lv2Syscall2(7, HV_BASE + 0x454, 0x7f84e3783be00001ULL);
+	Lv2Syscall2(7, HV_BASE + 0x45c, 0x9be1007038600000ULL);
+
+    remove_new_poke();
+    unmap_lv1();
+	ss_patched=1;
+    return 0;
+}
+
+int unpatch_sys_storage(void)
+{
+	if(!ss_patched) return 0;
+    install_new_poke(); if (!map_lv1_ss()) { remove_new_poke(); return -1; }
+
+	Lv2Syscall2(7, HV_BASE + 0x3b8, 0x7f83e378f8010098ULL);
+	Lv2Syscall2(7, HV_BASE + 0x3dc, 0x7f85e3784bfff0e5ULL);
+	Lv2Syscall2(7, HV_BASE + 0x454, 0x7f84e37838a10070ULL);
+	Lv2Syscall2(7, HV_BASE + 0x45c, 0x9be1007048005fa5ULL);
+
+    remove_new_poke();
+    unmap_lv1();
+
+    return 0;
+}
+
+
+void poke_lv1(u64 _addr, u64 _val)
+{
+	u64 _offset = (_addr & 0xFFFFFFFFFFFFF000ULL);
+	install_new_poke();
+	lv1_undocumented_function_114(_offset, HV_PAGE_SIZE, HV_SIZE, &mmap_lpar_addr);
+	mm_map_lpar_memory_region(mmap_lpar_addr, HV_BASE, HV_SIZE, HV_PAGE_SIZE, 0);
+
+	Lv2Syscall2(7, HV_BASE + (_addr - _offset), _val);
+
+	remove_new_poke();
+	lv1_undocumented_function_115(mmap_lpar_addr);
+}
+
+u64 peek_lv1(u64 _addr)
+{
+	u64 _offset = (_addr & 0xFFFFFFFFFFFFF000ULL);
+	install_new_poke();
+	lv1_undocumented_function_114(_offset, HV_PAGE_SIZE, HV_SIZE, &mmap_lpar_addr);
+	mm_map_lpar_memory_region(mmap_lpar_addr, HV_BASE, HV_SIZE, HV_PAGE_SIZE, 0);
+
+	u64 ret = Lv2Syscall1(6, HV_BASE + (_addr - _offset));
+
+	remove_new_poke();
+	lv1_undocumented_function_115(mmap_lpar_addr);
+	return ret;
 }

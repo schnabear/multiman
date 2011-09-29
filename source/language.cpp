@@ -690,6 +690,22 @@ static unsigned char s_pXC1_SHUT2	[]	= "Shutdown your PLAYSTATION\xC2\xAE\x33 Sy
 static unsigned char s_pXC2_522	[]	= "System Auto-Off";
 static unsigned char s_pXC2_523	[]	= "Sets whether to enable or disable the automatic turn-off feature.";
 
+static unsigned char s_pXC2_524	[]	= "Expand Contents of XMMB media columns";
+static unsigned char s_pXC2_525	[]	= "Sets whether to scan and show content in music, photo, video and retro columns.";
+
+static unsigned char s_pISO		[]	= "Create ISO";
+static unsigned char s_pISO1	[]	= "Creating ISO image, please wait...";
+static unsigned char s_pISO2	[]	= "Speed: %4.2f MB/s, Remaining: %02i:%02i min";
+static unsigned char s_pISO3	[]	= "ISO Image saved as:\n\n%s\n\nProcessed %.0f MB in %i:%02i min (%.2f MB/s)";
+static unsigned char s_pISO4	[]	= "Error occured while accessing data!\n\nSectors read: %lu\nTotal sectors: %lu";
+static unsigned char s_pISO5	[]	= "ERROR: ISO Image cannot be created!";
+
+static unsigned char s_pXC2_532	[]	= "PSX Display Mode (PAL)";
+static unsigned char s_pXC2_533	[]	= "Sets default video output mode for European PSX titles.";
+
+static unsigned char s_pXC2_534	[]	= "PSX Display Mode (NTSC)";
+static unsigned char s_pXC2_535	[]	= "Sets default video output mode for USA/Japanese PSX titles.";
+
 static MMString s_MMStringDef[] = {
  { sizeof ( s_pDebugMode  ) - 1, s_pDebugMode	}, //0
  { sizeof ( s_pQuit0	  ) - 1, s_pQuit0		}, //1
@@ -1294,7 +1310,22 @@ static MMString s_MMStringDef[] = {
   { sizeof ( s_pXC1_SHUT2	) - 1, s_pXC1_SHUT2		}, //521
 
   { sizeof ( s_pXC2_522		) - 1, s_pXC2_522		},
-  { sizeof ( s_pXC2_523		) - 1, s_pXC2_523		}  //523
+  { sizeof ( s_pXC2_523		) - 1, s_pXC2_523		}, //523
+
+  { sizeof ( s_pXC2_525		) - 1, s_pXC2_524		},
+  { sizeof ( s_pXC2_525		) - 1, s_pXC2_525		},
+
+  { sizeof ( s_pISO			) - 1, s_pISO			},  //526
+  { sizeof ( s_pISO1		) - 1, s_pISO1			},
+  { sizeof ( s_pISO2		) - 1, s_pISO2			},
+  { sizeof ( s_pISO3		) - 1, s_pISO3			},
+  { sizeof ( s_pISO4		) - 1, s_pISO4			},
+  { sizeof ( s_pISO5		) - 1, s_pISO5			},
+
+  { sizeof ( s_pXC2_532		) - 1, s_pXC2_532		},
+  { sizeof ( s_pXC2_533		) - 1, s_pXC2_533		},
+  { sizeof ( s_pXC2_534		) - 1, s_pXC2_534		},
+  { sizeof ( s_pXC2_535		) - 1, s_pXC2_535		}
 };
 
 
