@@ -177,14 +177,14 @@ static inline int sys_storage_auth_bd(void)
 static inline int sys_storage_ctrl_bd(int _func)
 {
     int func = _func;//0x43;
-    system_call_2(864, 0x5007, (uint64_t) &func);
+    system_call_2(864, 0x5007, func);
     return_to_user_prog(int);
 }
 
 static inline int sys_storage_setbdemu(void)
 {
     int func = 0xA3;
-    system_call_2(864, 0x5007, (uint64_t) &func);
+    system_call_2(864, 0x5007, func);
     return_to_user_prog(int);
 }
 
